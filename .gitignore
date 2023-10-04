@@ -36,3 +36,6 @@ next-env.d.ts
 
 # cesium
 /public/cesium
+
+# over 100mb
+/public/glb/tecno.glb
