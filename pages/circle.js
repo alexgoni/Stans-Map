@@ -4,15 +4,8 @@ import * as Cesium from "cesium";
 import { useEffect, useRef, useState } from "react";
 
 export default function Circle() {
-  const [drawingCircle, _setDrawingCircle] = useState(false);
+  const [drawCircle, setDrawCircle] = useState(false);
   const [viewer, setViewer] = useState(null);
-
-  const setDrawingCircle = (value) => {
-    drawingCircleRef.current = value;
-    _setDrawingCircle(value);
-  };
-
-  const drawingCircleRef = useRef(null);
 
   const viewerRef = useRef(null);
 
@@ -23,7 +16,7 @@ export default function Circle() {
   let endDistance = null;
   let initClick = true;
 
-  const entityArr = [];
+  const circleGroupArr = [];
 
   useEffect(() => {
     const viewer = Viewer();
@@ -32,13 +25,25 @@ export default function Circle() {
 
     defaultCamera(viewer, [127.08049, 37.63457, 500]);
 
-    // handler 선언
+    return () => {
+      viewer.destroy();
+    };
+  }, []);
+
+  useEffect(() => {
+    const viewer = viewerRef.current;
+
     const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+
+    // 위젯 오픈 상태 아닐 시 현재 등록된 이벤트 리스너 해제
+    if (!drawCircle) {
+      handler.removeInputAction(Cesium.ScreenSpaceEventType.LEFT_CLICK);
+      initClick = true;
+      return;
+    }
 
     // click to create points
     handler.setInputAction((click) => {
-      if (!drawingCircleRef.current) return;
-
       const cartesian = viewer.camera.pickEllipsoid(click.position);
 
       if (cartesian) {
@@ -46,7 +51,7 @@ export default function Circle() {
         const longitude = Cesium.Math.toDegrees(cartographic.longitude);
         const latitude = Cesium.Math.toDegrees(cartographic.latitude);
 
-        const entityObj = {};
+        let circleGroup = {};
 
         if (initClick) {
           startPoint = viewer.entities.add({
@@ -61,9 +66,8 @@ export default function Circle() {
             latitude: latitude,
           });
 
-          entityObj.startPoint = startPoint;
+          circleGroup.startPoint = startPoint;
           initClick = false;
-          console.log("first click", entityObj);
         } else {
           endPoint = viewer.entities.add({
             position: Cesium.Cartesian3.fromDegrees(longitude, latitude, 0),
@@ -76,8 +80,7 @@ export default function Circle() {
             longitude: longitude,
             latitude: latitude,
           });
-          entityObj.endPoint = endPoint;
-          console.log("second click", entityObj);
+          circleGroup.endPoint = endPoint;
 
           startDistance = Cesium.Cartographic.fromDegrees(
             startPoint.longitude,
@@ -112,26 +115,30 @@ export default function Circle() {
           });
 
           initClick = true;
-          entityObj.circle = circle;
-          entityObj.radius = surfaceDistance;
+          circleGroup.circle = circle;
+          circleGroup.radius = surfaceDistance;
 
-          entityArr.push(entityObj);
+          circleGroupArr.push(circleGroup);
+
+          console.log(circleGroupArr);
         }
       }
     }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
+    // 언마운트시 이벤트 리스너 해제
     return () => {
-      viewer.destroy();
-      handler.destroy();
+      handler.removeInputAction(Cesium.ScreenSpaceEventType.LEFT_CLICK);
     };
-  }, []);
+  }, [drawCircle]);
 
   const clearEntities = () => {
-    viewer.entities.removeAll();
-    startPoint = null;
-    endPoint = null;
-    startDistance = null;
-    endDistance = null;
+    console.log(circleGroupArr);
+    //TODO: circle 관련 entity만 제거
+    circleGroupArr.forEach((element) => {
+      viewer.entities.remove(element.circle);
+      viewer.entities.remove(element.startPoint);
+      viewer.entities.remove(element.endPoint);
+    });
   };
 
   return (
@@ -142,7 +149,7 @@ export default function Circle() {
       ></div>
       <button
         className="fixed left-4 top-4 z-50 bg-white p-4"
-        onClick={() => setDrawingCircle(true)}
+        onClick={() => setDrawCircle(true)}
       >
         Start Drawing Circle
       </button>
@@ -150,7 +157,7 @@ export default function Circle() {
         className="fixed left-4 top-16 z-50 bg-white p-4"
         onClick={() => {
           clearEntities();
-          setDrawingCircle(false);
+          setDrawCircle(false);
         }}
       >
         Clear Entities
