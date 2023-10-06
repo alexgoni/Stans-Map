@@ -7,17 +7,18 @@ import { ModelGroup, ModelGroupInfo } from "@/components/module/ModelGroup";
 import {
   getPositionObj,
   groupDownAnimation,
+  groupUpAnimation,
   holdView,
   hoverToOpacityChange,
   isInnerModelClicked,
-  leftClickToUp,
-  rightClickToDown,
   unholdView,
 } from "@/components/handler/cesium/ModelEvent";
 import { InfoBox, popUpInfo } from "@/components/widget/InfoBox";
 import useDidMountEffect from "@/components/module/useDidMountEffect";
 import { MeasureWidget, pointEvent } from "@/components/widget/Measure";
 import Modal from "@/components/widget/Modal";
+import { floorsModelState, tecnoModelState } from "@/recoil/atom/ModelState";
+import { useRecoilValue } from "recoil";
 
 export default function POC() {
   /* 
@@ -30,15 +31,19 @@ export default function POC() {
     모델 hover : {opacity 변경}
     Floor 좌클릭 : {모달 오픈} 
   */
-  const upState = useRef(false);
-  const downState = useRef(true);
-  const viewerRef = useRef(null);
-  const modelGroupInfoRef = useRef(null);
+  const tecnoModel = useRecoilValue(tecnoModelState);
+  const floorsModel = useRecoilValue(floorsModelState);
 
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [uri, setUri] = useState("");
   const [widgetOpen, setWidgetOpen] = useState(false);
   const [surfaceDistance, setSurfaceDistance] = useState(0);
+
+  let upState = false;
+  let downState = true;
+
+  const viewerRef = useRef(null);
+  const modelGroupInfoRef = useRef(null);
 
   useEffect(() => {
     const geomap = new Cesium.WebMapServiceImageryProvider({
@@ -71,7 +76,7 @@ export default function POC() {
     // 충돌 무시
     // viewer.scene.screenSpaceCameraController.enableCollisionDetection = false;
 
-    viewer.scene.globe.depthTestAgainstTerrain = true;
+    // viewer.scene.globe.depthTestAgainstTerrain = true;
 
     viewerRef.current = viewer;
 
@@ -79,50 +84,26 @@ export default function POC() {
     defaultCamera(viewer, [127.08049, 37.63457, 500]);
 
     // tecno 생성
-    const tecnoPosition = [127.08049, 37.63457, 0];
-    const tecnoOrientation = [105, 0, 0];
-    const tecnoInfo = {
-      name: "Tecno Building",
-      description: "STANS 4th floor",
-      model: {
-        uri: "/glb/tecno.glb",
-        scale: 0.01,
-      },
-    };
     const tecno = addModelEntity({
       viewer,
-      position: tecnoPosition,
-      orientation: tecnoOrientation,
-      modelInfo: tecnoInfo,
+      position: tecnoModel.position,
+      orientation: tecnoModel.orientation,
+      modelInfo: tecnoModel.info,
     });
 
     // floors 생성
-    const floorPosition = [127.08081, 37.63456, 15];
-    const floorOrientation = [16, 0, 0];
-
-    const minFloor = 3;
-    const maxFloor = 5;
     const floors = [];
 
-    for (let i = minFloor; i <= maxFloor; i++) {
-      const floorInfo = {
-        description: `${i}th Floor`,
-        model: {
-          uri: `/glb/Floor${i}.glb`,
-          scale: 1.2,
-          color: Cesium.Color.fromAlpha(Cesium.Color.WHITE, 0.0),
-        },
-      };
-
+    floorsModel.forEach((element) => {
       const floor = addModelEntity({
         viewer,
-        position: floorPosition,
-        orientation: floorOrientation,
-        modelInfo: floorInfo,
+        position: element.position,
+        orientation: element.orientation,
+        modelInfo: element.info,
       });
 
       floors.push(floor);
-    }
+    });
 
     // modelGroup, modelGroupInfo 생성
     const modelGroup = new ModelGroup(tecno, floors);
@@ -131,8 +112,6 @@ export default function POC() {
       modelGroup,
       downPositionObj,
       upPositionObj,
-      upState,
-      downState,
     );
 
     modelGroupInfoRef.current = modelGroupInfo;
@@ -144,40 +123,58 @@ export default function POC() {
     handler.setInputAction((click) => {
       const pickedObject = viewer.scene.pick(click.position);
 
-      // 모델 up
-      leftClickToUp({
-        pickedObject,
-        ...modelGroupInfo,
-      });
+      if (
+        Cesium.defined(pickedObject) &&
+        pickedObject.id === modelGroup.outerModel
+      ) {
+        downState
+          ? (() => {
+              // 모델 up
+              groupUpAnimation(modelGroupInfo);
+              downState = false;
+              upState = true;
+            })()
+          : null;
+
+        // infoBox 팝업
+        popUpInfo({ pickedObject, model: tecno });
+      }
 
       // 시점 고정
       holdView(viewer, pickedObject, tecno);
 
-      // innerModel click event
-      if (upState.current)
-        isInnerModelClicked({
-          pickedObject,
-          innerModel: floors,
-          setModalIsOpen,
-          setUri,
-        });
-
-      // infoBox 팝업
-      popUpInfo({ pickedObject, model: tecno });
+      // 건물이 떠있는 상태에서 내부 건물 클릭 허용
+      isInnerModelClicked({
+        pickedObject,
+        innerModel: floors,
+        setModalIsOpen,
+        setUri,
+      });
     }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
     // right click event
     handler.setInputAction((click) => {
       const pickedObject = viewer.scene.pick(click.position);
 
-      // 모델 down
-      rightClickToDown({ pickedObject, ...modelGroupInfo });
+      if (
+        Cesium.defined(pickedObject) &&
+        pickedObject.id === modelGroup.outerModel
+      ) {
+        upState
+          ? (() => {
+              // 모델 down
+              groupDownAnimation(modelGroupInfo);
+              downState = true;
+              upState = false;
+            })()
+          : null;
 
-      // 시점 고정 해제
-      unholdView(viewer, pickedObject, tecno);
+        // 시점 고정 해제
+        unholdView(viewer, pickedObject, tecno);
 
-      // popup close
-      document.querySelector("#info").style.display = "none";
+        // popup close
+        document.querySelector("#info").style.display = "none";
+      }
     }, Cesium.ScreenSpaceEventType.RIGHT_CLICK);
 
     // hover event
@@ -188,8 +185,7 @@ export default function POC() {
     return () => {
       viewer.destroy();
       handler.destroy();
-      upState.current = false;
-      downState.current = true;
+      document.querySelector("#info").style.display = "none";
     };
   }, []);
 
@@ -220,7 +216,11 @@ export default function POC() {
         className="m-0 h-screen w-screen overflow-hidden p-0"
       ></div>
       <InfoBox
-        closeEvent={() => groupDownAnimation({ ...modelGroupInfoRef.current })}
+        closeEvent={() => {
+          groupDownAnimation(modelGroupInfoRef.current);
+          upState = false;
+          downState = true;
+        }}
       />
       <Modal
         modalIsOpen={modalIsOpen}

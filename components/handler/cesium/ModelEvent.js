@@ -4,53 +4,33 @@ const DURATION = 1.0;
 const UP_HEIGHT = 40;
 
 function getPositionObj(modelGroup) {
-  const innerPositionArray = modelGroup.innerModel.map((element) =>
-    element.position.getValue(Cesium.JulianDate.now()),
-  );
+  const calculatePosition = (position) => {
+    const cartographic = Cesium.Cartographic.fromCartesian(position);
+    return Cesium.Cartesian3.fromRadians(
+      cartographic.longitude,
+      cartographic.latitude,
+      cartographic.height + UP_HEIGHT,
+    );
+  };
 
   const downPositionObj = {
     outerPosition: modelGroup.outerModel.position.getValue(
       Cesium.JulianDate.now(),
     ),
-    innerPosition: innerPositionArray,
+    innerPosition: modelGroup.innerModel.map((element) =>
+      element.position.getValue(Cesium.JulianDate.now()),
+    ),
   };
 
   const upPositionObj = {
-    outerPosition: Cesium.Cartesian3.fromDegrees(
-      Cesium.Math.toDegrees(
-        Cesium.Cartographic.fromCartesian(downPositionObj.outerPosition)
-          .longitude,
-      ),
-      Cesium.Math.toDegrees(
-        Cesium.Cartographic.fromCartesian(downPositionObj.outerPosition)
-          .latitude,
-      ),
-      Cesium.Cartographic.fromCartesian(downPositionObj.outerPosition).height +
-        UP_HEIGHT,
-    ),
-    innerPosition: innerPositionArray.map((element) => {
-      return Cesium.Cartesian3.fromDegrees(
-        Cesium.Math.toDegrees(
-          Cesium.Cartographic.fromCartesian(element).longitude,
-        ),
-        Cesium.Math.toDegrees(
-          Cesium.Cartographic.fromCartesian(element).latitude,
-        ),
-        Cesium.Cartographic.fromCartesian(element).height + UP_HEIGHT,
-      );
-    }),
+    outerPosition: calculatePosition(downPositionObj.outerPosition),
+    innerPosition: downPositionObj.innerPosition.map(calculatePosition),
   };
 
   return { downPositionObj, upPositionObj };
 }
 
-function upAnimation({
-  originalPosition,
-  upTargetPosition,
-  model,
-  upState,
-  downState,
-}) {
+function upAnimation({ originalPosition, upTargetPosition, model }) {
   let startTime = null;
 
   function animate(time) {
@@ -67,22 +47,13 @@ function upAnimation({
       );
       model.position.setValue(newPosition);
       requestAnimationFrame(animate);
-    } else if (upState && downState) {
-      upState.current = true;
-      downState.current = false;
     }
   }
 
   requestAnimationFrame(animate);
 }
 
-function downAnimation({
-  originalPosition,
-  downTargetPosition,
-  model,
-  upState,
-  downState,
-}) {
+function downAnimation({ originalPosition, downTargetPosition, model }) {
   let startTime = null;
 
   function animate(time) {
@@ -99,28 +70,19 @@ function downAnimation({
       );
       model.position.setValue(newPosition);
       requestAnimationFrame(animate);
-    } else if (upState && downState) {
-      upState.current = false;
-      downState.current = true;
     }
   }
 
   requestAnimationFrame(animate);
 }
 
-function groupUpAnimation({
-  modelGroup,
-  downPositionObj,
-  upPositionObj,
-  upState,
-  downState,
-}) {
+function groupUpAnimation(modelGroupInfo) {
+  const { modelGroup, downPositionObj, upPositionObj } = modelGroupInfo;
+
   upAnimation({
     originalPosition: downPositionObj.outerPosition,
     upTargetPosition: upPositionObj.outerPosition,
     model: modelGroup.outerModel,
-    upState,
-    downState,
   });
 
   if (modelGroup.innerModel.length > 0) {
@@ -134,19 +96,13 @@ function groupUpAnimation({
   }
 }
 
-function groupDownAnimation({
-  modelGroup,
-  downPositionObj,
-  upPositionObj,
-  upState,
-  downState,
-}) {
+function groupDownAnimation(modelGroupInfo) {
+  const { modelGroup, downPositionObj, upPositionObj } = modelGroupInfo;
+
   downAnimation({
     originalPosition: upPositionObj.outerPosition,
     downTargetPosition: downPositionObj.outerPosition,
     model: modelGroup.outerModel,
-    upState,
-    downState,
   });
 
   if (modelGroup.innerModel.length > 0) {
@@ -156,29 +112,6 @@ function groupDownAnimation({
         downTargetPosition: downPositionObj.innerPosition[idx],
         model: element,
       });
-    });
-  }
-}
-
-function leftClickToUp({
-  pickedObject,
-  modelGroup,
-  downPositionObj,
-  upPositionObj,
-  upState,
-  downState,
-}) {
-  if (
-    Cesium.defined(pickedObject) &&
-    pickedObject.id === modelGroup.outerModel &&
-    !upState.current
-  ) {
-    groupUpAnimation({
-      modelGroup,
-      downPositionObj,
-      upPositionObj,
-      upState,
-      downState,
     });
   }
 }
@@ -196,29 +129,6 @@ function isInnerModelClicked({
       setModalIsOpen(true);
       setUri(uri);
     }
-  }
-}
-
-function rightClickToDown({
-  pickedObject,
-  modelGroup,
-  downPositionObj,
-  upPositionObj,
-  upState,
-  downState,
-}) {
-  if (
-    Cesium.defined(pickedObject) &&
-    pickedObject.id === modelGroup.outerModel &&
-    !downState.current
-  ) {
-    groupDownAnimation({
-      modelGroup,
-      downPositionObj,
-      upPositionObj,
-      upState,
-      downState,
-    });
   }
 }
 
@@ -244,7 +154,7 @@ function hoverToOpacityChange({ viewer, movement, modelGroup }) {
       0.7,
     );
     modelGroup.innerModel.map((element) => {
-      element.model.color = Cesium.Color.fromAlpha(Cesium.Color.YELLOW, 1.0);
+      element.model.color = Cesium.Color.fromAlpha(Cesium.Color.WHITE, 1.0);
     });
   } else if (
     Cesium.defined(pickedObject) &&
@@ -301,8 +211,6 @@ export {
   getPositionObj,
   groupDownAnimation,
   groupUpAnimation,
-  rightClickToDown,
-  leftClickToUp,
   isInnerModelClicked,
   hoverToOpacityChange,
   holdView,

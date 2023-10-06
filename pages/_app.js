@@ -1,8 +1,15 @@
 import "@/styles/globals.css";
-import * as Cesium from "cesium";
+import { RecoilRoot } from "recoil";
+import dynamic from "next/dynamic";
 
-export default function App({ Component, pageProps }) {
-  Cesium.Ion.defaultAccessToken =
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI5YTY3ZDVhNC0zMThlLTQxZjUtODhmOS04ZmJjZGY4MDM4MDEiLCJpZCI6MTQzNzkxLCJpYXQiOjE2ODU2ODkwNDF9.3RQSwjKyySalcp1nUufcBxUk_hNALFLJ9j-X0-FoEpI";
-  return <Component {...pageProps} />;
+function App({ Component, pageProps }) {
+  return (
+    <RecoilRoot>
+      <Component {...pageProps} />
+    </RecoilRoot>
+  );
 }
+
+export default dynamic(() => Promise.resolve(App), {
+  ssr: false,
+});

@@ -11,12 +11,13 @@
   },
   "dependencies": {
     "cesium": "^1.109.0",
-    "next": "13.5.2",
+    "next": "^13.5.4",
     "react": "18.2.0",
     "react-bootstrap-icons": "^1.10.3",
     "react-dom": "18.2.0",
     "react-modal": "^3.16.1",
     "react-spinners": "^0.13.8",
+    "recoil": "^0.7.7",
     "three": "^0.156.1"
   },
   "devDependencies": {

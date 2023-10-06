@@ -6,22 +6,14 @@ class ModelGroup {
 }
 
 class ModelGroupInfo {
-  constructor(modelGroup, downPositionObj, upPositionObj, upState, downState) {
-    if (
-      !modelGroup ||
-      !downPositionObj ||
-      !upPositionObj ||
-      !upState ||
-      !downState
-    ) {
+  constructor(modelGroup, downPositionObj, upPositionObj) {
+    if (!modelGroup || !downPositionObj || !upPositionObj) {
       throw new Error("모든 매개변수는 필수입니다.");
     }
 
     this.modelGroup = modelGroup;
     this.downPositionObj = downPositionObj;
     this.upPositionObj = upPositionObj;
-    this.upState = upState;
-    this.downState = downState;
   }
 }
 
