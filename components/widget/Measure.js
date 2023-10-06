@@ -92,6 +92,7 @@ function pointEvent({ viewer, handler, widgetOpen, setSurfaceDistance }) {
 
   // click to create points
   handler.setInputAction((click) => {
+    // event handler가 등록되는 시점의 state. 외부의 변화를 참조하지 않는다.
     if (!widgetOpen) return;
 
     const cartesian = viewer.camera.pickEllipsoid(click.position);
