@@ -18,8 +18,12 @@ export default function Circle() {
 
   let startPoint = null;
   let endPoint = null;
+  let circle = null;
   let startDistance = null;
   let endDistance = null;
+  let initClick = true;
+
+  const entityArr = [];
 
   useEffect(() => {
     const viewer = Viewer();
@@ -42,9 +46,10 @@ export default function Circle() {
         const longitude = Cesium.Math.toDegrees(cartographic.longitude);
         const latitude = Cesium.Math.toDegrees(cartographic.latitude);
 
-        if (!startPoint) {
+        const entityObj = {};
+
+        if (initClick) {
           startPoint = viewer.entities.add({
-            id: "start_point",
             position: Cesium.Cartesian3.fromDegrees(longitude, latitude, 0),
             point: {
               pixelSize: 6,
@@ -55,9 +60,12 @@ export default function Circle() {
             longitude: longitude,
             latitude: latitude,
           });
-        } else if (!endPoint) {
+
+          entityObj.startPoint = startPoint;
+          initClick = false;
+          console.log("first click", entityObj);
+        } else {
           endPoint = viewer.entities.add({
-            id: "end_point",
             position: Cesium.Cartesian3.fromDegrees(longitude, latitude, 0),
             point: {
               pixelSize: 6,
@@ -68,6 +76,8 @@ export default function Circle() {
             longitude: longitude,
             latitude: latitude,
           });
+          entityObj.endPoint = endPoint;
+          console.log("second click", entityObj);
 
           startDistance = Cesium.Cartographic.fromDegrees(
             startPoint.longitude,
@@ -96,10 +106,16 @@ export default function Circle() {
             outlineWidth: 4,
           });
 
-          viewer.entities.add({
+          circle = viewer.entities.add({
             position: startPoint.position,
             ellipse: properties,
           });
+
+          initClick = true;
+          entityObj.circle = circle;
+          entityObj.radius = surfaceDistance;
+
+          entityArr.push(entityObj);
         }
       }
     }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
