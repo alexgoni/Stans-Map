@@ -1,109 +1,38 @@
 import Viewer from "@/components/handler/cesium/Viewer";
-import { useEffect } from "react";
+import React, { useEffect } from "react";
 import * as Cesium from "cesium";
-import { addModelEntity } from "@/components/handler/cesium/Entity";
-import { defaultCamera, flyCamera } from "@/components/handler/cesium/Camera";
-import { ModelGroup, ModelGroupInfo } from "@/components/module/ModelGroup";
-import {
-  downStateAtom,
-  floorsModelState,
-  tecnoModelState,
-  upStateAtom,
-} from "@/recoil/atom/ModelState";
-import { useRecoilState, useRecoilValue } from "recoil";
-import { getPositionObj } from "@/components/handler/cesium/ModelEvent";
 
 export default function test() {
-  const tecnoModel = useRecoilValue(tecnoModelState);
-
-  const [upState, setUpState] = useRecoilState(upStateAtom);
-  const [downState, setDownState] = useRecoilState(downStateAtom);
-
   useEffect(() => {
-    const geomap = new Cesium.WebMapServiceImageryProvider({
-      url: "http://192.168.1.45:8188/geoserver/wms",
-      parameters: {
-        format: "image/png",
-        transparent: "true",
-        tiled: true,
-        enablePickFeatures: true,
-      },
-      layers: "stans:protoMap",
-      maximumLevel: 20,
-    });
+    const viewer = Viewer({ terrain: Cesium.Terrain.fromWorldTerrain() });
 
-    // viewer 생성
-    const viewer = Viewer({
-      img: geomap,
-      animation: false,
-      baseLayerPicker: false,
-    });
-
-    // homeButton event
-    viewer.homeButton.viewModel.command.beforeExecute.addEventListener(
-      (event) => {
-        event.cancel = true;
-        flyCamera(viewer, [127.5, 37.512, 1_500_000]);
-      },
+    const longitude = 127;
+    const latitude = 38;
+    const cartographicPosition = Cesium.Cartographic.fromDegrees(
+      longitude,
+      latitude,
     );
 
-    // 충돌 무시
-    // viewer.scene.screenSpaceCameraController.enableCollisionDetection = false;
+    const cartesian2Position = new Cesium.Cartesian2(
+      cartographicPosition.longitude,
+      cartographicPosition.latitude,
+    ); // Cartesian2 좌표 생성
 
-    viewer.scene.globe.depthTestAgainstTerrain = true;
+    // Cartesian2를 Cartographic으로 변환
+    const position = Cesium.Cartographic.fromCartesian(cartesian2Position);
 
-    // Camera 설정
-    defaultCamera(viewer, [127.08049, 37.63457, 500]);
+    console.log(position);
 
-    // tecno 생성
-    const tecno = addModelEntity({
-      viewer,
-      position: tecnoModel.position,
-      orientation: tecnoModel.orientation,
-      modelInfo: tecnoModel.info,
-    });
+    // // cartographicPosition에서 경도, 위도 정보를 추출
+    // const longitude = Cesium.Math.toDegrees(cartographicPosition.longitude);
+    // const latitude = Cesium.Math.toDegrees(cartographicPosition.latitude);
 
-    // handler 선언
-    const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+    console.log(`경도: ${longitude}, 위도: ${latitude}`);
 
-    // modelGroup, modelGroupInfo 생성
-    const modelGroup = new ModelGroup(tecno);
-    const { downPositionObj, upPositionObj } = getPositionObj(modelGroup);
-
-    // left click event
-    handler.setInputAction((click) => {
-      setUpState(true);
-      setDownState(false);
-      function upAnimation(model) {
-        let startTime = null;
-
-        function animate(time) {
-          if (!startTime) startTime = time;
-          const progress = (time - startTime) / (1 * 1000);
-
-          if (progress < 1) {
-            const newPosition = new Cesium.Cartesian3();
-            Cesium.Cartesian3.lerp(
-              downPositionObj.outerPosition,
-              upPositionObj.outerPosition,
-              progress,
-              newPosition,
-            );
-            model.position.setValue(newPosition);
-            requestAnimationFrame(animate);
-          }
-        }
-
-        requestAnimationFrame(animate);
-      }
-
-      upAnimation(tecno);
-    }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+    return () => {
+      viewer.destroy();
+    };
   }, []);
-
-  useEffect(() => {
-    console.log("upstate : ", upState, "downstate : ", downState);
-  }, [upState, downState]);
 
   return (
     <div
@@ -111,4 +40,113 @@ export default function test() {
       className="m-0 h-screen w-screen overflow-hidden p-0"
     ></div>
   );
+}
+
+function clickEvent(click) {
+  const ray = viewer.camera.getPickRay(click.position);
+  const earthPosition = viewer.scene.globe.pick(ray, viewer.scene);
+  if (Cesium.defined(earthPosition)) {
+    const cartographic = Cesium.Cartographic.fromCartesian(earthPosition);
+
+    const longitude = Cesium.Math.toDegrees(cartographic.longitude);
+    const latitude = Cesium.Math.toDegrees(cartographic.latitude);
+
+    if (initClick) {
+      startPoint = viewer.entities.add({
+        position: earthPosition,
+        point: {
+          pixelSize: 6,
+          color: Cesium.Color.WHITE,
+          outlineColor: Cesium.Color.RED,
+          outlineWidth: 1,
+          disableDepthTestDistance: Number.POSITIVE_INFINITY,
+        },
+
+        longitude: longitude,
+        latitude: latitude,
+      });
+
+      circleGroup.startPoint = startPoint;
+      initClick = false;
+    } else {
+      const endPoint = viewer.entities.add({
+        position: earthPosition,
+        point: {
+          pixelSize: 6,
+          color: Cesium.Color.WHITE,
+          outlineColor: Cesium.Color.RED,
+          outlineWidth: 1,
+          disableDepthTestDistance: Number.POSITIVE_INFINITY,
+        },
+
+        longitude: longitude,
+        latitude: latitude,
+      });
+      circleGroup.endPoint = endPoint;
+
+      const startDistance = Cesium.Cartographic.fromDegrees(
+        startPoint.longitude,
+        startPoint.latitude,
+      );
+      const endDistance = Cesium.Cartographic.fromDegrees(
+        endPoint.longitude,
+        endPoint.latitude,
+      );
+
+      const ellipsoid = Cesium.Ellipsoid.WGS84;
+      const geodesic = new Cesium.EllipsoidGeodesic(
+        startDistance,
+        endDistance,
+        ellipsoid,
+      );
+      const surfaceDistance = geodesic.surfaceDistance;
+
+      const circlePrimitive = viewer.scene.primitives.add(
+        new Cesium.GroundPrimitive({
+          geometryInstances: new Cesium.GeometryInstance({
+            geometry: new Cesium.CircleGeometry({
+              center: startPoint.position._value,
+              radius: surfaceDistance,
+            }),
+          }),
+          appearance: new Cesium.EllipsoidSurfaceAppearance({
+            material: Cesium.Material.fromType("Color", {
+              color: new Cesium.Color(1.0, 0.0, 0.0, 0.3),
+            }),
+          }),
+        }),
+      );
+
+      circleGroup.circle = circlePrimitive;
+      circleGroup.radius = surfaceDistance;
+
+      const label = viewer.entities.add({
+        position: Cesium.Cartesian3.fromDegrees(
+          startPoint.longitude,
+          startPoint.latitude,
+          2,
+        ),
+        label: {
+          text: `${surfaceDistance.toFixed(2)}m`,
+          font: "14px sans-serif",
+          fillColor: Cesium.Color.WHITE,
+          outlineColor: Cesium.Color.BLACK,
+          outlineWidth: 2,
+          style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+          scale: 1,
+          showBackground: true,
+          heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
+          verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+          horizontalOrigin: Cesium.HorizontalOrigin.CENTER,
+          pixelOffset: new Cesium.Cartesian2(0, -10),
+          disableDepthTestDistance: Number.POSITIVE_INFINITY,
+        },
+      });
+
+      circleGroup.label = label;
+      initClick = true;
+
+      circleGroupArr.push({ ...circleGroup });
+    }
+  }
 }

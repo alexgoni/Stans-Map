@@ -1,30 +1,20 @@
 import { defaultCamera } from "@/components/handler/cesium/Camera";
 import Viewer from "@/components/handler/cesium/Viewer";
+import useDidMountEffect from "@/components/module/useDidMountEffect";
 import * as Cesium from "cesium";
 import { useEffect, useRef, useState } from "react";
 
-export default function Circle() {
+// original
+export default function Circle3() {
   const [drawCircle, setDrawCircle] = useState(false);
-  const [viewer, setViewer] = useState(null);
 
   const viewerRef = useRef(null);
 
-  let startPoint = null;
-  let endPoint = null;
-  let circle = null;
-  let startDistance = null;
-  let endDistance = null;
-  let initClick = true;
-
-  let circleGroup = {};
   const circleGroupArr = [];
 
   useEffect(() => {
-    const viewer = Viewer({
-      terrain: Cesium.Terrain.fromWorldTerrain(),
-    });
+    const viewer = Viewer({ terrain: Cesium.Terrain.fromWorldTerrain() });
     viewerRef.current = viewer;
-    setViewer(viewer);
 
     defaultCamera(viewer, [127.08049, 37.63457, 500]);
 
@@ -33,20 +23,24 @@ export default function Circle() {
     };
   }, []);
 
-  useEffect(() => {
+  useDidMountEffect(() => {
     const viewer = viewerRef.current;
-
     const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
 
-    // 위젯 오픈 상태 아닐 시 현재 등록된 이벤트 리스너 해제
-    if (!drawCircle) {
-      handler.removeInputAction(Cesium.ScreenSpaceEventType.LEFT_CLICK);
-      initClick = true;
-      return;
-    }
+    // 이전에 등록된 이벤트 핸들러를 제거
+    handler.removeInputAction(Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
-    // click to create points
-    handler.setInputAction((click) => {
+    let startPoint = null;
+    let endPoint = null;
+    let circle = null;
+    let label = null;
+    let startDistance = null;
+    let endDistance = null;
+    let initClick = true;
+
+    let circleGroup = {};
+
+    function clickEvent(click) {
       const cartesian = viewer.camera.pickEllipsoid(click.position);
 
       if (cartesian) {
@@ -56,13 +50,12 @@ export default function Circle() {
 
         if (initClick) {
           startPoint = viewer.entities.add({
-            position: Cesium.Cartesian3.fromDegrees(longitude, latitude, 0.5),
+            position: Cesium.Cartesian3.fromDegrees(longitude, latitude, 0),
             point: {
               pixelSize: 6,
               color: Cesium.Color.WHITE,
               outlineColor: Cesium.Color.RED,
               outlineWidth: 1,
-              heightReference: Cesium.HeightReference.RELATIVE_TO_GROUND,
             },
             longitude: longitude,
             latitude: latitude,
@@ -104,26 +97,45 @@ export default function Circle() {
           const properties = new Cesium.EllipseGraphics({
             semiMinorAxis: surfaceDistance,
             semiMajorAxis: surfaceDistance,
-            heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
+            height: 1.0,
             material: Cesium.Color.RED.withAlpha(0.3),
             outline: true,
             outlineColor: Cesium.Color.RED,
             outlineWidth: 4,
           });
 
-          circle = viewer.entities.add({
-            position: startPoint.position,
-            ellipse: properties,
-          });
+          const circlePrimitive = viewer.scene.primitives.add(
+            new Cesium.GroundPrimitive({
+              geometryInstances: new Cesium.GeometryInstance({
+                geometry: new Cesium.CircleGeometry({
+                  center: startPoint.position._value,
+                  radius: surfaceDistance,
+                }),
+              }),
+              appearance: new Cesium.EllipsoidSurfaceAppearance({
+                material: Cesium.Material.fromType("Color", {
+                  color: new Cesium.Color(1.0, 0.0, 0.0, 0.3),
+                }),
+              }),
+            }),
+          );
 
-          const radiusLabel = viewer.entities.add({
+          //   circle = viewer.entities.add({
+          //     position: startPoint.position,
+          //     ellipse: properties,
+          //   });
+
+          circleGroup.circle = circlePrimitive;
+          circleGroup.radius = surfaceDistance;
+
+          label = viewer.entities.add({
             position: Cesium.Cartesian3.fromDegrees(
               startPoint.longitude,
               startPoint.latitude,
               2,
             ),
             label: {
-              text: `Radius: ${surfaceDistance.toFixed(2)} meters`,
+              text: `${surfaceDistance.toFixed(2)}m`,
               font: "14px sans-serif",
               fillColor: Cesium.Color.WHITE,
               outlineColor: Cesium.Color.BLACK,
@@ -132,35 +144,29 @@ export default function Circle() {
               scale: 1,
               verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
               pixelOffset: new Cesium.Cartesian2(0, -10),
+              showBackground: true,
             },
           });
 
+          circleGroup.label = label;
           initClick = true;
-          circleGroup.circle = circle;
-          circleGroup.radius = surfaceDistance;
 
-          circleGroupArr.push(circleGroup);
-
-          console.log(circleGroupArr);
+          circleGroupArr.push({ ...circleGroup });
         }
       }
-    }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+    }
 
-    // 언마운트시 이벤트 리스너 해제
+    if (drawCircle) {
+      handler.setInputAction(
+        clickEvent,
+        Cesium.ScreenSpaceEventType.LEFT_CLICK,
+      );
+    }
+
     return () => {
       handler.removeInputAction(Cesium.ScreenSpaceEventType.LEFT_CLICK);
     };
   }, [drawCircle]);
-
-  const clearEntities = () => {
-    console.log(circleGroupArr);
-    //TODO: circle 관련 entity만 제거
-    circleGroupArr.forEach((element) => {
-      viewer.entities.remove(element.circle);
-      viewer.entities.remove(element.startPoint);
-      viewer.entities.remove(element.endPoint);
-    });
-  };
 
   return (
     <>
@@ -177,8 +183,17 @@ export default function Circle() {
       <button
         className="fixed left-4 top-16 z-50 bg-white p-4"
         onClick={() => {
-          clearEntities();
-          setDrawCircle(false);
+          circleGroupArr.forEach((element) => {
+            const viewer = viewerRef.current;
+            viewer.entities.remove(element.startPoint);
+            viewer.entities.remove(element.endPoint);
+            viewer.entities.remove(element.circle);
+            viewer.entities.remove(element.label);
+            setDrawCircle(false);
+          });
+
+          // 빈 배열로 초기화
+          circleGroupArr.length = 0;
         }}
       >
         Clear Entities

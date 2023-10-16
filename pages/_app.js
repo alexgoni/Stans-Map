@@ -2,7 +2,7 @@ import "@/styles/globals.css";
 import { RecoilRoot } from "recoil";
 import dynamic from "next/dynamic";
 
-function App({ Component, pageProps }) {
+export default function App({ Component, pageProps }) {
   return (
     <RecoilRoot>
       <Component {...pageProps} />
@@ -10,6 +10,6 @@ function App({ Component, pageProps }) {
   );
 }
 
-export default dynamic(() => Promise.resolve(App), {
-  ssr: false,
-});
+// export default dynamic(() => Promise.resolve(App), {
+//   ssr: false,
+// });

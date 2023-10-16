@@ -27,17 +27,29 @@ export default function Measure() {
       maximumLevel: 20,
     });
 
+    const terrainProvider = new Cesium.CesiumTerrainProvider({
+      url: "http://localhost:8081/",
+    });
+
     // viewer 생성
     const viewer = Viewer({
       img: geomap,
       animation: false,
       baseLayerPicker: false,
-      terrain: Cesium.Terrain.fromWorldTerrain(),
+      terrain: terrainProvider,
     });
 
     viewer.scene.globe.depthTestAgainstTerrain = true;
 
     viewer.scene.screenSpaceCameraController.enableCollisionDetection = false;
+
+    //const viewer = Viewer({ terrain: Cesium.Terrain.fromWorldTerrain() });
+
+    //viewer.scene.terrainProvider = terrainProvider;
+
+    console.log("@@@@@@@@@@@@@@@@@@@@");
+    console.log(terrainProvider);
+    console.log("@@@@@@@@@@@@@@@@@@@@");
 
     viewerRef.current = viewer;
 
@@ -52,8 +64,6 @@ export default function Measure() {
       modelInfo: tecnoModel.info,
     });
 
-    viewer.zoomTo(tecno);
-
     return () => {
       viewer.destroy();
     };
@@ -63,6 +73,7 @@ export default function Measure() {
   useDidMountEffect(() => {
     const viewer = viewerRef.current;
     const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+
     pointEvent({ viewer, handler, widgetOpen, setSurfaceDistance });
 
     return () => {
@@ -85,3 +96,24 @@ export default function Measure() {
     </>
   );
 }
+
+// async function getTerrainData() {
+//   try {
+//     const terrainProvider = await new Cesium.CesiumTerrainProvider({
+//       url: "http://localhost:8081",
+//     });
+
+//     // const terrainProviderData = await fetch("http://192.168.1.45:8081/", {
+//     //   cache: "no-store",
+//     // });
+
+//     // if (!terrainProviderData.ok) {
+//     //   throw new Error(`HTTP error! status: ${terrainProviderData.status}`);
+//     // }
+
+//     return terrainProvider; // 혹은 다른 형식에 맞게 가공
+//   } catch (error) {
+//     console.error("Error fetching terrain data:", error);
+//     throw error;
+//   }
+// }

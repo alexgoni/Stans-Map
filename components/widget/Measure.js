@@ -95,22 +95,24 @@ function pointEvent({ viewer, handler, widgetOpen, setSurfaceDistance }) {
     // event handler가 등록되는 시점의 state. 외부의 변화를 참조하지 않는다.
     if (!widgetOpen) return;
 
-    const cartesian = viewer.camera.pickEllipsoid(click.position);
+    const ray = viewer.camera.getPickRay(click.position);
+    const earthPosition = viewer.scene.globe.pick(ray, viewer.scene);
 
-    if (cartesian) {
-      const cartographic = Cesium.Cartographic.fromCartesian(cartesian);
+    if (Cesium.defined(earthPosition)) {
+      const cartographic = Cesium.Cartographic.fromCartesian(earthPosition);
       const longitude = Cesium.Math.toDegrees(cartographic.longitude);
       const latitude = Cesium.Math.toDegrees(cartographic.latitude);
 
       if (!startPoint) {
         startPoint = viewer.entities.add({
           id: "start_point",
-          position: Cesium.Cartesian3.fromDegrees(longitude, latitude, 0),
+          position: earthPosition,
           point: {
             pixelSize: 10,
             color: Cesium.Color.BLACK,
             outlineColor: Cesium.Color.WHITE,
             outlineWidth: 2,
+            disableDepthTestDistance: Number.POSITIVE_INFINITY,
           },
           longitude: longitude,
           latitude: latitude,
@@ -118,12 +120,13 @@ function pointEvent({ viewer, handler, widgetOpen, setSurfaceDistance }) {
       } else if (!endPoint) {
         endPoint = viewer.entities.add({
           id: "end_point",
-          position: Cesium.Cartesian3.fromDegrees(longitude, latitude, 0),
+          position: earthPosition,
           point: {
             pixelSize: 10,
             color: Cesium.Color.BLACK,
             outlineColor: Cesium.Color.WHITE,
             outlineWidth: 2,
+            disableDepthTestDistance: Number.POSITIVE_INFINITY,
           },
           longitude: longitude,
           latitude: latitude,
@@ -146,6 +149,7 @@ function pointEvent({ viewer, handler, widgetOpen, setSurfaceDistance }) {
           polyline: {
             positions: positionsCartesian3,
             width: 5,
+            clampToGround: true, // 지상 위로 표시
             material: Cesium.Color.BLACK,
           },
         });
@@ -189,17 +193,17 @@ function pointEvent({ viewer, handler, widgetOpen, setSurfaceDistance }) {
 
   handler.setInputAction((movement) => {
     if (isDragging && draggedEntity) {
-      const cartesian = viewer.camera.pickEllipsoid(movement.endPosition);
-      if (cartesian) {
-        const cartographic = Cesium.Cartographic.fromCartesian(cartesian);
+      const ray = viewer.camera.getPickRay(movement.endPosition);
+      const earthPosition = viewer.scene.globe.pick(ray, viewer.scene);
+
+      if (Cesium.defined(earthPosition)) {
+        const cartographic = Cesium.Cartographic.fromCartesian(earthPosition);
+
         const longitude = Cesium.Math.toDegrees(cartographic.longitude);
         const latitude = Cesium.Math.toDegrees(cartographic.latitude);
         draggedEntity.longitude = longitude;
         draggedEntity.latitude = latitude;
-        draggedEntity.position = Cesium.Cartesian3.fromDegrees(
-          longitude,
-          latitude,
-        );
+        draggedEntity.position = earthPosition;
 
         const positionsDegrees = [
           startPoint.longitude,
