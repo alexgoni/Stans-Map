@@ -9,12 +9,11 @@ import { useEffect, useRef, useState } from "react";
 import { useRecoilValue } from "recoil";
 
 export default function Circle() {
+  // entities 객체 배열
+  const [circleGroupArr, setCircleGroupArr] = useState([]);
   const radiusWidgetOpen = useRecoilValue(radiusWidgetState);
 
   const viewerRef = useRef(null);
-
-  // entities 객체 배열
-  const circleGroupArr = [];
 
   useEffect(() => {
     const viewer = Viewer({
@@ -38,8 +37,9 @@ export default function Circle() {
     circleDrawingHandler({
       viewer,
       handler,
-      circleGroupArr,
       radiusWidgetOpen,
+      circleGroupArr,
+      setCircleGroupArr,
     });
 
     return () => {

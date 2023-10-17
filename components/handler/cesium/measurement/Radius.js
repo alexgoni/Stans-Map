@@ -7,8 +7,9 @@ import * as Cesium from "cesium";
 function circleDrawingHandler({
   viewer,
   handler,
-  circleGroupArr,
   radiusWidgetOpen,
+  circleGroupArr,
+  setCircleGroupArr,
 }) {
   // Click Flag
   let initClick = true;
@@ -120,7 +121,7 @@ function circleDrawingHandler({
           // Click Flag 초기화
           initClick = true;
 
-          circleGroupArr.push({ ...circleGroup });
+          setCircleGroupArr((prevArr) => [...prevArr, { ...circleGroup }]);
         }
       }
     }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
@@ -132,7 +133,7 @@ function circleDrawingHandler({
     });
 
     // 빈 배열로 초기화
-    circleGroupArr.length = 0;
+    setCircleGroupArr([]);
   }
 }
 
