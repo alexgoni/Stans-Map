@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import * as Cesium from "cesium";
 import { defaultCamera } from "@/components/handler/cesium/Camera";
 import useDidMountEffect from "@/components/module/useDidMountEffect";
+import * as turf from "@turf/turf";
 
 export default function Area() {
   const viewerRef = useRef(null);
@@ -17,7 +18,7 @@ export default function Area() {
 
     viewerRef.current = viewer;
 
-    defaultCamera(viewer, [-114.7377325, 36.0160655, 1000]);
+    defaultCamera(viewer, [127.08018445000782, 37.635648085178175, 1000]);
 
     return () => {
       viewer.destroy();
@@ -29,6 +30,8 @@ export default function Area() {
     const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
 
     let activeShapePoints = [];
+    let pointArr = [];
+    let pointCoordinate = [];
     let activeShape;
     let floatingPoint;
 
@@ -37,12 +40,12 @@ export default function Area() {
         const ray = viewer.camera.getPickRay(click.position);
         const clickPosition = viewer.scene.globe.pick(ray, viewer.scene);
         if (Cesium.defined(clickPosition)) {
-          //   const cartographic = Cesium.Cartographic.fromCartesian(clickPosition);
-          //   const longitude = Cesium.Math.toDegrees(cartographic.longitude);
-          //   const latitude = Cesium.Math.toDegrees(cartographic.latitude);
+          const cartographic = Cesium.Cartographic.fromCartesian(clickPosition);
+          const longitude = Cesium.Math.toDegrees(cartographic.longitude);
+          const latitude = Cesium.Math.toDegrees(cartographic.latitude);
 
+          // first click
           if (activeShapePoints.length === 0) {
-            // first click
             floatingPoint = viewer.entities.add({
               position: clickPosition,
               point: {
@@ -71,7 +74,7 @@ export default function Area() {
             });
           }
           activeShapePoints.push(clickPosition);
-          viewer.entities.add({
+          const point = viewer.entities.add({
             position: clickPosition,
             point: {
               pixelSize: 4,
@@ -83,6 +86,8 @@ export default function Area() {
             // longitude: longitude,
             // latitude: latitude,
           });
+          pointArr.push(point);
+          pointCoordinate.push([longitude, latitude]);
         }
       }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
@@ -100,21 +105,37 @@ export default function Area() {
         }
       }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 
+      // 마우스 우클릭 시 동적으로 생성되던 entity 제거하고 hierarchy 기반으로 polygon 재생성
       handler.setInputAction(() => {
         activeShapePoints.pop();
-        viewer.entities.add({
-          polygon: {
-            hierarchy: activeShapePoints,
-            material: new Cesium.ColorMaterialProperty(
-              Cesium.Color.SKYBLUE.withAlpha(0.5),
-            ),
-          },
-        });
+        if (pointArr.length > 2) {
+          viewer.entities.add({
+            polygon: {
+              hierarchy: activeShapePoints,
+              material: new Cesium.ColorMaterialProperty(
+                Cesium.Color.SKYBLUE.withAlpha(0.5),
+              ),
+            },
+          });
+          // 시작점과 끝점이 일치되어야 함
+          pointCoordinate.push(pointCoordinate[0]);
+          const polygonFeature = turf.polygon([pointCoordinate]);
+          const area = turf.area(polygonFeature);
+
+          console.log(`폴리곤의 면적: ${area} 제곱미터`);
+        } else {
+          pointArr.forEach((element) => {
+            viewer.entities.remove(element);
+          });
+        }
+
         viewer.entities.remove(floatingPoint);
         viewer.entities.remove(activeShape);
         floatingPoint = null;
         activeShape = null;
         activeShapePoints = [];
+        pointArr = [];
+        pointCoordinate = [];
       }, Cesium.ScreenSpaceEventType.RIGHT_CLICK);
     }
     return () => {

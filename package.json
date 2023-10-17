@@ -10,7 +10,7 @@
     "postinstall": "symlink-dir node_modules/cesium/Build/Cesium public/cesium"
   },
   "dependencies": {
-    "@turf/area": "^6.5.0",
+    "@turf/turf": "^6.5.0",
     "cesium": "^1.109.0",
     "next": "^13.5.4",
     "react": "18.2.0",
