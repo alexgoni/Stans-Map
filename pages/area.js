@@ -46,7 +46,7 @@ export default function Area() {
             floatingPoint = viewer.entities.add({
               position: clickPosition,
               point: {
-                pixelSize: 6,
+                pixelSize: 4,
                 color: Cesium.Color.SKYBLUE,
                 outlineColor: Cesium.Color.WHITE,
                 outlineWidth: 1,
@@ -74,7 +74,7 @@ export default function Area() {
           viewer.entities.add({
             position: clickPosition,
             point: {
-              pixelSize: 6,
+              pixelSize: 4,
               color: Cesium.Color.SKYBLUE,
               outlineColor: Cesium.Color.WHITE,
               outlineWidth: 1,
