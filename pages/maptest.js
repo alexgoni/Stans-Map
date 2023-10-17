@@ -28,10 +28,5 @@ export default function MapTest() {
     };
   }, []); // Empty dependency array ensures this useEffect runs once on mount
 
-  return (
-    <div
-      id="cesiumContainer"
-      className="m-0 h-screen w-screen overflow-hidden p-0"
-    ></div>
-  );
+  return <></>;
 }
