@@ -25,7 +25,7 @@ function addModelEntity({ viewer, position, orientation = [], modelInfo }) {
   const { id, name, description, model } = modelInfo;
   const { uri, scale, color } = model;
 
-  const entity = viewer.entities.add({
+  const modelEntity = viewer.entities.add({
     id,
     name,
     description,
@@ -38,7 +38,58 @@ function addModelEntity({ viewer, position, orientation = [], modelInfo }) {
     },
   });
 
-  return entity;
+  return modelEntity;
 }
 
-export { addModelEntity };
+function createAreaPoint({ viewer, position }) {
+  const point = viewer.entities.add({
+    position,
+    point: {
+      pixelSize: 4,
+      color: Cesium.Color.SKYBLUE,
+      outlineColor: Cesium.Color.WHITE,
+      outlineWidth: 1,
+      disableDepthTestDistance: Number.POSITIVE_INFINITY,
+    },
+  });
+
+  return point;
+}
+
+function createAreaPolygon({ viewer, hierarchy }) {
+  const polygon = viewer.entities.add({
+    polygon: {
+      hierarchy,
+      material: new Cesium.ColorMaterialProperty(
+        Cesium.Color.SKYBLUE.withAlpha(0.5),
+      ),
+    },
+  });
+
+  return polygon;
+}
+
+function createMeasurePoint({ viewer, position, geoInfo }) {
+  const [longitude, latitude] = geoInfo;
+  const point = viewer.entities.add({
+    position,
+    point: {
+      pixelSize: 9,
+      color: Cesium.Color.GOLD,
+      outlineColor: Cesium.Color.WHITE,
+      outlineWidth: 2,
+      disableDepthTestDistance: Number.POSITIVE_INFINITY,
+    },
+    longitude,
+    latitude,
+  });
+
+  return point;
+}
+
+export {
+  addModelEntity,
+  createAreaPoint,
+  createAreaPolygon,
+  createMeasurePoint,
+};

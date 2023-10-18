@@ -29,7 +29,6 @@ function circleDrawingHandler({
         const latitude = Cesium.Math.toDegrees(cartographic.latitude);
 
         if (initClick) {
-          // TODO: point 추가 함수 만들기
           const center = viewer.entities.add({
             position: clickPosition,
             point: {
