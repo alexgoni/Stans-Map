@@ -3,8 +3,17 @@ import { useEffect, useRef, useState } from "react";
 import * as Cesium from "cesium";
 import { defaultCamera } from "@/components/handler/cesium/Camera";
 import useDidMountEffect from "@/components/module/useDidMountEffect";
-import * as turf from "@turf/turf";
+import {
+  calculateArea,
+  createAreaPoint,
+  createAreaPolygon,
+} from "@/components/handler/cesium/Entity";
+import {
+  getRayPosition,
+  getCoordinate,
+} from "@/components/handler/cesium/measurement/GeoInfo";
 
+// TODO: 코드 단순화(함수화), drag 기능, 직선으로 면적?(구글 어스)
 export default function Area() {
   const viewerRef = useRef(null);
 
@@ -29,73 +38,57 @@ export default function Area() {
     const viewer = viewerRef.current;
     const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
 
-    let activeShapePoints = [];
-    let pointArr = [];
-    let pointCoordinate = [];
-    let activeShape;
     let floatingPoint;
+    let activeShapePoints = [];
+    let activeShape;
+    let addedPointArr = [];
+    let addedPointCoordinate = [];
 
     if (drawArea) {
       handler.setInputAction((click) => {
-        const ray = viewer.camera.getPickRay(click.position);
-        const clickPosition = viewer.scene.globe.pick(ray, viewer.scene);
+        const clickPosition = getRayPosition({
+          viewer,
+          position: click.position,
+        });
         if (Cesium.defined(clickPosition)) {
-          const cartographic = Cesium.Cartographic.fromCartesian(clickPosition);
-          const longitude = Cesium.Math.toDegrees(cartographic.longitude);
-          const latitude = Cesium.Math.toDegrees(cartographic.latitude);
+          const [longitude, latitude] = getCoordinate(clickPosition);
+          addedPointCoordinate.push([longitude, latitude]);
 
           // first click
           if (activeShapePoints.length === 0) {
-            floatingPoint = viewer.entities.add({
+            floatingPoint = createAreaPoint({
+              viewer,
               position: clickPosition,
-              point: {
-                pixelSize: 4,
-                color: Cesium.Color.SKYBLUE,
-                outlineColor: Cesium.Color.WHITE,
-                outlineWidth: 1,
-                disableDepthTestDistance: Number.POSITIVE_INFINITY,
-              },
-              //   longitude: longitude,
-              //   latitude: latitude,
             });
             activeShapePoints.push(clickPosition);
+
             // first click시 activeShapePoints를 감시해 PolygonHierarchy를 리턴하는 콜백 함수 등록
             const dynamicPositions = new Cesium.CallbackProperty(() => {
               return new Cesium.PolygonHierarchy(activeShapePoints);
             }, false);
 
-            activeShape = viewer.entities.add({
-              polygon: {
-                hierarchy: dynamicPositions,
-                material: new Cesium.ColorMaterialProperty(
-                  Cesium.Color.SKYBLUE.withAlpha(0.5),
-                ),
-              },
+            // 예상 Polygon
+            activeShape = createAreaPolygon({
+              viewer,
+              hierarchy: dynamicPositions,
             });
           }
-          activeShapePoints.push(clickPosition);
-          const point = viewer.entities.add({
+          const addedPoint = createAreaPoint({
+            viewer,
             position: clickPosition,
-            point: {
-              pixelSize: 4,
-              color: Cesium.Color.SKYBLUE,
-              outlineColor: Cesium.Color.WHITE,
-              outlineWidth: 1,
-              disableDepthTestDistance: Number.POSITIVE_INFINITY,
-            },
-            // longitude: longitude,
-            // latitude: latitude,
           });
-          pointArr.push(point);
-          pointCoordinate.push([longitude, latitude]);
+          activeShapePoints.push(clickPosition);
+          addedPointArr.push(addedPoint);
         }
       }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
       handler.setInputAction((movement) => {
         // first click 이후 movement 이벤트
         if (Cesium.defined(floatingPoint)) {
-          const ray = viewer.camera.getPickRay(movement.endPosition);
-          const newPosition = viewer.scene.globe.pick(ray, viewer.scene);
+          const newPosition = getRayPosition({
+            viewer,
+            position: movement.endPosition,
+          });
           if (Cesium.defined(newPosition)) {
             floatingPoint.position.setValue(newPosition);
             // 마우스가 움직일때마다 이전 위치 pop, 새로운 위치 push
@@ -108,23 +101,16 @@ export default function Area() {
       // 마우스 우클릭 시 동적으로 생성되던 entity 제거하고 hierarchy 기반으로 polygon 재생성
       handler.setInputAction(() => {
         activeShapePoints.pop();
-        if (pointArr.length > 2) {
-          viewer.entities.add({
-            polygon: {
-              hierarchy: activeShapePoints,
-              material: new Cesium.ColorMaterialProperty(
-                Cesium.Color.SKYBLUE.withAlpha(0.5),
-              ),
-            },
-          });
+        if (addedPointArr.length > 2) {
+          createAreaPolygon({ viewer, hierarchy: activeShapePoints });
           // 시작점과 끝점이 일치되어야 함
-          pointCoordinate.push(pointCoordinate[0]);
-          const polygonFeature = turf.polygon([pointCoordinate]);
-          const area = turf.area(polygonFeature);
+          addedPointCoordinate.push(addedPointCoordinate[0]);
+
+          const area = calculateArea(addedPointCoordinate);
 
           console.log(`폴리곤의 면적: ${area} 제곱미터`);
         } else {
-          pointArr.forEach((element) => {
+          addedPointArr.forEach((element) => {
             viewer.entities.remove(element);
           });
         }
@@ -134,8 +120,8 @@ export default function Area() {
         floatingPoint = null;
         activeShape = null;
         activeShapePoints = [];
-        pointArr = [];
-        pointCoordinate = [];
+        addedPointArr = [];
+        addedPointCoordinate = [];
       }, Cesium.ScreenSpaceEventType.RIGHT_CLICK);
     }
     return () => {

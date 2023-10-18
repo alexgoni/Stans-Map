@@ -1,4 +1,5 @@
 import * as Cesium from "cesium";
+import * as turf from "@turf/turf";
 
 function addModelEntity({ viewer, position, orientation = [], modelInfo }) {
   // entity position
@@ -25,7 +26,7 @@ function addModelEntity({ viewer, position, orientation = [], modelInfo }) {
   const { id, name, description, model } = modelInfo;
   const { uri, scale, color } = model;
 
-  const entity = viewer.entities.add({
+  const modelEntity = viewer.entities.add({
     id,
     name,
     description,
@@ -38,7 +39,42 @@ function addModelEntity({ viewer, position, orientation = [], modelInfo }) {
     },
   });
 
-  return entity;
+  return modelEntity;
 }
 
-export { addModelEntity };
+function createAreaPoint({ viewer, position }) {
+  const point = viewer.entities.add({
+    position,
+    point: {
+      pixelSize: 4,
+      color: Cesium.Color.SKYBLUE,
+      outlineColor: Cesium.Color.WHITE,
+      outlineWidth: 1,
+      disableDepthTestDistance: Number.POSITIVE_INFINITY,
+    },
+  });
+
+  return point;
+}
+
+function createAreaPolygon({ viewer, hierarchy }) {
+  const polygon = viewer.entities.add({
+    polygon: {
+      hierarchy,
+      material: new Cesium.ColorMaterialProperty(
+        Cesium.Color.SKYBLUE.withAlpha(0.5),
+      ),
+    },
+  });
+
+  return polygon;
+}
+
+function calculateArea(coordinateArr) {
+  const polygonFeature = turf.polygon([coordinateArr]);
+  const area = turf.area(polygonFeature);
+
+  return area;
+}
+
+export { addModelEntity, createAreaPoint, createAreaPolygon, calculateArea };
