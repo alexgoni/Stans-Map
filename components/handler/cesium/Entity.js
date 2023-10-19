@@ -1,5 +1,4 @@
 import * as Cesium from "cesium";
-import * as turf from "@turf/turf";
 
 function addModelEntity({ viewer, position, orientation = [], modelInfo }) {
   // entity position
