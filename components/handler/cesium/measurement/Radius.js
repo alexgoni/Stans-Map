@@ -1,5 +1,5 @@
 import * as Cesium from "cesium";
-import { calculateRadius, getCoordinate, getRayPosition } from "./GeoInfo";
+import { calculateRadius, getRayPosition } from "./GeoInfo";
 import CircleGroup from "@/components/class/Circle";
 
 /**
@@ -15,7 +15,6 @@ function circleDrawingHandler({
 }) {
   // Click Flag
   let initClick = true;
-
   let circleGroup = null;
 
   if (radiusWidgetOpen) {
