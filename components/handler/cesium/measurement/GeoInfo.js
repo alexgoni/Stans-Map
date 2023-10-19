@@ -1,4 +1,5 @@
 import * as Cesium from "cesium";
+import * as turf from "@turf/turf";
 
 function getRayPosition({ viewer, position }) {
   const ray = viewer.camera.getPickRay(position);
@@ -15,4 +16,11 @@ function getCoordinate(position) {
   return [longitude, latitude];
 }
 
-export { getRayPosition, getCoordinate };
+function calculateArea(coordinateArr) {
+  const polygonFeature = turf.polygon([coordinateArr]);
+  const area = turf.area(polygonFeature);
+
+  return area;
+}
+
+export { getRayPosition, getCoordinate, calculateArea };

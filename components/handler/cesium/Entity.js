@@ -70,11 +70,27 @@ function createAreaPolygon({ viewer, hierarchy }) {
   return polygon;
 }
 
-function calculateArea(coordinateArr) {
-  const polygonFeature = turf.polygon([coordinateArr]);
-  const area = turf.area(polygonFeature);
+function createMeasurePoint({ viewer, position, geoInfo }) {
+  const [longitude, latitude] = geoInfo;
+  const point = viewer.entities.add({
+    position,
+    point: {
+      pixelSize: 9,
+      color: Cesium.Color.GOLD,
+      outlineColor: Cesium.Color.WHITE,
+      outlineWidth: 2,
+      disableDepthTestDistance: Number.POSITIVE_INFINITY,
+    },
+    longitude,
+    latitude,
+  });
 
-  return area;
+  return point;
 }
 
-export { addModelEntity, createAreaPoint, createAreaPolygon, calculateArea };
+export {
+  addModelEntity,
+  createAreaPoint,
+  createAreaPolygon,
+  createMeasurePoint,
+};

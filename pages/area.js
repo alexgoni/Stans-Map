@@ -4,13 +4,13 @@ import * as Cesium from "cesium";
 import { defaultCamera } from "@/components/handler/cesium/Camera";
 import useDidMountEffect from "@/components/module/useDidMountEffect";
 import {
-  calculateArea,
   createAreaPoint,
   createAreaPolygon,
 } from "@/components/handler/cesium/Entity";
 import {
   getRayPosition,
   getCoordinate,
+  calculateArea,
 } from "@/components/handler/cesium/measurement/GeoInfo";
 
 // TODO: 코드 단순화(함수화), drag 기능, 직선으로 면적?(구글 어스)
@@ -41,8 +41,8 @@ export default function Area() {
     let floatingPoint;
     let activeShapePoints = [];
     let activeShape;
-    let addedPointArr = [];
-    let addedPointCoordinate = [];
+    let pointArr = [];
+    let pointCoordinate = [];
 
     if (drawArea) {
       handler.setInputAction((click) => {
@@ -52,7 +52,7 @@ export default function Area() {
         });
         if (Cesium.defined(clickPosition)) {
           const [longitude, latitude] = getCoordinate(clickPosition);
-          addedPointCoordinate.push([longitude, latitude]);
+          pointCoordinate.push([longitude, latitude]);
 
           // first click
           if (activeShapePoints.length === 0) {
@@ -73,12 +73,12 @@ export default function Area() {
               hierarchy: dynamicPositions,
             });
           }
-          const addedPoint = createAreaPoint({
+          const point = createAreaPoint({
             viewer,
             position: clickPosition,
           });
           activeShapePoints.push(clickPosition);
-          addedPointArr.push(addedPoint);
+          pointArr.push(point);
         }
       }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
@@ -100,17 +100,19 @@ export default function Area() {
 
       // 마우스 우클릭 시 동적으로 생성되던 entity 제거하고 hierarchy 기반으로 polygon 재생성
       handler.setInputAction(() => {
+        // console.log("hi");
+        // TODO: 이벤트 리무브
         activeShapePoints.pop();
-        if (addedPointArr.length > 2) {
+        if (pointArr.length > 2) {
           createAreaPolygon({ viewer, hierarchy: activeShapePoints });
           // 시작점과 끝점이 일치되어야 함
-          addedPointCoordinate.push(addedPointCoordinate[0]);
+          pointCoordinate.push(pointCoordinate[0]);
 
-          const area = calculateArea(addedPointCoordinate);
+          const area = calculateArea(pointCoordinate);
 
           console.log(`폴리곤의 면적: ${area} 제곱미터`);
         } else {
-          addedPointArr.forEach((element) => {
+          pointArr.forEach((element) => {
             viewer.entities.remove(element);
           });
         }
@@ -120,8 +122,8 @@ export default function Area() {
         floatingPoint = null;
         activeShape = null;
         activeShapePoints = [];
-        addedPointArr = [];
-        addedPointCoordinate = [];
+        pointArr = [];
+        pointCoordinate = [];
       }, Cesium.ScreenSpaceEventType.RIGHT_CLICK);
     }
     return () => {
