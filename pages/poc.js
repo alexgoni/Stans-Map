@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import * as Cesium from "cesium";
 import { addModelEntity } from "@/components/handler/cesium/Entity";
 import { defaultCamera, flyCamera } from "@/components/handler/cesium/Camera";
-import { ModelGroup, ModelGroupInfo } from "@/components/module/ModelGroup";
+import { ModelGroup, ModelGroupInfo } from "@/components/class/ModelGroup";
 import {
   getPositionObj,
   groupDownAnimation,

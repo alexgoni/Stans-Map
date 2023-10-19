@@ -16,6 +16,21 @@ function getCoordinate(position) {
   return [longitude, latitude];
 }
 
+function calculateRadius(startPosition, endPosition) {
+  const startCartographic = Cesium.Cartographic.fromCartesian(startPosition);
+
+  const endCartographic = Cesium.Cartographic.fromCartesian(endPosition);
+
+  const ellipsoid = Cesium.Ellipsoid.WGS84;
+  const geodesic = new Cesium.EllipsoidGeodesic(
+    startCartographic,
+    endCartographic,
+    ellipsoid,
+  );
+  // 최대 반지름 3600km
+  return Math.min(geodesic.surfaceDistance, 3600000);
+}
+
 function calculateArea(coordinateArr) {
   const polygonFeature = turf.polygon([coordinateArr]);
   const area = turf.area(polygonFeature);
@@ -23,4 +38,4 @@ function calculateArea(coordinateArr) {
   return area;
 }
 
-export { getRayPosition, getCoordinate, calculateArea };
+export { getRayPosition, getCoordinate, calculateArea, calculateRadius };

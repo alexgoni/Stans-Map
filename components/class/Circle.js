@@ -5,8 +5,8 @@ export default class CircleGroup {
     this.viewer = viewer;
     this.centerPosition = centerPosition;
 
-    // center point entity
-    this.centerEntity = {
+    // Create center point entity
+    this.centerEntity = viewer.entities.add({
       position: centerPosition,
       point: {
         pixelSize: 6,
@@ -15,23 +15,23 @@ export default class CircleGroup {
         outlineWidth: 1,
         disableDepthTestDistance: Number.POSITIVE_INFINITY,
       },
-    };
+    });
 
-    // circle entity
-    this.circleEntity = {
+    // Create circle entity
+    this.circleEntity = viewer.entities.add({
       position: centerPosition,
       ellipse: {
         semiMinorAxis: 0.01,
         semiMajorAxis: 0.01,
         material: Cesium.Color.RED.withAlpha(0.3),
       },
-    };
+    });
 
-    // label entity
-    this.labelEntity = {
+    // Create label entity
+    this.labelEntity = viewer.entities.add({
       position: centerPosition,
       label: {
-        text: "0 km", // Default text, can be updated later
+        text: "0.00m", // Default text, can be updated later
         font: "14px sans-serif",
         fillColor: Cesium.Color.WHITE,
         outlineColor: Cesium.Color.BLACK,
@@ -45,7 +45,7 @@ export default class CircleGroup {
         pixelOffset: new Cesium.Cartesian2(0, -10),
         disableDepthTestDistance: Number.POSITIVE_INFINITY,
       },
-    };
+    });
   }
 
   updateRadius(surfaceDistance) {
