@@ -6,6 +6,37 @@ import {
 } from "@/components/handler/cesium/measurement/GeoInfo";
 import * as turf from "@turf/turf";
 
+class LineGroup {
+  constructor() {
+    this.pointArr = [];
+    this.pointCoordinateArr = [];
+    this.polylineArr = [];
+    this.distance = 0;
+  }
+
+  addPoint(point) {
+    this.pointArr.push(point);
+  }
+
+  addPolyline(polyline) {
+    this.polylineArr.push(polyline);
+  }
+
+  addPointCoordinates(coordinates) {
+    this.pointCoordinateArr.push(coordinates);
+  }
+
+  clear() {
+    this.pointArr = [];
+    this.pointCoordinateArr = [];
+    this.lineGroupArr = [];
+    this.lineGroup.forEach((element) => {
+      this.viewer.entities.remove(element);
+    });
+    this.lineGroup = [];
+  }
+}
+
 export default class LineDrawer {
   constructor(viewer) {
     this.viewer = viewer;
@@ -14,17 +45,9 @@ export default class LineDrawer {
     this.floatingPoint = null;
     this.movingCoordinate = null;
     this.dashLine = null;
-    // entity array
-    this.pointArr = [];
-    // geoInfo array => polyline
-    this.pointCoordinateArr = [];
+    this.lineGroup = new LineGroup();
+    this.lineGroupArr = [];
 
-    /* 
-    프로퍼티에 메서드 할당
-
-    이벤트 핸들러가 호출될 때 this가 
-    올바른 인스턴스를 참조할 수 있도록 한다. 
-    */
     this.onLeftClick = this.onLeftClick.bind(this);
     this.onMouseMove = this.onMouseMove.bind(this);
     this.onRightClick = this.onRightClick.bind(this);
@@ -51,14 +74,27 @@ export default class LineDrawer {
     this.handler.removeInputAction(Cesium.ScreenSpaceEventType.RIGHT_CLICK);
   }
 
+  clearLineGroupArr() {
+    this.lineGroupArr.forEach((lineGroup) => {
+      lineGroup.pointArr.forEach((entity) =>
+        this.viewer.entities.remove(entity),
+      );
+      lineGroup.polylineArr.forEach((entity) =>
+        this.viewer.entities.remove(entity),
+      );
+    });
+
+    this.lineGroupArr = [];
+  }
+
   onLeftClick(click) {
     const clickPosition = getRayPosition({
       viewer: this.viewer,
       position: click.position,
     });
+
     if (Cesium.defined(clickPosition)) {
-      // first click
-      if (this.pointArr.length === 0) {
+      if (this.lineGroup.pointArr.length === 0) {
         this.floatingPoint = createMeasurePoint({
           viewer: this.viewer,
           position: clickPosition,
@@ -72,15 +108,17 @@ export default class LineDrawer {
         geoInfo: getCoordinate(clickPosition),
       });
 
-      this.pointArr.push(point);
+      this.lineGroup.addPoint(point);
+      this.lineGroup.addPointCoordinates([point.longitude, point.latitude]);
 
-      if (this.pointArr.length === 1) {
+      // first click 이후 dash line 추가
+      if (this.lineGroup.pointArr.length === 1) {
         const dynamicPolylinePosition = new Cesium.CallbackProperty(() => {
-          const prevLongitude =
-            this.pointArr[this.pointArr.length - 1].longitude;
-          const prevLatitude = this.pointArr[this.pointArr.length - 1].latitude;
+          const prevCoordinate = this.lineGroup.pointCoordinateArr.slice(-1)[0];
+          const prevLongitude = prevCoordinate?.[0];
+          const prevLatitude = prevCoordinate?.[1];
 
-          if (this.movingCoordinate !== null) {
+          if (prevLongitude && prevLatitude && this.movingCoordinate) {
             return [
               Cesium.Cartesian3.fromDegrees(prevLongitude, prevLatitude),
               Cesium.Cartesian3.fromDegrees(
@@ -89,6 +127,8 @@ export default class LineDrawer {
               ),
             ];
           }
+
+          return null;
         }, false);
 
         this.dashLine = this.viewer.entities.add({
@@ -104,23 +144,23 @@ export default class LineDrawer {
           },
         });
       }
-
-      this.pointCoordinateArr.push([point.longitude, point.latitude]);
-
       const polyline = this.viewer.entities.add({
         polyline: {
           positions: Cesium.Cartesian3.fromDegreesArray(
-            this.pointCoordinateArr.flat(),
+            this.lineGroup.pointCoordinateArr.flat(),
           ),
           width: 5,
           clampToGround: true,
           material: Cesium.Color.GOLD,
         },
       });
+
+      this.lineGroup.addPolyline(polyline);
     }
   }
 
   onMouseMove(movement) {
+    // floatingPoint 존재 => 선이 그려지는 중(move event, right click event 허용)
     if (Cesium.defined(this.floatingPoint)) {
       const newPosition = getRayPosition({
         viewer: this.viewer,
@@ -136,21 +176,24 @@ export default class LineDrawer {
   }
 
   onRightClick() {
-    if (this.pointArr.length === 1) {
-      this.viewer.entities.remove(this.pointArr[0]);
+    // floatingPoint 존재 => 선이 그려지는 중(move event, right click event 허용)
+    if (Cesium.defined(this.floatingPoint)) {
+      if (this.lineGroup.pointArr.length === 1) {
+        this.viewer.entities.remove(this.lineGroup.pointArr[0]);
+      } else {
+        const line = turf.lineString(this.lineGroup.pointCoordinateArr);
+        const distance = turf.lineDistance(line, { units: "kilometers" });
+        this.lineGroup.distance = distance;
+
+        this.lineGroupArr.push(this.lineGroup);
+        this.lineGroup = new LineGroup();
+      }
+
+      this.viewer.entities.remove(this.floatingPoint);
+      this.viewer.entities.remove(this.lineGroup.dashLine);
+
+      this.floatingPoint = null;
+      this.movingCoordinate = null;
     }
-
-    const line = turf.lineString(this.pointCoordinateArr);
-    const distance = turf.lineDistance(line, { units: "kilometers" });
-    console.log("Distance along the line:", distance, "kilometers");
-
-    this.viewer.entities.remove(this.floatingPoint);
-    this.viewer.entities.remove(this.dashLine);
-
-    this.floatingPoint = null;
-    this.dashLine = null;
-    this.movingCoordinate = null;
-    this.pointArr = [];
-    this.pointCoordinateArr = [];
   }
 }
