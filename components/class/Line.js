@@ -6,12 +6,15 @@ import {
 } from "@/components/handler/cesium/measurement/GeoInfo";
 import * as turf from "@turf/turf";
 
+// TODO: label entity, drag
 class LineGroup {
-  constructor() {
+  constructor(viewer) {
+    this.viewer = viewer;
     this.pointArr = [];
     this.pointCoordinateArr = [];
     this.polylineArr = [];
     this.distance = 0;
+    this.label = null;
   }
 
   addPoint(point) {
@@ -26,15 +29,34 @@ class LineGroup {
     this.pointCoordinateArr.push(coordinates);
   }
 
-  clear() {
-    this.pointArr = [];
-    this.pointCoordinateArr = [];
-    this.lineGroupArr = [];
-    this.lineGroup.forEach((element) => {
-      this.viewer.entities.remove(element);
+  createDistanceLabel(position) {
+    this.label = this.viewer.entities.add({
+      position,
+      label: {
+        text: this.distance.toFixed(2) + "m",
+        font: "14px sans-serif",
+        fillColor: Cesium.Color.WHITE,
+        outlineColor: Cesium.Color.BLACK,
+        outlineWidth: 2,
+        style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+        scale: 1,
+        showBackground: true,
+        heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
+        verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+        horizontalOrigin: Cesium.HorizontalOrigin.CENTER,
+        pixelOffset: new Cesium.Cartesian2(0, -10),
+        disableDepthTestDistance: Number.POSITIVE_INFINITY,
+      },
     });
-    this.lineGroup = [];
   }
+
+  // updateDistanceLabel(newPosition) {
+  //   this.label.position.setValue(newPosition);
+
+  //   // this.label.label.text = new Cesium.CallbackProperty(() => {
+  //   //   return this.distance.toFixed(2).km;
+  //   // }, false);
+  // }
 }
 
 export default class LineDrawer {
@@ -45,7 +67,7 @@ export default class LineDrawer {
     this.floatingPoint = null;
     this.movingCoordinate = null;
     this.dashLine = null;
-    this.lineGroup = new LineGroup();
+    this.lineGroup = new LineGroup(this.viewer);
     this.lineGroupArr = [];
 
     this.onLeftClick = this.onLeftClick.bind(this);
@@ -118,17 +140,30 @@ export default class LineDrawer {
           const prevLongitude = prevCoordinate?.[0];
           const prevLatitude = prevCoordinate?.[1];
 
-          if (prevLongitude && prevLatitude && this.movingCoordinate) {
-            return [
-              Cesium.Cartesian3.fromDegrees(prevLongitude, prevLatitude),
-              Cesium.Cartesian3.fromDegrees(
-                this.movingCoordinate.longitude,
-                this.movingCoordinate.latitude,
-              ),
-            ];
-          }
+          if (!(prevLongitude && prevLatitude && this.movingCoordinate)) return;
 
-          return null;
+          return [
+            Cesium.Cartesian3.fromDegrees(prevLongitude, prevLatitude),
+            Cesium.Cartesian3.fromDegrees(
+              this.movingCoordinate[0],
+              this.movingCoordinate[1],
+            ),
+          ];
+        }, false);
+
+        this.lineGroup.createDistanceLabel(this.floatingPoint.position);
+
+        this.lineGroup.distance = new Cesium.CallbackProperty(() => {
+          if (this.movingCoordinate) {
+            const candidateCoordinateArr = [
+              ...this.lineGroup.pointCoordinateArr,
+              this.movingCoordinate,
+            ];
+            const line = turf.lineString(candidateCoordinateArr);
+            const distance = turf.lineDistance(line, { units: "kilometers" });
+
+            return distance;
+          }
         }, false);
 
         this.dashLine = this.viewer.entities.add({
@@ -170,9 +205,16 @@ export default class LineDrawer {
       if (Cesium.defined(newPosition)) {
         const [longitude, latitude] = getCoordinate(newPosition);
         this.floatingPoint.position.setValue(newPosition);
-        this.movingCoordinate = { longitude, latitude };
-      }
-    }
+        this.movingCoordinate = [longitude, latitude];
+      } // if
+
+      // TODO: 나중에 고치자 ~ 심화과정
+      const checkSize = this.lineGroup.pointCoordinateArr.length;
+      if (checkSize <= 2) return;
+      const line = turf.lineString(this.lineGroup.pointCoordinateArr);
+      const distance = turf.lineDistance(line, { units: "kilometers" });
+      this.lineGroup.label.label.text = distance.toFixed(2) + "km";
+    } // if
   }
 
   onRightClick() {
@@ -184,9 +226,12 @@ export default class LineDrawer {
         const line = turf.lineString(this.lineGroup.pointCoordinateArr);
         const distance = turf.lineDistance(line, { units: "kilometers" });
         this.lineGroup.distance = distance;
+        this.lineGroup.label.position =
+          this.lineGroup.pointArr.slice(-1)[0].position;
+        this.lineGroup.label.label.text = distance.toFixed(2) + "km";
 
         this.lineGroupArr.push(this.lineGroup);
-        this.lineGroup = new LineGroup();
+        this.lineGroup = new LineGroup(this.viewer);
       }
 
       this.viewer.entities.remove(this.floatingPoint);
