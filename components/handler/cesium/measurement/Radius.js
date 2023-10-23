@@ -1,6 +1,6 @@
 import * as Cesium from "cesium";
 import { calculateRadius, getRayPosition } from "./GeoInfo";
-import CircleGroup from "@/components/class/Circle";
+import CircleGroup from "@/components/module/measurement/Circle";
 
 /**
  *

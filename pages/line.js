@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import * as Cesium from "cesium";
 import { defaultCamera } from "@/components/handler/cesium/Camera";
 import useDidMountEffect from "@/components/module/useDidMountEffect";
-import LineDrawer from "@/components/class/Line";
+import LineDrawer from "@/components/module/measurement/Line";
 
 export default function Line() {
   const [drawLine, setDrawLine] = useState(false);
@@ -29,11 +29,9 @@ export default function Line() {
 
   useDidMountEffect(() => {
     const lineDrawer = lineDrawerRef.current;
-    if (drawLine) {
-      lineDrawer.startDrawing();
-    } else {
-      lineDrawer.clearLineGroupArr();
-    }
+
+    drawLine ? lineDrawer.startDrawing() : lineDrawer.stopDrawing();
+    lineDrawer.clearLineGroupArr();
 
     return () => {
       lineDrawer.stopDrawing();
