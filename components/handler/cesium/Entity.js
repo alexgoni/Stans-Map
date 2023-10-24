@@ -69,7 +69,7 @@ function createAreaPolygon({ viewer, hierarchy }) {
   return polygon;
 }
 
-function createMeasurePoint({ viewer, position, geoInfo }) {
+function createLinePoint({ viewer, position, geoInfo }) {
   const [longitude, latitude] = geoInfo;
   const point = viewer.entities.add({
     position,
@@ -87,9 +87,41 @@ function createMeasurePoint({ viewer, position, geoInfo }) {
   return point;
 }
 
+function createDashline({ viewer, positions }) {
+  const dashline = viewer.entities.add({
+    polyline: {
+      positions,
+      width: 2,
+      clampToGround: true,
+      material: new Cesium.PolylineDashMaterialProperty({
+        color: Cesium.Color.YELLOW,
+        dashLength: 16.0,
+        dashPattern: 255,
+      }),
+    },
+  });
+
+  return dashline;
+}
+
+function createPolyline({ viewer, positions }) {
+  const polyline = viewer.entities.add({
+    polyline: {
+      positions,
+      width: 5,
+      clampToGround: true,
+      material: Cesium.Color.GOLD,
+    },
+  });
+
+  return polyline;
+}
+
 export {
   addModelEntity,
   createAreaPoint,
   createAreaPolygon,
-  createMeasurePoint,
+  createLinePoint,
+  createDashline,
+  createPolyline,
 };

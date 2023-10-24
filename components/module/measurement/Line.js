@@ -1,6 +1,11 @@
 import * as Cesium from "cesium";
-import { createMeasurePoint } from "@/components/handler/cesium/Entity";
 import {
+  createDashline,
+  createLinePoint,
+  createPolyline,
+} from "@/components/handler/cesium/Entity";
+import {
+  calculateDistance,
   getCoordinate,
   getRayPosition,
 } from "@/components/handler/cesium/measurement/GeoInfo";
@@ -67,6 +72,7 @@ export default class LineDrawer {
     this.floatingPoint = null;
     this.movingCoordinate = null;
     this.dashLine = null;
+
     this.lineGroup = new LineGroup(this.viewer);
     this.lineGroupArr = [];
 
@@ -117,14 +123,14 @@ export default class LineDrawer {
     if (!Cesium.defined(clickPosition)) return;
 
     if (this.lineGroup.pointArr.length === 0) {
-      this.floatingPoint = createMeasurePoint({
+      this.floatingPoint = createLinePoint({
         viewer: this.viewer,
         position: clickPosition,
         geoInfo: getCoordinate(clickPosition),
       });
     }
 
-    const point = createMeasurePoint({
+    const point = createLinePoint({
       viewer: this.viewer,
       position: clickPosition,
       geoInfo: getCoordinate(clickPosition),
@@ -159,35 +165,22 @@ export default class LineDrawer {
             ...this.lineGroup.pointCoordinateArr,
             this.movingCoordinate,
           ];
-          const line = turf.lineString(candidateCoordinateArr);
-          const distance = turf.lineDistance(line, { units: "kilometers" });
-
-          return distance;
+          return calculateDistance(candidateCoordinateArr);
         }
       }, false);
-
-      this.dashLine = this.viewer.entities.add({
-        polyline: {
-          positions: dynamicPolylinePosition,
-          width: 2,
-          clampToGround: true,
-          material: new Cesium.PolylineDashMaterialProperty({
-            color: Cesium.Color.YELLOW,
-            dashLength: 16.0,
-            dashPattern: 255,
-          }),
-        },
+      this.dashLine = createDashline({
+        viewer: this.viewer,
+        positions: dynamicPolylinePosition,
       });
     }
-    const polyline = this.viewer.entities.add({
-      polyline: {
-        positions: Cesium.Cartesian3.fromDegreesArray(
-          this.lineGroup.pointCoordinateArr.flat(),
-        ),
-        width: 5,
-        clampToGround: true,
-        material: Cesium.Color.GOLD,
-      },
+
+    const polylinePosition = Cesium.Cartesian3.fromDegreesArray(
+      this.lineGroup.pointCoordinateArr.flat(),
+    );
+
+    const polyline = createPolyline({
+      viewer: this.viewer,
+      positions: polylinePosition,
     });
 
     this.lineGroup.addPolyline(polyline);
@@ -222,12 +215,13 @@ export default class LineDrawer {
     if (this.lineGroup.pointArr.length === 1) {
       this.viewer.entities.remove(this.lineGroup.pointArr[0]);
     } else {
-      const line = turf.lineString(this.lineGroup.pointCoordinateArr);
-      const distance = turf.lineDistance(line, { units: "kilometers" });
-      this.lineGroup.distance = distance;
+      this.lineGroup.distance = calculateDistance(
+        this.lineGroup.pointCoordinateArr,
+      );
       this.lineGroup.label.position =
         this.lineGroup.pointArr.slice(-1)[0].position;
-      this.lineGroup.label.label.text = distance.toFixed(2) + "km";
+      this.lineGroup.label.label.text =
+        this.lineGroup.distance.toFixed(2) + "km";
 
       this.lineGroupArr.push(this.lineGroup);
       this.lineGroup = new LineGroup(this.viewer);

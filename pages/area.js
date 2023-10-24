@@ -5,7 +5,6 @@ import { defaultCamera } from "@/components/handler/cesium/Camera";
 import useDidMountEffect from "@/components/module/useDidMountEffect";
 import AreaDrawer from "@/components/module/measurement/Area";
 
-// TODO: 코드 단순화(함수화), drag 기능, 직선으로 면적?(구글 어스)
 export default function Area() {
   const areaDrawerRef = useRef(null);
   const [drawArea, setDrawArea] = useState(false);
@@ -31,8 +30,12 @@ export default function Area() {
   useDidMountEffect(() => {
     const areaDrawer = areaDrawerRef.current;
 
-    drawArea ? areaDrawer.startDrawing() : areaDrawer.stopDrawing();
-    // areaDrawer.clearLineGroupArr();
+    if (drawArea) {
+      areaDrawer.startDrawing();
+    } else {
+      areaDrawer.stopDrawing();
+      areaDrawer.clearLineGroupArr();
+    }
 
     return () => {
       areaDrawer.stopDrawing();

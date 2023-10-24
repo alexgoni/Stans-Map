@@ -9,16 +9,43 @@ import {
 } from "@/components/handler/cesium/measurement/GeoInfo";
 import * as Cesium from "cesium";
 
+class AreaGroup {
+  constructor(viewer) {
+    this.viewer = viewer;
+    this.shapePointPositionArr = [];
+    this.pointArr = [];
+    this.turfPointPositionArr = [];
+    this.polygon = null;
+  }
+
+  addPoint(point) {
+    this.pointArr.push(point);
+  }
+
+  addShapePointPosition(position) {
+    this.shapePointPositionArr.push(position);
+  }
+
+  addTurfPointPosition(position) {
+    this.turfPointPositionArr.push(position);
+  }
+
+  addPointPosition(position) {
+    this.addShapePointPosition(position);
+    this.addTurfPointPosition(getCoordinate(position));
+  }
+}
+
 export default class AreaDrawer {
   constructor(viewer) {
     this.viewer = viewer;
     this.handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
 
     this.floatingPoint = null;
-    this.shapePointCoordinateArr = [];
     this.activeShape = null;
-    this.pointArr = [];
-    this.turfPointCoordinateArr = [];
+
+    this.areaGroup = new AreaGroup(this.viewer);
+    this.areaGroupArr = [];
 
     this.onLeftClick = this.onLeftClick.bind(this);
     this.onMouseMove = this.onMouseMove.bind(this);
@@ -46,27 +73,36 @@ export default class AreaDrawer {
     this.handler.removeInputAction(Cesium.ScreenSpaceEventType.RIGHT_CLICK);
   }
 
+  clearLineGroupArr() {
+    this.areaGroupArr.forEach((areaGroup) => {
+      this.viewer.entities.remove(areaGroup.polygon);
+      areaGroup.pointArr.forEach((entity) => {
+        this.viewer.entities.remove(entity);
+      });
+    });
+
+    this.areaGroupArr = [];
+  }
+
   onLeftClick(click) {
     const clickPosition = getRayPosition({
       viewer: this.viewer,
       position: click.position,
     });
-
     if (!Cesium.defined(clickPosition)) return;
-    const [longitude, latitude] = getCoordinate(clickPosition);
-    this.turfPointCoordinateArr.push([longitude, latitude]);
-
     // first click
-    if (this.shapePointCoordinateArr.length === 0) {
+    if (this.areaGroup.pointArr.length === 0) {
       this.floatingPoint = createAreaPoint({
         viewer: this.viewer,
         position: clickPosition,
       });
-      this.shapePointCoordinateArr.push(clickPosition);
+      this.areaGroup.addShapePointPosition(clickPosition);
 
       // first click시 activeShapePoints를 감시해 PolygonHierarchy를 리턴하는 콜백 함수 등록
       const dynamicPositions = new Cesium.CallbackProperty(() => {
-        return new Cesium.PolygonHierarchy(this.shapePointCoordinateArr);
+        return new Cesium.PolygonHierarchy(
+          this.areaGroup.shapePointPositionArr,
+        );
       }, false);
 
       this.activeShape = createAreaPolygon({
@@ -78,8 +114,8 @@ export default class AreaDrawer {
       viewer: this.viewer,
       position: clickPosition,
     });
-    this.shapePointCoordinateArr.push(clickPosition);
-    this.pointArr.push(point);
+    this.areaGroup.addPoint(point);
+    this.areaGroup.addPointPosition(clickPosition);
   }
 
   onMouseMove(movement) {
@@ -92,24 +128,29 @@ export default class AreaDrawer {
     if (Cesium.defined(newPosition)) {
       this.floatingPoint.position.setValue(newPosition);
       // 마우스가 움직일때마다 이전 위치 pop, 새로운 위치 push
-      this.shapePointCoordinateArr.pop();
-      this.shapePointCoordinateArr.push(newPosition);
+      this.areaGroup.shapePointPositionArr.pop();
+      this.areaGroup.shapePointPositionArr.push(newPosition);
     }
   }
 
   onRightClick() {
     // first click 이후 rightClick 이벤트
     if (!Cesium.defined(this.floatingPoint)) return;
-    this.shapePointCoordinateArr.pop();
-    if (this.pointArr.length > 2) {
+    this.areaGroup.shapePointPositionArr.pop();
+    if (this.areaGroup.pointArr.length > 2) {
       // 시작점과 끝점이 일치되어야 함
-      this.turfPointCoordinateArr.push(this.turfPointCoordinateArr[0]);
-      createAreaPolygon({
+      this.areaGroup.turfPointPositionArr.push(
+        this.areaGroup.turfPointPositionArr[0],
+      );
+      const polygon = createAreaPolygon({
         viewer: this.viewer,
-        hierarchy: this.shapePointCoordinateArr,
+        hierarchy: this.areaGroup.shapePointPositionArr,
       });
-      const area = calculateArea(this.turfPointCoordinateArr);
+      this.areaGroup.polygon = polygon;
+      const area = calculateArea(this.areaGroup.turfPointPositionArr);
       console.log(`폴리곤의 면적: ${area} 제곱미터`);
+
+      this.areaGroupArr.push(this.areaGroup);
     } else {
       this.pointArr.forEach((element) => {
         this.viewer.entities.remove(element);
@@ -121,8 +162,6 @@ export default class AreaDrawer {
 
     this.floatingPoint = null;
     this.activeShape = null;
-    this.shapePointCoordinateArr = [];
-    this.pointArr = [];
-    this.turfPointCoordinateArr = [];
+    this.areaGroup = new AreaGroup(this.viewer);
   }
 }

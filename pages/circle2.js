@@ -3,24 +3,24 @@ import { useEffect, useRef, useState } from "react";
 import * as Cesium from "cesium";
 import { defaultCamera } from "@/components/handler/cesium/Camera";
 import useDidMountEffect from "@/components/module/useDidMountEffect";
-import LineDrawer from "@/components/module/measurement/Line";
+import CircleDrawer from "@/components/module/measurement/Circle";
 
-export default function Line() {
-  const [drawLine, setDrawLine] = useState(false);
-  const lineDrawerRef = useRef(null);
+export default function Circle2() {
+  const circleDrawerRef = useRef(null);
+  const [drawCircle, setDrawCircle] = useState(false);
 
   useEffect(() => {
     const viewer = Viewer({
-      // terrain: Cesium.Terrain.fromWorldTerrain(),
+      terrain: Cesium.Terrain.fromWorldTerrain(),
       animation: false,
       baseLayerPicker: false,
     });
 
     defaultCamera(viewer, [127.08018445000782, 37.635648085178175, 1000]);
 
-    // lindDrawer 인스턴스 생성
-    const lineDrawer = new LineDrawer(viewer);
-    lineDrawerRef.current = lineDrawer;
+    // circleDrawer 인스턴스 생성
+    const circleDrawer = new CircleDrawer(viewer);
+    circleDrawerRef.current = circleDrawer;
 
     return () => {
       viewer.destroy();
@@ -28,34 +28,34 @@ export default function Line() {
   }, []);
 
   useDidMountEffect(() => {
-    const lineDrawer = lineDrawerRef.current;
+    const circleDrawer = circleDrawerRef.current;
 
-    if (drawLine) {
-      lineDrawer.startDrawing();
+    if (drawCircle) {
+      circleDrawer.startDrawing();
     } else {
-      lineDrawer.stopDrawing();
-      lineDrawer.clearLineGroupArr();
+      circleDrawer.stopDrawing();
+      circleDrawer.clearCircleGroupArr();
     }
 
     return () => {
-      lineDrawer.stopDrawing();
+      circleDrawer.stopDrawing();
     };
-  }, [drawLine]);
+  }, [drawCircle]);
 
   return (
     <>
       <button
         className="fixed left-4 top-4 z-50 bg-white p-4"
         onClick={() => {
-          setDrawLine(true);
+          setDrawCircle(true);
         }}
       >
-        Start Drawing line
+        Start Drawing Area
       </button>
       <button
         className="fixed left-4 top-16 z-50 bg-white p-4"
         onClick={() => {
-          setDrawLine(false);
+          setDrawCircle(false);
         }}
       >
         Clear Entities

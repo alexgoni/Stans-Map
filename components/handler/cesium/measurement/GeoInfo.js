@@ -18,7 +18,6 @@ function getCoordinate(position) {
 
 function calculateRadius(startPosition, endPosition) {
   const startCartographic = Cesium.Cartographic.fromCartesian(startPosition);
-
   const endCartographic = Cesium.Cartographic.fromCartesian(endPosition);
 
   const ellipsoid = Cesium.Ellipsoid.WGS84;
@@ -31,11 +30,24 @@ function calculateRadius(startPosition, endPosition) {
   return Math.min(geodesic.surfaceDistance, 3600000);
 }
 
-function calculateArea(coordinateArr) {
-  const polygonFeature = turf.polygon([coordinateArr]);
+function calculateDistance(positionArr) {
+  const line = turf.lineString(positionArr);
+  const distance = turf.lineDistance(line, { units: "kilometers" });
+
+  return distance;
+}
+
+function calculateArea(positionArr) {
+  const polygonFeature = turf.polygon([positionArr]);
   const area = turf.area(polygonFeature);
 
   return area;
 }
 
-export { getRayPosition, getCoordinate, calculateArea, calculateRadius };
+export {
+  getRayPosition,
+  getCoordinate,
+  calculateArea,
+  calculateRadius,
+  calculateDistance,
+};
