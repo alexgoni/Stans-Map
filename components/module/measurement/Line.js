@@ -35,6 +35,15 @@ class LineGroup {
     this.pointPositionArr.push(getCoordinate(position));
   }
 
+  isPointCount(number) {
+    return this.pointEntityArr.length === number;
+  }
+
+  removeLastPointPosition() {
+    this.pointPositionArr.pop();
+    this.label.position = this.pointEntityArr.slice(-1)[0].position;
+  }
+
   addPolylineToViewer(positions) {
     const polyline = createPolyline({
       viewer: this.viewer,
@@ -56,6 +65,11 @@ class LineGroup {
         return `${(this.distance * 1000).toFixed(2)}m`;
       }
     }, false);
+  }
+
+  calculateDistanceAndUpdateLabel() {
+    this.distance = calculateDistance(this.pointPositionArr);
+    this.updateLabel();
   }
 }
 
@@ -97,6 +111,16 @@ export default class LineDrawer {
     this.handler.removeInputAction(Cesium.ScreenSpaceEventType.RIGHT_CLICK);
   }
 
+  resetLineGroup() {
+    this.lineGroup = new LineGroup(this.viewer);
+    this.viewer.entities.remove(this.floatingPoint);
+    this.viewer.entities.remove(this.dashLine);
+
+    this.floatingPoint = null;
+    this.floatingPointCoordinate = null;
+    this.dashLine = null;
+  }
+
   clearLineGroupArr() {
     this.lineGroupArr.forEach((lineGroup) => {
       lineGroup.pointEntityArr.forEach((entity) =>
@@ -118,7 +142,7 @@ export default class LineDrawer {
     });
     if (!Cesium.defined(clickPosition)) return;
 
-    if (this.lineGroup.pointEntityArr.length === 0) {
+    if (this.lineGroup.isPointCount(0)) {
       this.floatingPoint = createLinePoint({
         viewer: this.viewer,
         position: clickPosition,
@@ -176,38 +200,24 @@ export default class LineDrawer {
       this.lineGroup.pointPositionArr.pop();
       this.lineGroup.pointPositionArr.push(this.floatingPointCoordinate);
 
-      this.lineGroup.distance = calculateDistance(
-        this.lineGroup.pointPositionArr,
-      );
-      this.lineGroup.updateLabel();
+      this.lineGroup.calculateDistanceAndUpdateLabel();
     }
   }
 
   onRightClick() {
     if (!Cesium.defined(this.floatingPoint)) return;
 
-    if (this.lineGroup.pointEntityArr.length === 1) {
+    // movement event에서 마지막으로 push된 element 제거
+    this.lineGroup.removeLastPointPosition();
+
+    if (this.lineGroup.isPointCount(1)) {
       this.viewer.entities.remove(this.lineGroup.pointEntityArr[0]);
       this.viewer.entities.remove(this.lineGroup.label);
     } else {
-      // movement event에서 마지막으로 push된 element 제거
-      this.lineGroup.pointPositionArr.pop();
-      const finalDistance = calculateDistance(this.lineGroup.pointPositionArr);
-      this.lineGroup.label.position =
-        this.lineGroup.pointEntityArr.slice(-1)[0].position;
-      this.lineGroup.label.label.text =
-        finalDistance > 1
-          ? `${finalDistance.toFixed(2)}km`
-          : `${(finalDistance * 1000).toFixed(2)}m`;
-
+      this.lineGroup.calculateDistanceAndUpdateLabel();
       this.lineGroupArr.push(this.lineGroup);
     }
 
-    this.lineGroup = new LineGroup(this.viewer);
-    this.viewer.entities.remove(this.floatingPoint);
-    this.viewer.entities.remove(this.dashLine);
-
-    this.floatingPoint = null;
-    this.floatingPointCoordinate = null;
+    this.resetLineGroup();
   }
 }

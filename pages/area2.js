@@ -2,6 +2,8 @@ import { useState, useEffect, useRef } from "react";
 import * as Cesium from "cesium";
 import Viewer from "@/components/handler/cesium/Viewer";
 import { defaultCamera } from "@/components/handler/cesium/Camera";
+import * as turf from "@turf/turf";
+import useDidMountEffect from "@/components/module/useDidMountEffect";
 
 export default function Area2() {
   const viewerRef = useRef(null);
@@ -16,68 +18,55 @@ export default function Area2() {
       infoBox: true,
     });
 
-    viewer.scene.globe.depthTestAgainstTerrain = true;
-    const positions = Cesium.Cartesian3.fromDegreesArray([
-      -115.0, 37.0, -115.0, 32.0, -107.0, 38.0, -102.0, 31.0, -102.0, 35.0,
-      -115.0, 37.0,
+    viewerRef.current = viewer;
+
+    // const positions = Cesium.Cartesian3.fromDegreesArray([
+    //   -115.0, 37.0, -115.0, 32.0, -107.0, 38.0, -102.0, 31.0, -102.0, 35.0,
+    //   -115.0, 37.0,
+    // ]);
+
+    // const polygon = viewer.entities.add({
+    //   polygon: {
+    //     hierarchy: new Cesium.PolygonHierarchy(positions),
+    //     material: Cesium.Color.SKYBLUE.withAlpha(0.5),
+    //     // height: 10000,
+    //   },
+    //   heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
+    // });
+
+    // viewer.zoomTo(polygon);
+
+    const poly = turf.polygon([
+      [
+        [-115.0, 37.0],
+        [-115.0, 32.0],
+        [-107.0, 38.0],
+        [-102.0, 31.0],
+        [-102.0, 35.0],
+        [-115.0, 37.0],
+      ],
     ]);
 
-    const polygon = viewer.entities.add({
-      polygon: {
-        hierarchy: new Cesium.PolygonHierarchy(positions),
-        material: Cesium.Color.SKYBLUE.withAlpha(0.5),
-        // height: 10000,
-      },
-      heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
-    });
+    const unkinkPolygon = turf.unkinkPolygon(poly);
 
-    viewer.zoomTo(polygon);
+    unkinkPolygon.features.forEach((element) => {
+      const coordinateArr = element.geometry.coordinates.flat(
+        Number.POSITIVE_INFINITY,
+      );
+      const positions = Cesium.Cartesian3.fromDegreesArray(coordinateArr);
+
+      const polygon = viewer.entities.add({
+        polygon: {
+          hierarchy: new Cesium.PolygonHierarchy(positions),
+          material: Cesium.Color.RED.withAlpha(0.5),
+        },
+      });
+    });
 
     return () => {
       viewer.destroy();
     };
   }, []);
 
-  // useEffect(() => {
-  //   const viewer = viewerRef.current;
-
-  //   if (drawArea) {
-  //     const positions = Cesium.Cartesian3.fromDegreesArray([
-  //       -115.0, 37.0, -115.0, 32.0, -107.0, 38.0, -102.0, 31.0, -102.0, 35.0,
-  //       -115.0, 37.0,
-  //     ]);
-
-  //     const polygon = viewer.entities.add({
-  //       polygon: {
-  //         hierarchy: new Cesium.PolygonHierarchy(positions),
-  //         material: Cesium.Color.SKYBLUE.withAlpha(0.5),
-
-  //         extrudedHeight: 0,
-  //       },
-  //     });
-
-  //     viewer.zoomTo(polygon);
-  //   }
-  // }, [drawArea]);
-
-  return (
-    <>
-      {/* <button
-        className="fixed left-4 top-4 z-50 bg-white p-4"
-        onClick={() => {
-          setDrawArea(true);
-        }}
-      >
-        Start Drawing Area
-      </button>
-      <button
-        className="fixed left-4 top-16 z-50 bg-white p-4"
-        onClick={() => {
-          setDrawArea(false);
-        }}
-      >
-        Clear Entities
-      </button> */}
-    </>
-  );
+  return <></>;
 }
