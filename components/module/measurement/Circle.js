@@ -1,7 +1,12 @@
 import {
+  createCenterPoint,
+  createCircle,
+  createLabel,
+} from "@/components/handler/cesium/Entity";
+import {
   calculateRadius,
   getRayPosition,
-} from "@/components/handler/cesium/measurement/GeoInfo";
+} from "@/components/handler/cesium/GeoInfo";
 import * as Cesium from "cesium";
 
 class CircleGroup {
@@ -14,48 +19,23 @@ class CircleGroup {
   }
 
   addCenterToViewer() {
-    // TODO: Entity 함수에 등록
-    this.centerPoint = this.viewer.entities.add({
+    this.centerPoint = createCenterPoint({
+      viewer: this.viewer,
       position: this.centerPosition,
-      point: {
-        pixelSize: 6,
-        color: Cesium.Color.WHITE,
-        outlineColor: Cesium.Color.RED,
-        outlineWidth: 1,
-        disableDepthTestDistance: Number.POSITIVE_INFINITY,
-      },
     });
   }
 
   addCircleToViewer() {
-    this.circle = this.viewer.entities.add({
+    this.circle = createCircle({
+      viewer: this.viewer,
       position: this.centerPosition,
-      ellipse: {
-        semiMinorAxis: 0.01,
-        semiMajorAxis: 0.01,
-        material: Cesium.Color.RED.withAlpha(0.3),
-      },
     });
   }
 
   addLabelToViewer() {
-    this.label = this.viewer.entities.add({
+    this.label = createLabel({
+      viewer: this.viewer,
       position: this.centerPosition,
-      label: {
-        text: "0.00m", // Default text, can be updated later
-        font: "14px sans-serif",
-        fillColor: Cesium.Color.WHITE,
-        outlineColor: Cesium.Color.BLACK,
-        outlineWidth: 2,
-        style: Cesium.LabelStyle.FILL_AND_OUTLINE,
-        scale: 1,
-        showBackground: true,
-        heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
-        verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
-        horizontalOrigin: Cesium.HorizontalOrigin.CENTER,
-        pixelOffset: new Cesium.Cartesian2(0, -10),
-        disableDepthTestDistance: Number.POSITIVE_INFINITY,
-      },
     });
   }
 
@@ -130,6 +110,8 @@ export default class CircleDrawer {
       this.viewer.entities.remove(circleGroup.circle);
       this.viewer.entities.remove(circleGroup.label);
     });
+
+    this.circleGroupArr = [];
   }
 
   onLeftClick(click) {
@@ -138,6 +120,7 @@ export default class CircleDrawer {
       position: click.position,
     });
     if (!Cesium.defined(clickPosition)) return;
+
     if (!this.initClick) {
       this.initClick = true;
 

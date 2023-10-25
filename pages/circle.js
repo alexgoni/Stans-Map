@@ -1,19 +1,13 @@
-import { defaultCamera } from "@/components/handler/cesium/Camera";
-import { circleDrawingHandler } from "@/components/handler/cesium/measurement/Radius";
 import Viewer from "@/components/handler/cesium/Viewer";
-import useDidMountEffect from "@/components/module/useDidMountEffect";
-import ToolBox from "@/components/widget/measurement/ToolBox";
-import { radiusWidgetState } from "@/recoil/atom/MeasurementState";
-import * as Cesium from "cesium";
 import { useEffect, useRef, useState } from "react";
-import { useRecoilValue } from "recoil";
+import * as Cesium from "cesium";
+import { defaultCamera } from "@/components/handler/cesium/Camera";
+import useDidMountEffect from "@/components/module/useDidMountEffect";
+import CircleDrawer from "@/components/module/measurement/Circle";
 
 export default function Circle() {
-  // entities 객체 배열
-  const [circleGroupArr, setCircleGroupArr] = useState([]);
-  const radiusWidgetOpen = useRecoilValue(radiusWidgetState);
-
-  const viewerRef = useRef(null);
+  const circleDrawerRef = useRef(null);
+  const [drawCircle, setDrawCircle] = useState(false);
 
   useEffect(() => {
     const viewer = Viewer({
@@ -21,9 +15,12 @@ export default function Circle() {
       animation: false,
       baseLayerPicker: false,
     });
-    viewerRef.current = viewer;
 
-    defaultCamera(viewer, [127.08049, 37.63457, 500]);
+    defaultCamera(viewer, [127.08018445000782, 37.635648085178175, 1000]);
+
+    // circleDrawer 인스턴스 생성
+    const circleDrawer = new CircleDrawer(viewer);
+    circleDrawerRef.current = circleDrawer;
 
     return () => {
       viewer.destroy();
@@ -31,25 +28,38 @@ export default function Circle() {
   }, []);
 
   useDidMountEffect(() => {
-    const viewer = viewerRef.current;
-    const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+    const circleDrawer = circleDrawerRef.current;
 
-    circleDrawingHandler({
-      viewer,
-      handler,
-      radiusWidgetOpen,
-      circleGroupArr,
-      setCircleGroupArr,
-    });
+    if (drawCircle) {
+      circleDrawer.startDrawing();
+    } else {
+      circleDrawer.stopDrawing();
+      circleDrawer.clearCircleGroupArr();
+    }
 
     return () => {
-      handler.removeInputAction(Cesium.ScreenSpaceEventType.LEFT_CLICK);
+      circleDrawer.stopDrawing();
     };
-  }, [radiusWidgetOpen]);
+  }, [drawCircle]);
 
   return (
     <>
-      <ToolBox />
+      <button
+        className="fixed left-4 top-4 z-50 bg-white p-4"
+        onClick={() => {
+          setDrawCircle(true);
+        }}
+      >
+        Start Drawing Area
+      </button>
+      <button
+        className="fixed left-4 top-16 z-50 bg-white p-4"
+        onClick={() => {
+          setDrawCircle(false);
+        }}
+      >
+        Clear Entities
+      </button>
     </>
   );
 }

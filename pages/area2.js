@@ -12,8 +12,11 @@ export default function Area2() {
       terrain: Cesium.Terrain.fromWorldTerrain(),
       // animation: false,
       // baseLayerPicker: false,
+      selectionIndicator: true,
+      infoBox: true,
     });
 
+    viewer.scene.globe.depthTestAgainstTerrain = true;
     const positions = Cesium.Cartesian3.fromDegreesArray([
       -115.0, 37.0, -115.0, 32.0, -107.0, 38.0, -102.0, 31.0, -102.0, 35.0,
       -115.0, 37.0,
@@ -25,6 +28,7 @@ export default function Area2() {
         material: Cesium.Color.SKYBLUE.withAlpha(0.5),
         // height: 10000,
       },
+      heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
     });
 
     viewer.zoomTo(polygon);

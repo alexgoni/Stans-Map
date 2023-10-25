@@ -1,6 +1,7 @@
 import * as Cesium from "cesium";
 import {
   createDashline,
+  createLabel,
   createLinePoint,
   createPolyline,
 } from "@/components/handler/cesium/Entity";
@@ -8,60 +9,54 @@ import {
   calculateDistance,
   getCoordinate,
   getRayPosition,
-} from "@/components/handler/cesium/measurement/GeoInfo";
-import * as turf from "@turf/turf";
+} from "@/components/handler/cesium/GeoInfo";
 
-// TODO: label entity, drag
 class LineGroup {
   constructor(viewer) {
     this.viewer = viewer;
-    this.pointArr = [];
-    this.pointCoordinateArr = [];
+    this.pointEntityArr = [];
+    this.pointPositionArr = [];
     this.polylineArr = [];
     this.distance = 0;
     this.label = null;
   }
 
-  addPoint(point) {
-    this.pointArr.push(point);
+  addPointToViewer(position) {
+    const point = createLinePoint({
+      viewer: this.viewer,
+      position,
+    });
+
+    this.pointEntityArr.push(point);
+    this.addPointPosition(position);
   }
 
-  addPolyline(polyline) {
+  addPointPosition(position) {
+    this.pointPositionArr.push(getCoordinate(position));
+  }
+
+  addPolylineToViewer(positions) {
+    const polyline = createPolyline({
+      viewer: this.viewer,
+      positions,
+    });
+
     this.polylineArr.push(polyline);
   }
 
-  addPointCoordinates(coordinates) {
-    this.pointCoordinateArr.push(coordinates);
+  addLabelToViewer(position) {
+    this.label = createLabel({ viewer: this.viewer, position });
   }
 
-  createDistanceLabel(position) {
-    this.label = this.viewer.entities.add({
-      position,
-      label: {
-        text: this.distance.toFixed(2) + "m",
-        font: "14px sans-serif",
-        fillColor: Cesium.Color.WHITE,
-        outlineColor: Cesium.Color.BLACK,
-        outlineWidth: 2,
-        style: Cesium.LabelStyle.FILL_AND_OUTLINE,
-        scale: 1,
-        showBackground: true,
-        heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
-        verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
-        horizontalOrigin: Cesium.HorizontalOrigin.CENTER,
-        pixelOffset: new Cesium.Cartesian2(0, -10),
-        disableDepthTestDistance: Number.POSITIVE_INFINITY,
-      },
-    });
+  updateLabel() {
+    this.label.label.text = new Cesium.CallbackProperty(() => {
+      if (this.distance > 1) {
+        return `${this.distance.toFixed(2)}km`;
+      } else {
+        return `${(this.distance * 1000).toFixed(2)}m`;
+      }
+    }, false);
   }
-
-  // updateDistanceLabel(newPosition) {
-  //   this.label.position.setValue(newPosition);
-
-  //   // this.label.label.text = new Cesium.CallbackProperty(() => {
-  //   //   return this.distance.toFixed(2).km;
-  //   // }, false);
-  // }
 }
 
 export default class LineDrawer {
@@ -70,7 +65,7 @@ export default class LineDrawer {
     this.handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
 
     this.floatingPoint = null;
-    this.movingCoordinate = null;
+    this.floatingPointCoordinate = null;
     this.dashLine = null;
 
     this.lineGroup = new LineGroup(this.viewer);
@@ -104,12 +99,13 @@ export default class LineDrawer {
 
   clearLineGroupArr() {
     this.lineGroupArr.forEach((lineGroup) => {
-      lineGroup.pointArr.forEach((entity) =>
+      lineGroup.pointEntityArr.forEach((entity) =>
         this.viewer.entities.remove(entity),
       );
       lineGroup.polylineArr.forEach((entity) =>
         this.viewer.entities.remove(entity),
       );
+      this.viewer.entities.remove(lineGroup.label);
     });
 
     this.lineGroupArr = [];
@@ -122,72 +118,50 @@ export default class LineDrawer {
     });
     if (!Cesium.defined(clickPosition)) return;
 
-    if (this.lineGroup.pointArr.length === 0) {
+    if (this.lineGroup.pointEntityArr.length === 0) {
       this.floatingPoint = createLinePoint({
         viewer: this.viewer,
         position: clickPosition,
-        geoInfo: getCoordinate(clickPosition),
       });
-    }
+      this.lineGroup.addPointPosition(clickPosition);
+      this.lineGroup.addLabelToViewer(this.floatingPoint.position);
 
-    const point = createLinePoint({
-      viewer: this.viewer,
-      position: clickPosition,
-      geoInfo: getCoordinate(clickPosition),
-    });
-
-    this.lineGroup.addPoint(point);
-    this.lineGroup.addPointCoordinates([point.longitude, point.latitude]);
-
-    // first click 이후 dash line 추가
-    if (this.lineGroup.pointArr.length === 1) {
       const dynamicPolylinePosition = new Cesium.CallbackProperty(() => {
-        const prevCoordinate = this.lineGroup.pointCoordinateArr.slice(-1)[0];
-        const prevLongitude = prevCoordinate?.[0];
-        const prevLatitude = prevCoordinate?.[1];
+        // last fixed point position
+        const prevCoordinate =
+          this.lineGroup.pointPositionArr[
+            this.lineGroup.pointEntityArr.length - 1
+          ];
+        const prevLongitude = prevCoordinate[0];
+        const prevLatitude = prevCoordinate[1];
 
-        if (!(prevLongitude && prevLatitude && this.movingCoordinate)) return;
+        // first click 이후 움직이지 않을 때 return null
+        if (!this.floatingPointCoordinate) return;
 
         return [
           Cesium.Cartesian3.fromDegrees(prevLongitude, prevLatitude),
           Cesium.Cartesian3.fromDegrees(
-            this.movingCoordinate[0],
-            this.movingCoordinate[1],
+            this.floatingPointCoordinate[0],
+            this.floatingPointCoordinate[1],
           ),
         ];
       }, false);
 
-      this.lineGroup.createDistanceLabel(this.floatingPoint.position);
-
-      this.lineGroup.distance = new Cesium.CallbackProperty(() => {
-        if (this.movingCoordinate) {
-          const candidateCoordinateArr = [
-            ...this.lineGroup.pointCoordinateArr,
-            this.movingCoordinate,
-          ];
-          return calculateDistance(candidateCoordinateArr);
-        }
-      }, false);
       this.dashLine = createDashline({
         viewer: this.viewer,
         positions: dynamicPolylinePosition,
       });
     }
 
+    this.lineGroup.addPointToViewer(clickPosition);
+
     const polylinePosition = Cesium.Cartesian3.fromDegreesArray(
-      this.lineGroup.pointCoordinateArr.flat(),
+      this.lineGroup.pointPositionArr.flat(),
     );
-
-    const polyline = createPolyline({
-      viewer: this.viewer,
-      positions: polylinePosition,
-    });
-
-    this.lineGroup.addPolyline(polyline);
+    this.lineGroup.addPolylineToViewer(polylinePosition);
   }
 
   onMouseMove(movement) {
-    // floatingPoint 존재 => 선이 그려지는 중(move event, right click event 허용)
     if (!Cesium.defined(this.floatingPoint)) return;
 
     const newPosition = getRayPosition({
@@ -196,41 +170,44 @@ export default class LineDrawer {
     });
 
     if (Cesium.defined(newPosition)) {
-      const [longitude, latitude] = getCoordinate(newPosition);
       this.floatingPoint.position.setValue(newPosition);
-      this.movingCoordinate = [longitude, latitude];
-    }
+      this.floatingPointCoordinate = getCoordinate(newPosition);
 
-    // TODO: 나중에 고치자 ~ 심화과정
-    const checkSize = this.lineGroup.pointCoordinateArr.length;
-    if (checkSize <= 2) return;
-    const line = turf.lineString(this.lineGroup.pointCoordinateArr);
-    const distance = turf.lineDistance(line, { units: "kilometers" });
-    this.lineGroup.label.label.text = distance.toFixed(2) + "km";
+      this.lineGroup.pointPositionArr.pop();
+      this.lineGroup.pointPositionArr.push(this.floatingPointCoordinate);
+
+      this.lineGroup.distance = calculateDistance(
+        this.lineGroup.pointPositionArr,
+      );
+      this.lineGroup.updateLabel();
+    }
   }
 
   onRightClick() {
-    // floatingPoint 존재 => 선이 그려지는 중(move event, right click event 허용)
     if (!Cesium.defined(this.floatingPoint)) return;
-    if (this.lineGroup.pointArr.length === 1) {
-      this.viewer.entities.remove(this.lineGroup.pointArr[0]);
+
+    if (this.lineGroup.pointEntityArr.length === 1) {
+      this.viewer.entities.remove(this.lineGroup.pointEntityArr[0]);
+      this.viewer.entities.remove(this.lineGroup.label);
     } else {
-      this.lineGroup.distance = calculateDistance(
-        this.lineGroup.pointCoordinateArr,
-      );
+      // movement event에서 마지막으로 push된 element 제거
+      this.lineGroup.pointPositionArr.pop();
+      const finalDistance = calculateDistance(this.lineGroup.pointPositionArr);
       this.lineGroup.label.position =
-        this.lineGroup.pointArr.slice(-1)[0].position;
+        this.lineGroup.pointEntityArr.slice(-1)[0].position;
       this.lineGroup.label.label.text =
-        this.lineGroup.distance.toFixed(2) + "km";
+        finalDistance > 1
+          ? `${finalDistance.toFixed(2)}km`
+          : `${(finalDistance * 1000).toFixed(2)}m`;
 
       this.lineGroupArr.push(this.lineGroup);
-      this.lineGroup = new LineGroup(this.viewer);
     }
 
+    this.lineGroup = new LineGroup(this.viewer);
     this.viewer.entities.remove(this.floatingPoint);
     this.viewer.entities.remove(this.dashLine);
 
     this.floatingPoint = null;
-    this.movingCoordinate = null;
+    this.floatingPointCoordinate = null;
   }
 }

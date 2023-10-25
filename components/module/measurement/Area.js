@@ -6,7 +6,7 @@ import {
   calculateArea,
   getCoordinate,
   getRayPosition,
-} from "@/components/handler/cesium/measurement/GeoInfo";
+} from "@/components/handler/cesium/GeoInfo";
 import * as Cesium from "cesium";
 
 class AreaGroup {

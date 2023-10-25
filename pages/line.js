@@ -11,7 +11,7 @@ export default function Line() {
 
   useEffect(() => {
     const viewer = Viewer({
-      // terrain: Cesium.Terrain.fromWorldTerrain(),
+      terrain: Cesium.Terrain.fromWorldTerrain(),
       animation: false,
       baseLayerPicker: false,
     });
