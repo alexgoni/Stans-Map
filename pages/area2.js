@@ -50,9 +50,7 @@ export default function Area2() {
     const unkinkPolygon = turf.unkinkPolygon(poly);
 
     unkinkPolygon.features.forEach((element) => {
-      const coordinateArr = element.geometry.coordinates.flat(
-        Number.POSITIVE_INFINITY,
-      );
+      const coordinateArr = element.geometry.coordinates.flat(2);
       const positions = Cesium.Cartesian3.fromDegreesArray(coordinateArr);
 
       const polygon = viewer.entities.add({

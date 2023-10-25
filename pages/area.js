@@ -34,7 +34,7 @@ export default function Area() {
       areaDrawer.startDrawing();
     } else {
       areaDrawer.stopDrawing();
-      areaDrawer.clearLineGroupArr();
+      areaDrawer.clearAreaGroupArr();
     }
 
     return () => {

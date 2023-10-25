@@ -2,6 +2,7 @@ import {
   createAreaPoint,
   createAreaPolygon,
   createLabel,
+  createUnkinkedPolygon,
 } from "@/components/handler/cesium/Entity";
 import {
   calculateArea,
@@ -16,7 +17,7 @@ class AreaGroup {
     this.pointEntityArr = [];
     this.pointPositionArr = [];
     this.turfPointPositionArr = [];
-    this.polygon = null;
+    this.polygonArr = [];
     this.area = 0;
     this.label = null;
   }
@@ -62,12 +63,10 @@ class AreaGroup {
   }
 
   addPolygonToViewer() {
-    const polygon = createAreaPolygon({
+    this.polygonArr = createUnkinkedPolygon({
       viewer: this.viewer,
-      hierarchy: this.pointPositionArr,
+      turfPointPositionArr: this.turfPointPositionArr,
     });
-
-    this.polygon = polygon;
   }
 
   addLabelToViewer(position) {
@@ -147,9 +146,11 @@ export default class AreaDrawer {
     this.activeShape = null;
   }
 
-  clearLineGroupArr() {
+  clearAreaGroupArr() {
     this.areaGroupArr.forEach((areaGroup) => {
-      this.viewer.entities.remove(areaGroup.polygon);
+      areaGroup.polygonArr.forEach((entity) => {
+        this.viewer.entities.remove(entity);
+      });
       areaGroup.pointEntityArr.forEach((entity) => {
         this.viewer.entities.remove(entity);
       });
@@ -179,10 +180,14 @@ export default class AreaDrawer {
         return new Cesium.PolygonHierarchy(this.areaGroup.pointPositionArr);
       }, false);
 
+      //////////////////////////////
+
       this.activeShape = createAreaPolygon({
         viewer: this.viewer,
         hierarchy: dynamicPositions,
       });
+
+      //////////////////////////////
     }
 
     this.areaGroup.addPointToViewer(clickPosition);
@@ -222,7 +227,6 @@ export default class AreaDrawer {
     if (this.areaGroup.pointEntityArr.length <= 2) {
       this.viewer.entities.remove(this.areaGroup.pointEntityArr[0]);
       this.viewer.entities.remove(this.areaGroup.pointEntityArr[1]);
-      this.viewer.entities.remove(this.areaGroup.polygon);
       this.viewer.entities.remove(this.areaGroup.label);
     } else {
       this.areaGroup.addPolygonToViewer();

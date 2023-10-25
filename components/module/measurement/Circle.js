@@ -15,6 +15,7 @@ class CircleGroup {
     this.centerPosition = null;
     this.centerPoint = null;
     this.circle = null;
+    this.radius = 0;
     this.label = null;
   }
 
@@ -45,33 +46,33 @@ class CircleGroup {
     this.addLabelToViewer();
   }
 
-  updateRadius(newRadius) {
+  updateRadius() {
     /* 
     CallbackPropery로 실시간 동적 업데이트
     최소값 설정(각 axis값 0이 될 시 에러 발생) 
     */
     this.circle.ellipse.semiMajorAxis = new Cesium.CallbackProperty(() => {
-      return Math.max(newRadius, 0.01);
+      return Math.max(this.radius, 0.01);
     }, false);
 
     this.circle.ellipse.semiMinorAxis = new Cesium.CallbackProperty(() => {
-      return Math.max(newRadius, 0.01);
+      return Math.max(this.radius, 0.01);
     }, false);
   }
 
-  updateLabel(newRadius) {
+  updateLabel() {
     this.label.label.text = new Cesium.CallbackProperty(() => {
-      if (newRadius >= 1000) {
-        return `${(newRadius / 1000).toFixed(2)}km`;
+      if (this.radius >= 1000) {
+        return `${(this.radius / 1000).toFixed(2)}km`;
       } else {
-        return `${newRadius.toFixed(2)}m`;
+        return `${this.radius.toFixed(2)}m`;
       }
     }, false);
   }
 
-  updateCircleGroup(newRadius) {
-    this.updateRadius(newRadius);
-    this.updateLabel(newRadius);
+  updateCircleGroup() {
+    this.updateRadius(this.radius);
+    this.updateLabel(this.radius);
   }
 }
 
@@ -140,11 +141,11 @@ export default class CircleDrawer {
       position: movement.endPosition,
     });
     if (Cesium.defined(newPosition)) {
-      const surfaceDistance = calculateRadius(
+      this.circleGroup.radius = calculateRadius(
         this.circleGroup.centerPosition,
         newPosition,
       );
-      this.circleGroup.updateCircleGroup(surfaceDistance);
+      this.circleGroup.updateCircleGroup();
     }
   }
 }

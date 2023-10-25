@@ -1,4 +1,5 @@
 import * as Cesium from "cesium";
+import * as turf from "@turf/turf";
 
 function addModelEntity({ viewer, position, orientation = [], modelInfo }) {
   // entity position
@@ -67,6 +68,31 @@ function createAreaPolygon({ viewer, hierarchy }) {
   });
 
   return polygon;
+}
+
+function createUnkinkedPolygon({ viewer, turfPointPositionArr }) {
+  turfPointPositionArr.push(turfPointPositionArr[0]);
+
+  const poly = turf.polygon([turfPointPositionArr]);
+  const unkinkPolygon = turf.unkinkPolygon(poly);
+
+  const polygonArr = [];
+
+  unkinkPolygon.features.forEach((element) => {
+    const coordinateArr = element.geometry.coordinates.flat(2);
+    const positions = Cesium.Cartesian3.fromDegreesArray(coordinateArr);
+
+    const polygon = viewer.entities.add({
+      polygon: {
+        hierarchy: new Cesium.PolygonHierarchy(positions),
+        material: Cesium.Color.RED.withAlpha(0.5),
+      },
+    });
+
+    polygonArr.push(polygon);
+  });
+
+  return polygonArr;
 }
 
 function createLinePoint({ viewer, position }) {
@@ -169,6 +195,7 @@ export {
   addModelEntity,
   createAreaPoint,
   createAreaPolygon,
+  createUnkinkedPolygon,
   createLinePoint,
   createDashline,
   createPolyline,
