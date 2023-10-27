@@ -82,7 +82,7 @@ export default class CircleDrawer {
     this.handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
 
     this.initClick = false;
-    this.circleGroup = null;
+    this.circleGroup = new CircleGroup(this.viewer);
     this.circleGroupArr = [];
 
     this.onLeftClick = this.onLeftClick.bind(this);
@@ -115,6 +115,15 @@ export default class CircleDrawer {
     this.circleGroupArr = [];
   }
 
+  forceReset() {
+    this.clearCircleGroupArr();
+    this.initClick = false;
+    this.viewer.entities.remove(this.circleGroup.centerPoint);
+    this.viewer.entities.remove(this.circleGroup.circle);
+    this.viewer.entities.remove(this.circleGroup.label);
+    this.circleGroup = new CircleGroup(this.viewer);
+  }
+
   onLeftClick(click) {
     const clickPosition = getRayPosition({
       viewer: this.viewer,
@@ -125,12 +134,12 @@ export default class CircleDrawer {
     if (!this.initClick) {
       this.initClick = true;
 
-      this.circleGroup = new CircleGroup(this.viewer);
       this.circleGroup.centerPosition = clickPosition;
       this.circleGroup.addCircleGroupToViewer(clickPosition);
     } else {
       this.initClick = false;
       this.circleGroupArr.push(this.circleGroup);
+      this.circleGroup = new CircleGroup(this.viewer);
     }
   }
 

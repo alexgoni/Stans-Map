@@ -112,13 +112,14 @@ export default class LineDrawer {
   }
 
   resetLineGroup() {
-    this.lineGroup = new LineGroup(this.viewer);
     this.viewer.entities.remove(this.floatingPoint);
     this.viewer.entities.remove(this.dashLine);
 
     this.floatingPoint = null;
     this.floatingPointCoordinate = null;
     this.dashLine = null;
+
+    this.lineGroup = new LineGroup(this.viewer);
   }
 
   clearLineGroupArr() {
@@ -156,6 +157,8 @@ export default class LineDrawer {
           this.lineGroup.pointPositionArr[
             this.lineGroup.pointEntityArr.length - 1
           ];
+        if (!prevCoordinate) return;
+
         const prevLongitude = prevCoordinate[0];
         const prevLatitude = prevCoordinate[1];
 

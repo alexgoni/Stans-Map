@@ -2,7 +2,7 @@ import { atom } from "recoil";
 
 export const distanceWidgetState = atom({
   key: "distanceWidgetState",
-  default: false,
+  default: true,
 });
 
 export const radiusWidgetState = atom({

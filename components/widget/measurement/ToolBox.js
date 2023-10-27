@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Rulers, Circle, Heptagon } from "react-bootstrap-icons";
 import Icon from "./Icon";
 import {
@@ -22,7 +22,8 @@ export default function ToolBox() {
       <div className="fixed bottom-8 left-10 flex flex-col-reverse gap-1">
         <Icon
           icon={<Rulers className="text-2xl text-gray-200" />}
-          onClick={() => {
+          widgetOpen={toolBoxOpen}
+          clickHandler={() => {
             setToolBoxOpen(!toolBoxOpen);
             setDistanceWidgetOpen(false);
             setRadiusWidgetOpen(false);
@@ -35,17 +36,35 @@ export default function ToolBox() {
             <Icon
               icon={<Rulers className="text-2xl text-gray-200" />}
               widgetOpen={distanceWidgetOpen}
-              onClick={() => setDistanceWidgetOpen(!distanceWidgetOpen)}
+              clickHandler={() => {
+                setDistanceWidgetOpen(!distanceWidgetOpen);
+                if (!distanceWidgetOpen) {
+                  setRadiusWidgetOpen(false);
+                  setAreaWidgetOpen(false);
+                }
+              }}
             />
             <Icon
               icon={<Circle className="text-2xl text-gray-200" />}
               widgetOpen={radiusWidgetOpen}
-              onClick={() => setDistanceWidgetOpen(!radiusWidgetOpen)}
+              clickHandler={() => {
+                setRadiusWidgetOpen(!radiusWidgetOpen);
+                if (!radiusWidgetOpen) {
+                  setDistanceWidgetOpen(false);
+                  setAreaWidgetOpen(false);
+                }
+              }}
             />
             <Icon
               icon={<Heptagon className="text-2xl text-gray-200" />}
               widgetOpen={areaWidgetOpen}
-              onClick={() => setDistanceWidgetOpen(!areaWidgetOpen)}
+              clickHandler={() => {
+                setAreaWidgetOpen(!areaWidgetOpen);
+                if (!areaWidgetOpen) {
+                  setDistanceWidgetOpen(false);
+                  setRadiusWidgetOpen(false);
+                }
+              }}
             />
           </>
         ) : null}

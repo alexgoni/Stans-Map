@@ -1,5 +1,6 @@
 import * as Cesium from "cesium";
 import * as turf from "@turf/turf";
+import { calculateArea } from "./GeoInfo";
 
 function addModelEntity({ viewer, position, orientation = [], modelInfo }) {
   // entity position
@@ -180,28 +181,53 @@ function createKinkedPolygon({ viewer, turfPointPositionArr }) {
 //       const isContain = turf.booleanContains(outerPoly, innerPoly);
 
 //       if (isContain) {
-//         const polygonWithHoleCoords = [
-//           coordinateArr,
-//           unkinkPolygon[idx + 1].geometry.coordinates,
-//         ];
-//         console.log(polygonWithHoleCoords);
-//         const polygonWithHole = turf.polygon(polygonWithHoleCoords);
-//         const area = turf.area(polygonWithHole);
-//         total += area;
-//         console.log(`Hole이 있는 Polygon의 넓이: ${area} 제곱 미터`);
+//         // 포함 관계인 경우
+
+//         const innerCoordinateArr =
+//           unkinkPolygon[idx + 1].geometry.coordinates.flat(2);
+//         const innerPositions =
+//           Cesium.Cartesian3.fromDegreesArray(innerCoordinateArr);
+
+//         const hierarchy = {
+//           positions,
+//           holes: [{ positions: innerPositions }],
+//         };
+
+//         const polygon = viewer.entities.add({
+//           polygon: {
+//             hierarchy,
+//             material: Cesium.Color.RED.withAlpha(0.5),
+//           },
+//         });
+//         polygonArr.push(polygon);
+
+//         idx++; // 다음 원소로 넘어감
 //       } else {
-//         const polygonCoords = [coordinateArr];
-//         const turfPolygon = turf.polygon(polygonCoords);
-//         const area = turf.area(turfPolygon);
-//         total += area;
-//         console.log(`포함관계 x: ${area} 제곱 미터`);
+//         // 포함 관계가 아닌 경우
+
+//         const polygon = viewer.entities.add({
+//           polygon: {
+//             hierarchy: {
+//               positions,
+//             },
+//             material: Cesium.Color.BLUE.withAlpha(0.5),
+//           },
+//         });
+//         polygonArr.push(polygon);
 //       }
 //     } else {
-//       const polygonCoords = [coordinateArr];
-//       const turfPolygon = turf.polygon(polygonCoords);
-//       const area = turf.area(turfPolygon);
-//       total += area;
-//       console.log(`simple: ${area} 제곱 미터`);
+//       // 가장 안쪽 polygon이거나 simple polygon인 경우
+
+//       const polygon = viewer.entities.add({
+//         polygon: {
+//           hierarchy: {
+//             positions,
+//           },
+//           material: Cesium.Color.GREEN.withAlpha(0.5),
+//         },
+//       });
+//       polygonArr.push(polygon);
+//       polygonArr.push(polygon);
 //     }
 //   }
 

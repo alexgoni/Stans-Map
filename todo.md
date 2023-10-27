@@ -36,7 +36,8 @@
 
 5. toolbox 예외케이스
 
-- [] state에 따라 widget 바꾸기
-- [] 하나의 widget이 on 되면 다른 widget은 off
+- [x] state에 따라 widget 바꾸기
+- [x] 하나의 widget이 on 되면 다른 widget은 off
+      drawer가 진행중일때 drawer widnget off 하는 경우 : 우클릭이나 두번째 클릭을 하지 않았을 때는 group에 푸시되지 않아서 지울 수가 없음 (이게 올바른 동작?) => line, area는 우클릭으로 종료 이벤트 실행, circle은 프로퍼티 초기화하고 viewer에서 entity 지우는 forceReset 메서드 호출
 
 6. superclass
