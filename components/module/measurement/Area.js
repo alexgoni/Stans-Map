@@ -1,8 +1,8 @@
 import {
   createAreaPoint,
-  createAreaPolygon,
+  createAreaPolyline,
   createLabel,
-  createUnkinkedPolygon,
+  createKinkedPolygon,
 } from "@/components/handler/cesium/Entity";
 import {
   calculateArea,
@@ -63,7 +63,7 @@ class AreaGroup {
   }
 
   addPolygonToViewer() {
-    this.polygonArr = createUnkinkedPolygon({
+    this.polygonArr = createKinkedPolygon({
       viewer: this.viewer,
       turfPointPositionArr: this.turfPointPositionArr,
     });
@@ -177,17 +177,17 @@ export default class AreaDrawer {
       this.areaGroup.addLabelToViewer(this.floatingPoint.position);
 
       const dynamicPositions = new Cesium.CallbackProperty(() => {
-        return new Cesium.PolygonHierarchy(this.areaGroup.pointPositionArr);
+        if (this.areaGroup.pointEntityArr.length < 2)
+          return this.areaGroup.pointPositionArr.flat();
+        const clonePointPositonArr = [...this.areaGroup.pointPositionArr];
+        clonePointPositonArr.push(clonePointPositonArr[0]);
+        return clonePointPositonArr.flat();
       }, false);
 
-      //////////////////////////////
-
-      this.activeShape = createAreaPolygon({
+      this.activeShape = createAreaPolyline({
         viewer: this.viewer,
-        hierarchy: dynamicPositions,
+        positions: dynamicPositions,
       });
-
-      //////////////////////////////
     }
 
     this.areaGroup.addPointToViewer(clickPosition);

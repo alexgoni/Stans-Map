@@ -57,10 +57,28 @@ function createAreaPoint({ viewer, position }) {
   return point;
 }
 
+// function createAreaPolygon({ viewer, hierarchy }) {
+//   const polygon = viewer.entities.add({
+//     polygon: {
+//       hierarchy,
+//       material: new Cesium.ColorMaterialProperty(
+//         Cesium.Color.SKYBLUE.withAlpha(0.5),
+//       ),
+//     },
+//   });
+
+//   return polygon;
+// }
+
 function createAreaPolygon({ viewer, hierarchy }) {
+  const { positions, holes } = hierarchy;
+
   const polygon = viewer.entities.add({
     polygon: {
-      hierarchy,
+      hierarchy: {
+        positions,
+        holes: holes || [],
+      },
       material: new Cesium.ColorMaterialProperty(
         Cesium.Color.SKYBLUE.withAlpha(0.5),
       ),
@@ -70,30 +88,127 @@ function createAreaPolygon({ viewer, hierarchy }) {
   return polygon;
 }
 
-function createUnkinkedPolygon({ viewer, turfPointPositionArr }) {
+function createAreaPolyline({ viewer, positions }) {
+  const polyline = viewer.entities.add({
+    polyline: {
+      positions: positions,
+      width: 5,
+      clampToGround: true,
+      material: Cesium.Color.SKYBLUE.withAlpha(0.5),
+    },
+  });
+
+  return polyline;
+}
+
+function createKinkedPolygon({ viewer, turfPointPositionArr }) {
   turfPointPositionArr.push(turfPointPositionArr[0]);
 
   const poly = turf.polygon([turfPointPositionArr]);
-  const unkinkPolygon = turf.unkinkPolygon(poly);
+  const unkinkPolygon = turf.unkinkPolygon(poly).features;
 
   const polygonArr = [];
 
-  unkinkPolygon.features.forEach((element) => {
-    const coordinateArr = element.geometry.coordinates.flat(2);
-    const positions = Cesium.Cartesian3.fromDegreesArray(coordinateArr);
+  for (let idx = 0; idx < unkinkPolygon.length; idx++) {
+    const element = unkinkPolygon[idx];
+    const coordinateArr = element.geometry.coordinates;
+    const positions = Cesium.Cartesian3.fromDegreesArray(coordinateArr.flat(2));
 
-    const polygon = viewer.entities.add({
-      polygon: {
-        hierarchy: new Cesium.PolygonHierarchy(positions),
-        material: Cesium.Color.RED.withAlpha(0.5),
-      },
-    });
+    if (idx !== unkinkPolygon.length - 1) {
+      const outerPoly = turf.polygon(coordinateArr);
+      const innerPoly = turf.polygon(
+        unkinkPolygon[idx + 1].geometry.coordinates,
+      );
+      const isContain = turf.booleanContains(outerPoly, innerPoly);
 
-    polygonArr.push(polygon);
-  });
+      if (isContain) {
+        // 포함 관계인 경우
+        const innerCoordinateArr =
+          unkinkPolygon[idx + 1].geometry.coordinates.flat(2);
+        const innerPositions =
+          Cesium.Cartesian3.fromDegreesArray(innerCoordinateArr);
+
+        const hierarchy = {
+          positions,
+          holes: [{ positions: innerPositions }],
+        };
+
+        const polygon = createAreaPolygon({ viewer, hierarchy });
+        polygonArr.push(polygon);
+
+        idx++; // 다음 원소로 넘어감
+      } else {
+        // 포함 관계가 아닌 경우
+        const polygon = createAreaPolygon({ viewer, hierarchy: { positions } });
+        polygonArr.push(polygon);
+      }
+    } else {
+      // 가장 안쪽 polygon이거나 simple polygon인 경우
+      const polygon = createAreaPolygon({ viewer, hierarchy: { positions } });
+      polygonArr.push(polygon);
+    }
+  }
 
   return polygonArr;
 }
+
+// function createKinkedPolygon({ viewer, turfPointPositionArr }) {
+//   turfPointPositionArr.push(turfPointPositionArr[0]);
+
+//   const poly = turf.polygon([turfPointPositionArr]);
+//   const unkinkPolygon = turf.unkinkPolygon(poly).features;
+
+//   const polygonArr = [];
+//   let total = 0;
+
+//   for (let idx = 0; idx < unkinkPolygon.length; idx++) {
+//     const element = unkinkPolygon[idx];
+//     const coordinateArr = element.geometry.coordinates;
+//     const positions = Cesium.Cartesian3.fromDegreesArray(coordinateArr.flat(2));
+
+//     // // 다각형 넓이 계산
+//     // console.log(element.geometry.coordinates);
+//     // const area = turf.area(element);
+//     // console.log(`다각형 넓이: ${area} 제곱 미터`);
+//     // total += area;
+
+//     if (idx !== unkinkPolygon.length - 1) {
+//       const outerPoly = turf.polygon(coordinateArr);
+//       const innerPoly = turf.polygon(
+//         unkinkPolygon[idx + 1].geometry.coordinates,
+//       );
+//       const isContain = turf.booleanContains(outerPoly, innerPoly);
+
+//       if (isContain) {
+//         const polygonWithHoleCoords = [
+//           coordinateArr,
+//           unkinkPolygon[idx + 1].geometry.coordinates,
+//         ];
+//         console.log(polygonWithHoleCoords);
+//         const polygonWithHole = turf.polygon(polygonWithHoleCoords);
+//         const area = turf.area(polygonWithHole);
+//         total += area;
+//         console.log(`Hole이 있는 Polygon의 넓이: ${area} 제곱 미터`);
+//       } else {
+//         const polygonCoords = [coordinateArr];
+//         const turfPolygon = turf.polygon(polygonCoords);
+//         const area = turf.area(turfPolygon);
+//         total += area;
+//         console.log(`포함관계 x: ${area} 제곱 미터`);
+//       }
+//     } else {
+//       const polygonCoords = [coordinateArr];
+//       const turfPolygon = turf.polygon(polygonCoords);
+//       const area = turf.area(turfPolygon);
+//       total += area;
+//       console.log(`simple: ${area} 제곱 미터`);
+//     }
+//   }
+
+//   console.log(`전체 넓이: ${total} 제곱 미터`);
+
+//   return polygonArr;
+// }
 
 function createLinePoint({ viewer, position }) {
   const point = viewer.entities.add({
@@ -194,8 +309,9 @@ function createLabel({ viewer, position }) {
 export {
   addModelEntity,
   createAreaPoint,
+  createAreaPolyline,
   createAreaPolygon,
-  createUnkinkedPolygon,
+  createKinkedPolygon,
   createLinePoint,
   createDashline,
   createPolyline,

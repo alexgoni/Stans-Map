@@ -34,15 +34,18 @@ export default function ToolBox() {
           <>
             <Icon
               icon={<Rulers className="text-2xl text-gray-200" />}
+              widgetOpen={distanceWidgetOpen}
               onClick={() => setDistanceWidgetOpen(!distanceWidgetOpen)}
             />
             <Icon
               icon={<Circle className="text-2xl text-gray-200" />}
-              onClick={() => setRadiusWidgetOpen(!radiusWidgetOpen)}
+              widgetOpen={radiusWidgetOpen}
+              onClick={() => setDistanceWidgetOpen(!radiusWidgetOpen)}
             />
             <Icon
               icon={<Heptagon className="text-2xl text-gray-200" />}
-              onClick={() => setAreaWidgetOpen(!areaWidgetOpen)}
+              widgetOpen={areaWidgetOpen}
+              onClick={() => setDistanceWidgetOpen(!areaWidgetOpen)}
             />
           </>
         ) : null}
