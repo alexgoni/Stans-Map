@@ -1,4 +1,4 @@
-import Viewer from "@/components/handler/cesium/Viewer";
+import { Viewer } from "@/components/handler/cesium/Viewer";
 import { useEffect, useRef, useState } from "react";
 import * as Cesium from "cesium";
 import { defaultCamera } from "@/components/handler/cesium/Camera";

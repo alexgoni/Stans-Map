@@ -1,6 +1,6 @@
 import * as Cesium from "cesium";
 
-export default function Viewer({
+function Viewer({
   terrain = undefined,
   selectionIndicator = false,
   infoBox = false,
@@ -46,3 +46,15 @@ export default function Viewer({
 
   return viewer;
 }
+
+function cursorHandler(viewer, widgetStateObj) {
+  const { distanceWidgetOpen, radiusWidgetOpen, areaWidgetOpen } =
+    widgetStateObj;
+  if (distanceWidgetOpen || radiusWidgetOpen || areaWidgetOpen) {
+    viewer.container.style.cursor = "crosshair";
+  } else {
+    viewer.container.style.cursor = "default";
+  }
+}
+
+export { Viewer, cursorHandler };

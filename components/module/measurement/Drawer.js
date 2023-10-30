@@ -1,3 +1,4 @@
+import { cursorHandler } from "@/components/handler/cesium/Viewer";
 import AreaDrawer from "./Area";
 import CircleDrawer from "./Circle";
 import LineDrawer from "./Line";
@@ -15,6 +16,8 @@ export default class Drawer {
     this.distanceWidgetOpen = widgetStateObj.distanceWidgetOpen;
     this.radiusWidgetOpen = widgetStateObj.radiusWidgetOpen;
     this.areaWidgetOpen = widgetStateObj.areaWidgetOpen;
+
+    cursorHandler(this.viewer, widgetStateObj);
   }
 
   lineDrawerHandler() {

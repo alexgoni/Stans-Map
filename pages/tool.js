@@ -1,9 +1,6 @@
 import { defaultCamera } from "@/components/handler/cesium/Camera";
-import Viewer from "@/components/handler/cesium/Viewer";
-import AreaDrawer from "@/components/module/measurement/Area";
-import CircleDrawer from "@/components/module/measurement/Circle";
+import { Viewer } from "@/components/handler/cesium/Viewer";
 import Drawer from "@/components/module/measurement/Drawer";
-import LineDrawer from "@/components/module/measurement/Line";
 import useDidMountEffect from "@/components/module/useDidMountEffect";
 import ToolBox from "@/components/widget/measurement/ToolBox";
 import {
@@ -26,7 +23,7 @@ export default function Tool() {
     areaWidgetOpen,
   };
 
-  const viewerRef = useRef(null);
+  // const viewerRef = useRef(null);
   const drawerRef = useRef(null);
 
   useEffect(() => {
@@ -36,7 +33,7 @@ export default function Tool() {
       baseLayerPicker: false,
     });
 
-    viewerRef.current = viewer;
+    // viewerRef.current = viewer;
 
     defaultCamera(viewer, [127.08018445000782, 37.635648085178175, 1000]);
 

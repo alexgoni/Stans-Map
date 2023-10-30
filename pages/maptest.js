@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import * as Cesium from "cesium";
-import Viewer from "@/components/handler/cesium/Viewer";
+import { Viewer } from "@/components/handler/cesium/Viewer";
 
 export default function MapTest() {
   useEffect(() => {

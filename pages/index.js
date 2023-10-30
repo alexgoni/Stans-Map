@@ -1,5 +1,5 @@
 import { flyCamera } from "@/components/handler/cesium/Camera";
-import Viewer from "@/components/handler/cesium/Viewer";
+import { Viewer } from "@/components/handler/cesium/Viewer";
 import * as Cesium from "cesium";
 import { useEffect } from "react";
 
