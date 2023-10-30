@@ -4,7 +4,7 @@ import * as Cesium from "cesium";
 export const tecnoModelState = atom({
   key: "tecnoModelState",
   default: {
-    position: [127.08049, 37.63457, 0],
+    position: [127.08049, 37.63457, 38],
     orientation: [105, 0, 0],
     info: {
       name: "Tecno Building",
@@ -21,7 +21,7 @@ export const floorsModelState = atom({
   key: "floorsState",
   default: [
     {
-      position: [127.08081, 37.63456, 15],
+      position: [127.08081, 37.63456, 53],
       orientation: [16, 0, 0],
       info: {
         description: "3th Floor",
@@ -33,7 +33,7 @@ export const floorsModelState = atom({
       },
     },
     {
-      position: [127.08081, 37.63456, 15],
+      position: [127.08081, 37.63456, 53],
       orientation: [16, 0, 0],
       info: {
         description: "4th Floor",
@@ -45,7 +45,7 @@ export const floorsModelState = atom({
       },
     },
     {
-      position: [127.08081, 37.63456, 15],
+      position: [127.08081, 37.63456, 53],
       orientation: [16, 0, 0],
       info: {
         description: "5th Floor",

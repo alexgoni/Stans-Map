@@ -8,18 +8,18 @@ import {
   getRayPosition,
 } from "@/components/handler/cesium/GeoInfo";
 import * as Cesium from "cesium";
+import { ShapeGroup, ShapeDrawer } from "./Shape";
 
-class CircleGroup {
+class CircleGroup extends ShapeGroup {
   constructor(viewer) {
-    this.viewer = viewer;
+    super(viewer);
     this.centerPosition = null;
     this.centerPoint = null;
     this.circle = null;
-    this.radius = 0;
-    this.label = null;
+    this.radius = this.value;
   }
 
-  addCenterToViewer() {
+  addPointerToViewer() {
     this.centerPoint = createCenterPoint({
       viewer: this.viewer,
       position: this.centerPosition,
@@ -41,12 +41,12 @@ class CircleGroup {
   }
 
   addCircleGroupToViewer() {
-    this.addCenterToViewer();
+    this.addPointerToViewer();
     this.addCircleToViewer();
     this.addLabelToViewer();
   }
 
-  updateRadius() {
+  registerRadiusCallBack() {
     /* 
     CallbackPropery로 실시간 동적 업데이트
     최소값 설정(각 axis값 0이 될 시 에러 발생) 
@@ -60,7 +60,7 @@ class CircleGroup {
     }, false);
   }
 
-  updateLabel() {
+  registerLabelCallBack() {
     this.label.label.text = new Cesium.CallbackProperty(() => {
       if (this.radius >= 1000) {
         return `${(this.radius / 1000).toFixed(2)}km`;
@@ -70,23 +70,18 @@ class CircleGroup {
     }, false);
   }
 
-  updateCircleGroup() {
-    this.updateRadius(this.radius);
-    this.updateLabel(this.radius);
+  registerCircleGroupCallback() {
+    this.registerRadiusCallBack(this.radius);
+    this.registerLabelCallBack(this.radius);
   }
 }
 
-export default class CircleDrawer {
+export default class CircleDrawer extends ShapeDrawer {
   constructor(viewer) {
-    this.viewer = viewer;
-    this.handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
-
-    this.initClick = false;
+    super(viewer);
+    this.isDrawing = false;
     this.circleGroup = new CircleGroup(this.viewer);
     this.circleGroupArr = [];
-
-    this.onLeftClick = this.onLeftClick.bind(this);
-    this.onMouseMove = this.onMouseMove.bind(this);
   }
 
   startDrawing() {
@@ -117,7 +112,7 @@ export default class CircleDrawer {
 
   forceReset() {
     this.clearCircleGroupArr();
-    this.initClick = false;
+    this.isDrawing = false;
     this.viewer.entities.remove(this.circleGroup.centerPoint);
     this.viewer.entities.remove(this.circleGroup.circle);
     this.viewer.entities.remove(this.circleGroup.label);
@@ -131,30 +126,37 @@ export default class CircleDrawer {
     });
     if (!Cesium.defined(clickPosition)) return;
 
-    if (!this.initClick) {
-      this.initClick = true;
+    const firstClickHandler = () => {
+      this.isDrawing = true;
 
       this.circleGroup.centerPosition = clickPosition;
       this.circleGroup.addCircleGroupToViewer(clickPosition);
-    } else {
-      this.initClick = false;
+      this.circleGroup.registerCircleGroupCallback();
+    };
+
+    const secondClickHandler = () => {
+      this.isDrawing = false;
+
       this.circleGroupArr.push(this.circleGroup);
       this.circleGroup = new CircleGroup(this.viewer);
-    }
+    };
+
+    if (!this.isDrawing) firstClickHandler();
+    else secondClickHandler();
   }
 
   onMouseMove(movement) {
-    if (!this.initClick) return;
+    if (!this.isDrawing) return;
+
     const newPosition = getRayPosition({
       viewer: this.viewer,
       position: movement.endPosition,
     });
-    if (Cesium.defined(newPosition)) {
-      this.circleGroup.radius = calculateRadius(
-        this.circleGroup.centerPosition,
-        newPosition,
-      );
-      this.circleGroup.updateCircleGroup();
-    }
+    if (!Cesium.defined(newPosition)) return;
+
+    this.circleGroup.radius = calculateRadius(
+      this.circleGroup.centerPosition,
+      newPosition,
+    );
   }
 }

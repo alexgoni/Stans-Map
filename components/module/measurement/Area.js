@@ -10,16 +10,14 @@ import {
   getRayPosition,
 } from "@/components/handler/cesium/GeoInfo";
 import * as Cesium from "cesium";
+import { ShapeGroup, ShapeDrawer } from "./Shape";
 
-class AreaGroup {
+class AreaGroup extends ShapeGroup {
   constructor(viewer) {
-    this.viewer = viewer;
-    this.pointEntityArr = [];
-    this.pointPositionArr = [];
+    super(viewer);
     this.turfPointPositionArr = [];
     this.polygonArr = [];
-    this.area = 0;
-    this.label = null;
+    this.area = this.value;
   }
 
   addPointToViewer(position) {
@@ -45,15 +43,8 @@ class AreaGroup {
     this.addTurfPointPosition(position);
   }
 
-  modifyTurfBeforeCalculate() {
-    this.turfPointPositionArr = [
-      ...this.turfPointPositionArr,
-      this.turfPointPositionArr[0],
-    ];
-  }
-
-  isPointCount(number) {
-    return this.pointEntityArr.length === number;
+  get pointEntityNum() {
+    return this.pointEntityArr.length;
   }
 
   removeLastPointPosition() {
@@ -95,46 +86,22 @@ class AreaGroup {
   }
 
   calculateAreaAndUpdateLabel() {
-    this.area = calculateArea(this.turfPointPositionArr);
+    const modifiedTurfArr = [
+      ...this.turfPointPositionArr,
+      this.turfPointPositionArr[0],
+    ];
+    this.area = calculateArea(modifiedTurfArr);
     this.updateLabel();
   }
 }
 
-export default class AreaDrawer {
+export default class AreaDrawer extends ShapeDrawer {
   constructor(viewer) {
-    this.viewer = viewer;
-    this.handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
-
-    this.floatingPoint = null;
+    super(viewer);
     this.activeShape = null;
 
     this.areaGroup = new AreaGroup(this.viewer);
     this.areaGroupArr = [];
-
-    this.onLeftClick = this.onLeftClick.bind(this);
-    this.onMouseMove = this.onMouseMove.bind(this);
-    this.onRightClick = this.onRightClick.bind(this);
-  }
-
-  startDrawing() {
-    this.handler.setInputAction(
-      this.onLeftClick,
-      Cesium.ScreenSpaceEventType.LEFT_CLICK,
-    );
-    this.handler.setInputAction(
-      this.onMouseMove,
-      Cesium.ScreenSpaceEventType.MOUSE_MOVE,
-    );
-    this.handler.setInputAction(
-      this.onRightClick,
-      Cesium.ScreenSpaceEventType.RIGHT_CLICK,
-    );
-  }
-
-  stopDrawing() {
-    this.handler.removeInputAction(Cesium.ScreenSpaceEventType.LEFT_CLICK);
-    this.handler.removeInputAction(Cesium.ScreenSpaceEventType.MOUSE_MOVE);
-    this.handler.removeInputAction(Cesium.ScreenSpaceEventType.RIGHT_CLICK);
   }
 
   resetAreaGroup() {
@@ -167,7 +134,7 @@ export default class AreaDrawer {
     });
     if (!Cesium.defined(clickPosition)) return;
 
-    if (this.areaGroup.isPointCount(0)) {
+    const areaGroupFirstClickHandler = () => {
       this.floatingPoint = createAreaPoint({
         viewer: this.viewer,
         position: clickPosition,
@@ -188,8 +155,9 @@ export default class AreaDrawer {
         viewer: this.viewer,
         positions: dynamicPositions,
       });
-    }
+    };
 
+    if (this.areaGroup.pointEntityNum === 0) areaGroupFirstClickHandler();
     this.areaGroup.addPointToViewer(clickPosition);
   }
 
@@ -200,22 +168,23 @@ export default class AreaDrawer {
       viewer: this.viewer,
       position: movement.endPosition,
     });
+    if (!Cesium.defined(newPosition)) return;
 
-    if (Cesium.defined(newPosition)) {
-      this.floatingPoint.position.setValue(newPosition);
-
+    const updatePositionArr = () => {
       this.areaGroup.pointPositionArr.pop();
       this.areaGroup.pointPositionArr.push(newPosition);
 
       this.areaGroup.turfPointPositionArr.pop();
       this.areaGroup.turfPointPositionArr.push(getCoordinate(newPosition));
+    };
+    // floating point 위치 변경
+    this.floatingPoint.position.setValue(newPosition);
 
-      if (this.areaGroup.turfPointPositionArr.length < 3) return;
+    updatePositionArr();
 
-      this.areaGroup.modifyTurfBeforeCalculate();
-      this.areaGroup.calculateAreaAndUpdateLabel();
-      this.areaGroup.turfPointPositionArr.pop();
-    }
+    // update area
+    if (this.areaGroup.pointEntityNum < 2) return;
+    this.areaGroup.calculateAreaAndUpdateLabel();
   }
 
   onRightClick() {
@@ -224,19 +193,20 @@ export default class AreaDrawer {
     // movement event에서 마지막으로 push된 element 제거
     this.areaGroup.removeLastPointPosition();
 
-    if (this.areaGroup.pointEntityArr.length <= 2) {
+    const removeInvalidEntitiesFromPolygon = () => {
       this.viewer.entities.remove(this.areaGroup.pointEntityArr[0]);
       this.viewer.entities.remove(this.areaGroup.pointEntityArr[1]);
       this.viewer.entities.remove(this.areaGroup.label);
-    } else {
+    };
+
+    const areaGroupEndEvent = () => {
       this.areaGroup.addPolygonToViewer();
-
-      // 시작점과 끝점이 일치되어야 함
-      this.areaGroup.modifyTurfBeforeCalculate();
       this.areaGroup.calculateAreaAndUpdateLabel();
-
       this.areaGroupArr.push(this.areaGroup);
-    }
+    };
+
+    if (this.areaGroup.pointEntityNum <= 2) removeInvalidEntitiesFromPolygon();
+    else areaGroupEndEvent();
 
     this.resetAreaGroup();
   }

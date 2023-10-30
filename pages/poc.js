@@ -19,6 +19,13 @@ import { MeasureWidget, pointEvent } from "@/components/widget/Measure";
 import Modal from "@/components/widget/Modal";
 import { floorsModelState, tecnoModelState } from "@/recoil/atom/ModelState";
 import { useRecoilValue } from "recoil";
+import {
+  areaWidgetState,
+  distanceWidgetState,
+  radiusWidgetState,
+} from "@/recoil/atom/MeasurementState";
+import Drawer from "@/components/module/measurement/Drawer";
+import ToolBox from "@/components/widget/measurement/ToolBox";
 
 export default function POC() {
   /* 
@@ -34,6 +41,18 @@ export default function POC() {
   const tecnoModel = useRecoilValue(tecnoModelState);
   const floorsModel = useRecoilValue(floorsModelState);
 
+  const distanceWidgetOpen = useRecoilValue(distanceWidgetState);
+  const radiusWidgetOpen = useRecoilValue(radiusWidgetState);
+  const areaWidgetOpen = useRecoilValue(areaWidgetState);
+
+  const widgetStateObj = {
+    distanceWidgetOpen,
+    radiusWidgetOpen,
+    areaWidgetOpen,
+  };
+
+  const drawerRef = useRef(null);
+
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [uri, setUri] = useState("");
   const [widgetOpen, setWidgetOpen] = useState(false);
@@ -45,25 +64,31 @@ export default function POC() {
   const viewerRef = useRef(null);
   const modelGroupInfoRef = useRef(null);
 
-  useEffect(() => {
-    const geomap = new Cesium.WebMapServiceImageryProvider({
-      url: "http://192.168.1.45:8188/geoserver/wms",
-      parameters: {
-        format: "image/png",
-        transparent: "true",
-        tiled: true,
-        enablePickFeatures: true,
-      },
-      layers: "stans:protoMap",
-      maximumLevel: 20,
-    });
+  const geomap = new Cesium.WebMapServiceImageryProvider({
+    url: "http://192.168.1.45:8188/geoserver/wms",
+    parameters: {
+      format: "image/png",
+      transparent: "true",
+      tiled: true,
+      enablePickFeatures: true,
+    },
+    layers: "stans:protoMap",
+    maximumLevel: 20,
+  });
 
+  useEffect(() => {
     // viewer 생성
     const viewer = Viewer({
+      terrain: new Cesium.Terrain(
+        Cesium.CesiumTerrainProvider.fromUrl("http://localhost:8081/"),
+      ),
       img: geomap,
       animation: false,
       baseLayerPicker: false,
     });
+
+    const drawer = new Drawer(viewer);
+    drawerRef.current = drawer;
 
     // homeButton event
     viewer.homeButton.viewModel.command.beforeExecute.addEventListener(
@@ -76,7 +101,7 @@ export default function POC() {
     // 충돌 무시
     // viewer.scene.screenSpaceCameraController.enableCollisionDetection = false;
 
-    // viewer.scene.globe.depthTestAgainstTerrain = true;
+    viewer.scene.globe.depthTestAgainstTerrain = true;
 
     viewerRef.current = viewer;
 
@@ -189,17 +214,16 @@ export default function POC() {
     };
   }, []);
 
-  // Measure
   useDidMountEffect(() => {
-    const viewer = viewerRef.current;
-    const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
-    pointEvent({ viewer, handler, widgetOpen, setSurfaceDistance });
+    const drawer = drawerRef.current;
+
+    drawer.setWidgetState(widgetStateObj);
+    drawer.drawingHandler();
 
     return () => {
-      handler.destroy();
-      cesiumContainer.style.cursor = "default";
+      drawer.cleanUpDrawer();
     };
-  }, [widgetOpen]);
+  }, [distanceWidgetOpen, radiusWidgetOpen, areaWidgetOpen]);
 
   // 내부로 들어갔을 때 measure widget과 pop up 창 닫기
   useDidMountEffect(() => {
@@ -223,11 +247,7 @@ export default function POC() {
         closeModal={() => setModalIsOpen(false)}
         filePath={uri}
       />
-      <MeasureWidget
-        widgetOpen={widgetOpen}
-        setWidgetOpen={setWidgetOpen}
-        surfaceDistance={surfaceDistance}
-      />
+      <ToolBox />
     </>
   );
 }

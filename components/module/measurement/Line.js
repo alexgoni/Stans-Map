@@ -10,15 +10,13 @@ import {
   getCoordinate,
   getRayPosition,
 } from "@/components/handler/cesium/GeoInfo";
+import { ShapeGroup, ShapeDrawer } from "./Shape";
 
-class LineGroup {
+class LineGroup extends ShapeGroup {
   constructor(viewer) {
-    this.viewer = viewer;
-    this.pointEntityArr = [];
-    this.pointPositionArr = [];
+    super(viewer);
     this.polylineArr = [];
-    this.distance = 0;
-    this.label = null;
+    this.distance = this.value;
   }
 
   addPointToViewer(position) {
@@ -35,16 +33,15 @@ class LineGroup {
     this.pointPositionArr.push(getCoordinate(position));
   }
 
-  isPointCount(number) {
-    return this.pointEntityArr.length === number;
-  }
-
   removeLastPointPosition() {
     this.pointPositionArr.pop();
     this.label.position = this.pointEntityArr.slice(-1)[0].position;
   }
 
-  addPolylineToViewer(positions) {
+  addPolylineToViewer() {
+    const positions = Cesium.Cartesian3.fromDegreesArray(
+      this.pointPositionArr.flat(),
+    );
     const polyline = createPolyline({
       viewer: this.viewer,
       positions,
@@ -61,9 +58,8 @@ class LineGroup {
     this.label.label.text = new Cesium.CallbackProperty(() => {
       if (this.distance > 1) {
         return `${this.distance.toFixed(2)}km`;
-      } else {
-        return `${(this.distance * 1000).toFixed(2)}m`;
       }
+      return `${(this.distance * 1000).toFixed(2)}m`;
     }, false);
   }
 
@@ -73,42 +69,14 @@ class LineGroup {
   }
 }
 
-export default class LineDrawer {
+export default class LineDrawer extends ShapeDrawer {
   constructor(viewer) {
-    this.viewer = viewer;
-    this.handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
-
-    this.floatingPoint = null;
+    super(viewer);
     this.floatingPointCoordinate = null;
     this.dashLine = null;
 
     this.lineGroup = new LineGroup(this.viewer);
     this.lineGroupArr = [];
-
-    this.onLeftClick = this.onLeftClick.bind(this);
-    this.onMouseMove = this.onMouseMove.bind(this);
-    this.onRightClick = this.onRightClick.bind(this);
-  }
-
-  startDrawing() {
-    this.handler.setInputAction(
-      this.onLeftClick,
-      Cesium.ScreenSpaceEventType.LEFT_CLICK,
-    );
-    this.handler.setInputAction(
-      this.onMouseMove,
-      Cesium.ScreenSpaceEventType.MOUSE_MOVE,
-    );
-    this.handler.setInputAction(
-      this.onRightClick,
-      Cesium.ScreenSpaceEventType.RIGHT_CLICK,
-    );
-  }
-
-  stopDrawing() {
-    this.handler.removeInputAction(Cesium.ScreenSpaceEventType.LEFT_CLICK);
-    this.handler.removeInputAction(Cesium.ScreenSpaceEventType.MOUSE_MOVE);
-    this.handler.removeInputAction(Cesium.ScreenSpaceEventType.RIGHT_CLICK);
   }
 
   resetLineGroup() {
@@ -143,7 +111,7 @@ export default class LineDrawer {
     });
     if (!Cesium.defined(clickPosition)) return;
 
-    if (this.lineGroup.isPointCount(0)) {
+    const lineGroupFirstClickHandler = () => {
       this.floatingPoint = createLinePoint({
         viewer: this.viewer,
         position: clickPosition,
@@ -178,14 +146,14 @@ export default class LineDrawer {
         viewer: this.viewer,
         positions: dynamicPolylinePosition,
       });
+    };
+
+    if (this.lineGroup.pointEntityNum === 0) {
+      lineGroupFirstClickHandler();
     }
 
     this.lineGroup.addPointToViewer(clickPosition);
-
-    const polylinePosition = Cesium.Cartesian3.fromDegreesArray(
-      this.lineGroup.pointPositionArr.flat(),
-    );
-    this.lineGroup.addPolylineToViewer(polylinePosition);
+    this.lineGroup.addPolylineToViewer();
   }
 
   onMouseMove(movement) {
@@ -195,16 +163,21 @@ export default class LineDrawer {
       viewer: this.viewer,
       position: movement.endPosition,
     });
+    if (!Cesium.defined(newPosition)) return;
 
-    if (Cesium.defined(newPosition)) {
+    const updateFloatingPoint = () => {
       this.floatingPoint.position.setValue(newPosition);
       this.floatingPointCoordinate = getCoordinate(newPosition);
+    };
 
+    const updatePointPositionArr = () => {
       this.lineGroup.pointPositionArr.pop();
       this.lineGroup.pointPositionArr.push(this.floatingPointCoordinate);
+    };
 
-      this.lineGroup.calculateDistanceAndUpdateLabel();
-    }
+    updateFloatingPoint();
+    updatePointPositionArr();
+    this.lineGroup.calculateDistanceAndUpdateLabel();
   }
 
   onRightClick() {
@@ -213,13 +186,18 @@ export default class LineDrawer {
     // movement event에서 마지막으로 push된 element 제거
     this.lineGroup.removeLastPointPosition();
 
-    if (this.lineGroup.isPointCount(1)) {
+    const removeOneClickEntities = () => {
       this.viewer.entities.remove(this.lineGroup.pointEntityArr[0]);
       this.viewer.entities.remove(this.lineGroup.label);
-    } else {
+    };
+
+    const lineGroupEndEvent = () => {
       this.lineGroup.calculateDistanceAndUpdateLabel();
       this.lineGroupArr.push(this.lineGroup);
-    }
+    };
+
+    if (this.lineGroup.pointEntityNum === 1) removeOneClickEntities();
+    else lineGroupEndEvent();
 
     this.resetLineGroup();
   }
