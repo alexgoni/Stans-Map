@@ -1,10 +1,10 @@
 import * as Cesium from "cesium";
 
-const DURATION = 1.0;
+const DURATION = 0.7;
 const UP_HEIGHT = 40;
 
 function getPositionObj(modelGroup) {
-  const calculatePosition = (position) => {
+  const calculateUpPosition = (position) => {
     const cartographic = Cesium.Cartographic.fromCartesian(position);
     return Cesium.Cartesian3.fromRadians(
       cartographic.longitude,
@@ -23,8 +23,8 @@ function getPositionObj(modelGroup) {
   };
 
   const upPositionObj = {
-    outerPosition: calculatePosition(downPositionObj.outerPosition),
-    innerPosition: downPositionObj.innerPosition.map(calculatePosition),
+    outerPosition: calculateUpPosition(downPositionObj.outerPosition),
+    innerPosition: downPositionObj.innerPosition.map(calculateUpPosition),
   };
 
   return { downPositionObj, upPositionObj };
@@ -116,22 +116,6 @@ function groupDownAnimation(modelGroupInfo) {
   }
 }
 
-function isInnerModelClicked({
-  pickedObject,
-  innerModel,
-  setModalIsOpen,
-  setUri,
-}) {
-  if (Cesium.defined(pickedObject) && innerModel.includes(pickedObject.id)) {
-    const uri = pickedObject.id.model.uri.getValue();
-
-    if (uri) {
-      setModalIsOpen(true);
-      setUri(uri);
-    }
-  }
-}
-
 function hoverToOpacityChange({ viewer, movement, modelGroup }) {
   /* 
     hover event
@@ -145,74 +129,48 @@ function hoverToOpacityChange({ viewer, movement, modelGroup }) {
     
   */
   const pickedObject = viewer.scene.pick(movement.endPosition);
-  if (
-    Cesium.defined(pickedObject) &&
-    pickedObject.id === modelGroup.outerModel
-  ) {
-    modelGroup.outerModel.model.color = Cesium.Color.fromAlpha(
-      Cesium.Color.WHITE,
-      0.7,
-    );
-    modelGroup.innerModel.map((element) => {
-      element.model.color = Cesium.Color.fromAlpha(Cesium.Color.WHITE, 1.0);
-    });
-  } else if (
-    Cesium.defined(pickedObject) &&
-    modelGroup.innerModel.includes(pickedObject.id)
-  ) {
-    modelGroup.outerModel.model.color = Cesium.Color.fromAlpha(
-      Cesium.Color.WHITE,
-      0.7,
-    );
-    modelGroup.innerModel.map((element) => {
-      if (element === pickedObject.id) {
-        element.model.color = Cesium.Color.fromAlpha(Cesium.Color.YELLOW, 1.0);
-      } else {
+
+  if (Cesium.defined(pickedObject)) {
+    if (pickedObject.id === modelGroup.outerModel) {
+      modelGroup.outerModel.model.color = Cesium.Color.fromAlpha(
+        Cesium.Color.WHITE,
+        0.7,
+      );
+      modelGroup.innerModel.forEach((element) => {
         element.model.color = Cesium.Color.fromAlpha(Cesium.Color.WHITE, 1.0);
-      }
-    });
+      });
+    } else if (modelGroup.innerModel.includes(pickedObject.id)) {
+      modelGroup.outerModel.model.color = Cesium.Color.fromAlpha(
+        Cesium.Color.WHITE,
+        0.7,
+      );
+      modelGroup.innerModel.forEach((element) => {
+        if (element === pickedObject.id) {
+          element.model.color = Cesium.Color.fromAlpha(
+            Cesium.Color.YELLOW,
+            1.0,
+          );
+        } else {
+          element.model.color = Cesium.Color.fromAlpha(Cesium.Color.WHITE, 1.0);
+        }
+      });
+    }
   } else {
     modelGroup.outerModel.model.color = Cesium.Color.fromAlpha(
       Cesium.Color.WHITE,
       1.0,
     );
-    modelGroup.innerModel.map((element) => {
+    modelGroup.innerModel.forEach((element) => {
       element.model.color = Cesium.Color.fromAlpha(Cesium.Color.WHITE, 0.0);
     });
   }
 }
 
-/**
- *
- * @description : 모델 클릭 시 시점 고정
- *
- * @param  viewer
- * @param  pickedObject
- * @param  outerModel
- *
- * @return void
- */
-function holdView(viewer, pickedObject, outerModel) {
-  if (Cesium.defined(pickedObject) && pickedObject.id === outerModel) {
-    viewer.trackedEntity = outerModel;
-    return;
-  }
-  viewer.trackedEntity = undefined;
-}
-
-function unholdView(viewer, pickedObject, outerModel) {
-  if (!Cesium.defined(pickedObject) || pickedObject.id !== outerModel) return;
-  viewer.trackedEntity = undefined;
-}
-
 export {
+  getPositionObj,
   upAnimation,
   downAnimation,
-  getPositionObj,
   groupDownAnimation,
   groupUpAnimation,
-  isInnerModelClicked,
   hoverToOpacityChange,
-  holdView,
-  unholdView,
 };

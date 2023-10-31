@@ -28,7 +28,7 @@ export const floorsModelState = atom({
         model: {
           uri: "/glb/Floor3.glb",
           scale: 1.2,
-          color: Cesium.Color.fromAlpha(Cesium.Color.WHITE, 0.0),
+          color: Cesium.Color.fromAlpha(Cesium.Color.WHITE, 1.0),
         },
       },
     },
@@ -40,7 +40,7 @@ export const floorsModelState = atom({
         model: {
           uri: "/glb/Floor4.glb",
           scale: 1.2,
-          color: Cesium.Color.fromAlpha(Cesium.Color.WHITE, 0.0),
+          color: Cesium.Color.fromAlpha(Cesium.Color.WHITE, 1.0),
         },
       },
     },
@@ -52,7 +52,7 @@ export const floorsModelState = atom({
         model: {
           uri: "/glb/Floor5.glb",
           scale: 1.2,
-          color: Cesium.Color.fromAlpha(Cesium.Color.WHITE, 0.0),
+          color: Cesium.Color.fromAlpha(Cesium.Color.WHITE, 1.0),
         },
       },
     },

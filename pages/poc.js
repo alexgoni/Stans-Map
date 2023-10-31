@@ -12,7 +12,7 @@ import {
   hoverToOpacityChange,
   isInnerModelClicked,
   unholdView,
-} from "@/components/handler/cesium/ModelEvent";
+} from "@/components/handler/cesium/ModelEventHandler";
 import { InfoBox, popUpInfo } from "@/components/widget/InfoBox";
 import useDidMountEffect from "@/components/module/useDidMountEffect";
 import { MeasureWidget, pointEvent } from "@/components/widget/Measure";
@@ -77,7 +77,6 @@ export default function POC() {
   });
 
   useEffect(() => {
-    // viewer 생성
     const viewer = Viewer({
       terrain: new Cesium.Terrain(
         Cesium.CesiumTerrainProvider.fromUrl("http://localhost:8081/"),
@@ -85,28 +84,16 @@ export default function POC() {
       img: geomap,
       animation: false,
       baseLayerPicker: false,
+      koreaHomeButton: true,
     });
-
-    const drawer = new Drawer(viewer);
-    drawerRef.current = drawer;
-
-    // homeButton event
-    viewer.homeButton.viewModel.command.beforeExecute.addEventListener(
-      (event) => {
-        event.cancel = true;
-        flyCamera(viewer, [127.5, 37.512, 1_500_000]);
-      },
-    );
-
-    // 충돌 무시
-    // viewer.scene.screenSpaceCameraController.enableCollisionDetection = false;
-
     viewer.scene.globe.depthTestAgainstTerrain = true;
-
     viewerRef.current = viewer;
 
     // Camera 설정
     defaultCamera(viewer, [127.08049, 37.63457, 500]);
+
+    const drawer = new Drawer(viewer);
+    drawerRef.current = drawer;
 
     // tecno 생성
     const tecno = addModelEntity({

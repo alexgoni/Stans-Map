@@ -1,4 +1,5 @@
 import * as Cesium from "cesium";
+import { flyCamera } from "./Camera";
 
 function Viewer({
   terrain = undefined,
@@ -11,6 +12,7 @@ function Viewer({
   geocoder = false,
   baseLayerPicker = true,
   img = undefined,
+  koreaHomeButton = false,
 } = {}) {
   const viewer = new Cesium.Viewer("cesiumContainer", {
     terrain: terrain,
@@ -30,6 +32,16 @@ function Viewer({
     viewer.imageryLayers.addImageryProvider(img);
   }
 
+  // homeButton event
+  if (koreaHomeButton) {
+    viewer.homeButton.viewModel.command.beforeExecute.addEventListener(
+      (event) => {
+        event.cancel = true;
+        flyCamera(viewer, [127.5, 37.512, 1_500_000]);
+      },
+    );
+  }
+
   // 최대 확대 제한
   viewer.scene.screenSpaceCameraController.maximumZoomDistance = 6378137 * 5;
 
@@ -43,6 +55,9 @@ function Viewer({
   if (cesiumViewerBottom) {
     cesiumViewerBottom.remove();
   }
+
+  // 충돌 무시
+  // viewer.scene.screenSpaceCameraController.enableCollisionDetection = false;
 
   return viewer;
 }

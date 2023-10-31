@@ -6,7 +6,7 @@ import FirstPerson from "./FirstPerson";
 
 ReactModal.setAppElement("#__next");
 
-export default function Modal({ modalIsOpen, closeModal, filePath }) {
+export default function Modal({ modalOpen, closeModal, filePath }) {
   const [loading, setLoading] = useState(true);
   const [initCameraFlag, setInitCameraFlag] = useState(false);
   const loadingState = { loading, setLoading };
@@ -14,12 +14,12 @@ export default function Modal({ modalIsOpen, closeModal, filePath }) {
 
   useEffect(() => {
     setLoading(true);
-  }, [modalIsOpen]);
+  }, [modalOpen]);
 
   return (
     <>
       <ReactModal
-        isOpen={modalIsOpen}
+        isOpen={modalOpen}
         onRequestClose={closeModal}
         contentLabel="Model 2 Modal"
         style={{
