@@ -1,7 +1,6 @@
 import { useEffect } from "react";
 import { XLg } from "react-bootstrap-icons";
 
-// TODO: Widget Open 조건 변경
 export default function Icon({ icon, widgetOpen, clickHandler }) {
   return (
     <div

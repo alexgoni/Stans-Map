@@ -3,7 +3,7 @@ import {
   groupDownAnimation,
   groupUpAnimation,
   hoverToOpacityChange,
-} from "../handler/cesium/ModelEventHandler";
+} from "../../handler/cesium/ModelEventHandler";
 
 export default class ModelEvent {
   constructor({ viewer, modelGroup, modelGroupInfo, clickInnerModelHandler }) {

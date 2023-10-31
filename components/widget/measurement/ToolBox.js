@@ -8,7 +8,6 @@ import {
 } from "@/recoil/atom/MeasurementState";
 import { useRecoilState } from "recoil";
 
-// TODO: 세가지 이벤트 겹칠때? : 다른 위젯 x로 전환? cursor Pointer?
 export default function ToolBox() {
   const [toolBoxOpen, setToolBoxOpen] = useState(false);
   const [distanceWidgetOpen, setDistanceWidgetOpen] =
