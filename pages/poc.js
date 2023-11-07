@@ -50,9 +50,9 @@ export default function POC() {
   useEffect(() => {
     // viewer 생성
     const viewer = Viewer({
-      terrain: new Cesium.Terrain(
-        Cesium.CesiumTerrainProvider.fromUrl("http://localhost:8081/"),
-      ),
+      // terrain: new Cesium.Terrain(
+      //   Cesium.CesiumTerrainProvider.fromUrl("http://localhost:8081/"),
+      // ),
       animation: false,
       baseLayerPicker: false,
       koreaHomeButton: true,

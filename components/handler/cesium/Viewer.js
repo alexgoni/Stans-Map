@@ -6,30 +6,39 @@ function Viewer({
   selectionIndicator = false,
   infoBox = false,
   timeline = false,
-  animation = true,
+  animation = false,
   shouldAnimate = false,
   navigationHelpButton = false,
   geocoder = false,
-  baseLayerPicker = true,
-  img = undefined,
+  baseLayerPicker = false,
+  baseLayer = undefined,
   koreaHomeButton = false,
 } = {}) {
   const viewer = new Cesium.Viewer("cesiumContainer", {
-    terrain: terrain,
-    selectionIndicator: selectionIndicator,
-    infoBox: infoBox,
-    timeline: timeline,
-    animation: animation,
-    shouldAnimate: shouldAnimate,
-    navigationHelpButton: navigationHelpButton,
-    geocoder: geocoder,
-    baseLayerPicker: baseLayerPicker,
+    terrain,
+    selectionIndicator,
+    infoBox,
+    timeline,
+    animation,
+    shouldAnimate,
+    navigationHelpButton,
+    geocoder,
+    baseLayerPicker,
+    /* offline default imageLayer
+    baseLayer: false 
+    or
+    baseLayer: Cesium.ImageryLayer.fromProviderAsync(
+      Cesium.TileMapServiceImageryProvider.fromUrl(
+        Cesium.buildModuleUrl("Assets/Textures/NaturalEarthII"),
+      ),
+    ),
+    */
   });
 
   // imageLayer 설정
-  if (img !== undefined) {
+  if (baseLayer !== undefined) {
     viewer.imageryLayers.removeAll();
-    viewer.imageryLayers.addImageryProvider(img);
+    viewer.imageryLayers.addImageryProvider(baseLayer);
   }
 
   // homeButton event

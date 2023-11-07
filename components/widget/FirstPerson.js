@@ -87,7 +87,7 @@ export default function FirstPerson({
       },
     );
 
-    // 내부 object TODO: 광선이 벽 통과
+    // 내부 object TODO: 광선이 벽 통과 => 광선의 길이 제한?
     loader.load(
       "glb/airplane.glb",
       (gltf) => {
