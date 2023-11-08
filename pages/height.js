@@ -6,7 +6,6 @@ export default function height() {
   useEffect(() => {
     let viewer = null;
     (async () => {
-      debugger;
       viewer = new Cesium.Viewer("cesiumContainer", {
         terrainProvider: await Cesium.CesiumTerrainProvider.fromIonAssetId(1),
       });

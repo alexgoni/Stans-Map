@@ -2,19 +2,22 @@ import { Viewer } from "@/components/handler/cesium/Viewer";
 import React, { useEffect } from "react";
 import * as Cesium from "cesium";
 import CustomCesiumTerrainProvider from "@/components/module/CustomCesiumterrainProvider";
+import IonResource from "@/components/module/engine/IonResource";
+import CesiumTerrainProvider from "@/components/module/engine/CesiumTerrainProvider";
 
 export default function Terrain() {
   useEffect(() => {
-    let viewer;
+    let viewer = null;
 
     (async () => {
       try {
         async function createWorldTerrain() {
-          const provider = await Cesium.CesiumTerrainProvider.fromIonAssetId(1);
+          const provider = await CesiumTerrainProvider.fromIonAssetId(1);
 
-          return new CustomCesiumTerrainProvider({
-            url: Cesium.IonResource.fromAssetId(1),
+          const temp = new CustomCesiumTerrainProvider({
+            url: IonResource.fromAssetId(1),
           });
+          return temp;
         }
 
         const viewer = new Cesium.Viewer("cesiumContainer", {
@@ -42,9 +45,9 @@ export default function Terrain() {
           },
         });
 
-        // viewer.terrainProvider.setFloor(positions, -10000);
-        // //   viewer.scene.globe._surface.tileProvider._debug.wireframe = true;
-        // viewer.zoomTo(viewer.entities);
+        viewer.terrainProvider.setFloor(positions, -10000);
+        //   viewer.scene.globe._surface.tileProvider._debug.wireframe = true;
+        viewer.zoomTo(viewer.entities);
 
         //   (async () => {
         //     const temp = await Cesium.CesiumTerrainProvider.fromIonAssetId(1);

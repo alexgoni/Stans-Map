@@ -1,9 +1,31 @@
+import AttributeCompression from "./engine/AttributeCompression";
+import BoundingSphere from "./engine/BoundingSphere";
+import Cartesian3 from "./engine/Cartesian3";
+import CesiumTerrainProvider from "./engine/CesiumTerrainProvider";
+import Credit from "./engine/Credit";
+import defaultValue from "./engine/defaultValue";
+import defer from "./engine/defer";
+import defined from "./engine/defined";
+import DeveloperError from "./engine/DeveloperError";
+import Event from "./engine/Event";
+import GeographicTilingScheme from "./engine/GeographicTilingScheme";
+import WebMercatorTilingScheme from "./engine/WebMercatorTilingScheme";
+import getJsonFromTypedArray from "./engine/getJsonFromTypedArray";
+import HeightmapTerrainData from "./engine/HeightmapTerrainData";
+import IndexDatatype from "./engine/IndexDatatype";
+import OrientedBoundingBox from "./engine/OrientedBoundingBox";
+import QuantizedMeshTerrainData from "./engine/QuantizedMeshTerrainData";
+import Request from "./engine/Request";
+import RequestType from "./engine/RequestType";
+import RuntimeError from "./engine/RuntimeError";
+import TerrainProvider from "./engine/TerrainProvider";
+import TileAvailability from "./engine/TileAvailability";
+import TileProviderError from "./engine/TileProviderError";
 import * as Cesium from "cesium";
 import * as turf from "@turf/turf";
 
-export default class CustomCesiumTerrainProvider extends Cesium.CesiumTerrainProvider {
+export default class CustomCesiumTerrainProvider extends CesiumTerrainProvider {
   constructor(options) {
-    debugger;
     super(options);
   }
 
@@ -53,7 +75,7 @@ export default class CustomCesiumTerrainProvider extends Cesium.CesiumTerrainPro
       for (let i = 0; i < layerCount; ++i) {
         const layer = layers[i];
         if (
-          !Cesium.defined(layer.availability) ||
+          !defined(layer.availability) ||
           layer.availability.isTileAvailable(level, x, y)
         ) {
           layerToUse = layer;
@@ -66,8 +88,49 @@ export default class CustomCesiumTerrainProvider extends Cesium.CesiumTerrainPro
   }
 }
 
+const QuantizedMeshExtensionIds = {
+  /**
+   * Oct-Encoded Per-Vertex Normals are included as an extension to the tile mesh
+   *
+   * @type {Number}
+   * @constant
+   * @default 1
+   */
+  OCT_VERTEX_NORMALS: 1,
+  /**
+   * A watermask is included as an extension to the tile mesh
+   *
+   * @type {Number}
+   * @constant
+   * @default 2
+   */
+  WATER_MASK: 2,
+  /**
+   * A json object contain metadata about the tile
+   *
+   * @type {Number}
+   * @constant
+   * @default 4
+   */
+  METADATA: 4,
+};
+
+function getRequestHeader(extensionsList) {
+  if (!defined(extensionsList) || extensionsList.length === 0) {
+    return {
+      Accept:
+        "application/vnd.quantized-mesh,application/octet-stream;q=0.9,*/*;q=0.01",
+    };
+  }
+  const extensions = extensionsList.join("-");
+  return {
+    // when request tiles , be sure to include the following HTTP in request"
+    Accept: `application/vnd.quantized-mesh;extensions=${extensions},application/octet-stream;q=0.9,*/*;q=0.01`,
+  };
+}
+
 function requestTileGeometry(provider, x, y, level, layerToUse, request) {
-  if (!Cesium.defined(layerToUse)) {
+  if (!defined(layerToUse)) {
     return Promise.reject(new RuntimeError("Terrain tile doesn't exist"));
   }
 
@@ -106,8 +169,8 @@ function requestTileGeometry(provider, x, y, level, layerToUse, request) {
 
   const resource = layerToUse.resource;
   if (
-    Cesium.defined(resource._ionEndpoint) &&
-    !Cesium.defined(resource._ionEndpoint.externalType)
+    defined(resource._ionEndpoint) &&
+    !defined(resource._ionEndpoint.externalType)
   ) {
     // ion uses query paremeters to request extensions
     if (extensionList.length !== 0) {
@@ -134,13 +197,12 @@ function requestTileGeometry(provider, x, y, level, layerToUse, request) {
     })
     .fetchArrayBuffer();
 
-  if (!Cesium.defined(promise)) {
+  if (!defined(promise)) {
     return undefined;
   }
 
   return promise.then(function (buffer) {
-    if (Cesium.defined(provider._heightmapStructure)) {
-      // debugger
+    if (defined(provider._heightmapStructure)) {
       return createHeightmapTerrainData(provider, buffer, level, x, y);
     }
     return createQuantizedMeshTerrainData(
@@ -152,47 +214,6 @@ function requestTileGeometry(provider, x, y, level, layerToUse, request) {
       layerToUse,
     );
   });
-}
-
-const QuantizedMeshExtensionIds = {
-  /**
-   * Oct-Encoded Per-Vertex Normals are included as an extension to the tile mesh
-   *
-   * @type {Number}
-   * @constant
-   * @default 1
-   */
-  OCT_VERTEX_NORMALS: 1,
-  /**
-   * A watermask is included as an extension to the tile mesh
-   *
-   * @type {Number}
-   * @constant
-   * @default 2
-   */
-  WATER_MASK: 2,
-  /**
-   * A json object contain metadata about the tile
-   *
-   * @type {Number}
-   * @constant
-   * @default 4
-   */
-  METADATA: 4,
-};
-
-function getRequestHeader(extensionsList) {
-  if (!Cesium.defined(extensionsList) || extensionsList.length === 0) {
-    return {
-      Accept:
-        "application/vnd.quantized-mesh,application/octet-stream;q=0.9,*/*;q=0.01",
-    };
-  }
-  const extensions = extensionsList.join("-");
-  return {
-    // when request tiles , be sure to include the following HTTP in request"
-    Accept: `application/vnd.quantized-mesh;extensions=${extensions},application/octet-stream;q=0.9,*/*;q=0.01`,
-  };
 }
 
 ///////////////////////////////////////
@@ -213,7 +234,7 @@ function createQuantizedMeshTerrainData(provider, buffer, level, x, y, layer) {
   let triangleLength = bytesPerIndex * triangleElements;
 
   const view = new DataView(buffer);
-  const center = new Cesium.Cartesian3(
+  const center = new Cartesian3(
     view.getFloat64(pos, true),
     view.getFloat64(pos + 8, true),
     view.getFloat64(pos + 16, true),
@@ -228,7 +249,7 @@ function createQuantizedMeshTerrainData(provider, buffer, level, x, y, layer) {
 
   pos += Float32Array.BYTES_PER_ELEMENT;
 
-  const boundingSphere = new Cesium.BoundingSphere(
+  const boundingSphere = new BoundingSphere(
     new Cartesian3(
       view.getFloat64(pos, true),
       view.getFloat64(pos + 8, true),
@@ -238,7 +259,7 @@ function createQuantizedMeshTerrainData(provider, buffer, level, x, y, layer) {
   );
   pos += boundingSphereLength;
 
-  const horizonOcclusionPoint = new Cesium.Cartesian3(
+  const horizonOcclusionPoint = new Cartesian3(
     view.getFloat64(pos, true),
     view.getFloat64(pos + 8, true),
     view.getFloat64(pos + 16, true),
@@ -306,7 +327,6 @@ function createQuantizedMeshTerrainData(provider, buffer, level, x, y, layer) {
 
   const southVertexCount = view.getUint32(pos, true);
   pos += Uint32Array.BYTES_PER_ELEMENT;
-  //
   const southIndices = IndexDatatype.createTypedArrayFromArrayBuffer(
     vertexCount,
     buffer,
