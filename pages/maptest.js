@@ -16,6 +16,10 @@ export default function MapTest() {
       maximumLevel: 20,
     });
 
+    var version = Cesium.VERSION;
+
+    console.log("Version is " + version);
+
     const viewer = Viewer({
       terrain: new Cesium.Terrain(
         Cesium.CesiumTerrainProvider.fromUrl("http://localhost:8081/"),

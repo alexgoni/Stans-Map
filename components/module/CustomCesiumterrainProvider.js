@@ -1,30 +1,18 @@
-import AttributeCompression from "./engine/AttributeCompression";
-import BoundingSphere from "./engine/BoundingSphere";
-import Cartesian3 from "./engine/Cartesian3";
-import CesiumTerrainProvider from "./engine/CesiumTerrainProvider";
-import Credit from "./engine/Credit";
-import defaultValue from "./engine/defaultValue";
-import defer from "./engine/defer";
-import defined from "./engine/defined";
-import DeveloperError from "./engine/DeveloperError";
-import Event from "./engine/Event";
-import GeographicTilingScheme from "./engine/GeographicTilingScheme";
-import WebMercatorTilingScheme from "./engine/WebMercatorTilingScheme";
-import getJsonFromTypedArray from "./engine/getJsonFromTypedArray";
-import HeightmapTerrainData from "./engine/HeightmapTerrainData";
-import IndexDatatype from "./engine/IndexDatatype";
-import OrientedBoundingBox from "./engine/OrientedBoundingBox";
-import QuantizedMeshTerrainData from "./engine/QuantizedMeshTerrainData";
-import Request from "./engine/Request";
-import RequestType from "./engine/RequestType";
-import RuntimeError from "./engine/RuntimeError";
-import TerrainProvider from "./engine/TerrainProvider";
-import TileAvailability from "./engine/TileAvailability";
-import TileProviderError from "./engine/TileProviderError";
 import * as Cesium from "cesium";
 import * as turf from "@turf/turf";
+import { AttributeCompression } from "@/public/cesium";
+import { BoundingSphere } from "@/public/cesium";
+import { Cartesian3 } from "@/public/cesium";
+import { CesiumTerrainProvider } from "@/public/cesium";
+import { defined } from "@/public/cesium";
+import { DeveloperError } from "@/public/cesium";
+import { getJsonFromTypedArray } from "@/public/cesium";
+import { IndexDatatype } from "@/public/cesium";
+import { OrientedBoundingBox } from "@/public/cesium";
+import { QuantizedMeshTerrainData } from "@/public/cesium";
+import { RuntimeError } from "@/public/cesium";
 
-export default class CustomCesiumTerrainProvider extends CesiumTerrainProvider {
+export default class CustomCesiumTerrainProvider extends Cesium.CesiumTerrainProvider {
   constructor(options) {
     super(options);
   }
@@ -203,6 +191,7 @@ function requestTileGeometry(provider, x, y, level, layerToUse, request) {
 
   return promise.then(function (buffer) {
     if (defined(provider._heightmapStructure)) {
+      // debugger
       return createHeightmapTerrainData(provider, buffer, level, x, y);
     }
     return createQuantizedMeshTerrainData(

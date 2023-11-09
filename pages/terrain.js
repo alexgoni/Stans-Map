@@ -11,7 +11,7 @@ import {
 } from "@/recoil/atom/MeasurementState";
 import Drawer from "@/components/module/measurement/Drawer";
 
-export default function terrain() {
+export default function Terrain() {
   const distanceWidgetOpen = useRecoilValue(distanceWidgetState);
   const radiusWidgetOpen = useRecoilValue(radiusWidgetState);
   const areaWidgetOpen = useRecoilValue(areaWidgetState);

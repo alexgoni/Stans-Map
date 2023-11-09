@@ -1,66 +1,53 @@
-import { Viewer } from "@/components/handler/cesium/Viewer";
 import React, { useEffect } from "react";
 import * as Cesium from "cesium";
 import CustomCesiumTerrainProvider from "@/components/module/CustomCesiumterrainProvider";
-import IonResource from "@/components/module/engine/IonResource";
-import CesiumTerrainProvider from "@/components/module/engine/CesiumTerrainProvider";
 
 export default function Terrain() {
   useEffect(() => {
-    let viewer = null;
+    Cesium.Ion.defaultAccessToken =
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI5YTY3ZDVhNC0zMThlLTQxZjUtODhmOS04ZmJjZGY4MDM4MDEiLCJpZCI6MTQzNzkxLCJpYXQiOjE2ODU2ODkwNDF9.3RQSwjKyySalcp1nUufcBxUk_hNALFLJ9j-X0-FoEpI";
 
-    (async () => {
-      try {
-        async function createWorldTerrain() {
-          const provider = await CesiumTerrainProvider.fromIonAssetId(1);
+    function createWorldTerrain(options) {
+      const url = Cesium.IonResource.fromAssetId(1);
+      console.log(url);
+      const temp = new CustomCesiumTerrainProvider({
+        url,
+        requestVertexNormals: Cesium.defaultValue(
+          options.requestVertexNormals,
+          false,
+        ),
+        requestWaterMask: Cesium.defaultValue(options.requestWaterMask, false),
+      });
+      console.log(temp);
+      return temp;
+    }
 
-          const temp = new CustomCesiumTerrainProvider({
-            url: IonResource.fromAssetId(1),
-          });
-          return temp;
-        }
+    const viewer = new Cesium.Viewer("cesiumContainer", {
+      terrainProvider: createWorldTerrain({}),
+    });
 
-        const viewer = new Cesium.Viewer("cesiumContainer", {
-          terrainProvider: await createWorldTerrain(),
-        });
+    const largePolygonPositions = Cesium.Cartesian3.fromDegreesArray([
+      127, 37, 127, 38, 128, 38, 128, 37, 127, 37,
+    ]);
 
-        const largePolygonPositions = Cesium.Cartesian3.fromDegreesArray([
-          127, 37,
+    const positions = largePolygonPositions;
 
-          127, 38,
+    const entity = viewer.entities.add({
+      polygon: {
+        hierarchy: positions,
+        material: Cesium.Color.RED.withAlpha(0.0),
+      },
+    });
 
-          128, 38,
+    // FIXME: 줌 안됨
+    viewer.zoomTo(entity);
 
-          128, 37,
+    viewer.terrainProvider.setFloor(positions, -10000);
+    //   viewer.scene.globe._surface.tileProvider._debug.wireframe = true;
 
-          127, 37,
-        ]);
-
-        const positions = largePolygonPositions;
-
-        viewer.entities.add({
-          polygon: {
-            hierarchy: positions,
-            material: Cesium.Color.RED.withAlpha(0.0),
-          },
-        });
-
-        viewer.terrainProvider.setFloor(positions, -10000);
-        //   viewer.scene.globe._surface.tileProvider._debug.wireframe = true;
-        viewer.zoomTo(viewer.entities);
-
-        //   (async () => {
-        //     const temp = await Cesium.CesiumTerrainProvider.fromIonAssetId(1);
-
-        //     console.log(temp);
-        //   })();
-      } catch (error) {
-        console.error(error);
-      }
-    })();
+    console.log(viewer.scene.globe);
 
     return () => {
-      if (!viewer) return;
       viewer.destroy();
     };
   }, []);
