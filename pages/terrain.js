@@ -28,7 +28,7 @@ export default function Terrain() {
 
   useEffect(() => {
     const viewer = Viewer({
-      terrain: Cesium.Terrain.fromWorldTerrain(),
+      terrain: Cesium.createWorldTerrain(),
       baseLayerPicker: true,
     });
 

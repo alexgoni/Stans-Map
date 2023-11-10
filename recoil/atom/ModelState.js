@@ -4,7 +4,7 @@ import * as Cesium from "cesium";
 export const tecnoModelState = atom({
   key: "tecnoModelState",
   default: {
-    position: [127.08049, 37.63457, 38],
+    position: [127.08049, 37.63457, 38], // height: 38 (기준 Cesium.Terrain.FrowWorldTerrain)
     orientation: [105, 0, 0],
     info: {
       name: "Tecno Building",

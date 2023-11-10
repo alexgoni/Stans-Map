@@ -1,12 +1,25 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import * as Cesium from "cesium";
 import CustomCesiumTerrainProvider from "@/components/module/CustomCesiumterrainProvider";
+import { addModelEntity } from "@/components/handler/cesium/Entity";
+import { useRecoilValue } from "recoil";
+import { tecnoModelState } from "@/recoil/atom/ModelState";
+import height from "./height";
+import useDidMountEffect from "@/components/module/useDidMountEffect";
 
 export default function Terrain() {
-  useEffect(() => {
-    Cesium.Ion.defaultAccessToken =
-      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI5YTY3ZDVhNC0zMThlLTQxZjUtODhmOS04ZmJjZGY4MDM4MDEiLCJpZCI6MTQzNzkxLCJpYXQiOjE2ODU2ODkwNDF9.3RQSwjKyySalcp1nUufcBxUk_hNALFLJ9j-X0-FoEpI";
+  const tecnoModel = useRecoilValue(tecnoModelState);
+  const [height, setHeight] = useState(-100);
+  const viewerRef = useRef(null);
 
+  const tecnoPositions = Cesium.Cartesian3.fromDegreesArray([
+    127.07049, 37.62457, 127.07049, 37.64457, 127.09049, 37.64457, 127.09049,
+    37.62457,
+  ]);
+
+  const positions = tecnoPositions;
+
+  useEffect(() => {
     function createWorldTerrain(options) {
       const url = Cesium.IonResource.fromAssetId(1);
       console.log(url);
@@ -26,31 +39,46 @@ export default function Terrain() {
       terrainProvider: createWorldTerrain({}),
     });
 
-    const largePolygonPositions = Cesium.Cartesian3.fromDegreesArray([
-      127, 37, 127, 38, 128, 38, 128, 37, 127, 37,
-    ]);
+    viewer.extend(Cesium.viewerCesiumInspectorMixin);
+    viewer.scene.globe.depthTestAgainstTerrain = true;
 
-    const positions = largePolygonPositions;
+    viewerRef.current = viewer;
 
-    const entity = viewer.entities.add({
-      polygon: {
-        hierarchy: positions,
-        material: Cesium.Color.RED.withAlpha(0.0),
-      },
+    const tecno = addModelEntity({
+      viewer,
+      position: [127.08049, 37.63457, height],
+      orientation: [105, 0, 0],
+      modelInfo: tecnoModel.info,
     });
 
-    // FIXME: 줌 안됨
-    viewer.zoomTo(entity);
-
-    viewer.terrainProvider.setFloor(positions, -10000);
-    //   viewer.scene.globe._surface.tileProvider._debug.wireframe = true;
-
-    console.log(viewer.scene.globe);
+    viewer.zoomTo(tecno);
 
     return () => {
       viewer.destroy();
     };
   }, []);
 
-  return <></>;
+  useDidMountEffect(() => {
+    const viewer = viewerRef.current;
+    viewer.terrainProvider.setFloor(positions, height);
+    // tecno model position도 같이 움직여야함
+  }, [height]);
+
+  return (
+    <>
+      <div className="fixed left-5 top-5 z-10">
+        <input
+          type="range"
+          min="0"
+          max="500"
+          value={height}
+          onChange={(e) => {
+            setHeight(e.target.value);
+          }}
+          class="slider"
+          id="myRange"
+        />
+      </div>
+    </>
+  );
 }

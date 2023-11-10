@@ -1,16 +1,15 @@
 import * as Cesium from "cesium";
 import * as turf from "@turf/turf";
-import { AttributeCompression } from "@/public/cesium";
-import { BoundingSphere } from "@/public/cesium";
-import { Cartesian3 } from "@/public/cesium";
-import { CesiumTerrainProvider } from "@/public/cesium";
-import { defined } from "@/public/cesium";
-import { DeveloperError } from "@/public/cesium";
-import { getJsonFromTypedArray } from "@/public/cesium";
-import { IndexDatatype } from "@/public/cesium";
-import { OrientedBoundingBox } from "@/public/cesium";
-import { QuantizedMeshTerrainData } from "@/public/cesium";
-import { RuntimeError } from "@/public/cesium";
+import { AttributeCompression } from "@cesium/engine";
+import { getJsonFromTypedArray } from "@cesium/engine";
+import { BoundingSphere } from "cesium";
+import { Cartesian3 } from "cesium";
+import { defined } from "cesium";
+import { DeveloperError } from "cesium";
+import { IndexDatatype } from "cesium";
+import { OrientedBoundingBox } from "cesium";
+import { QuantizedMeshTerrainData } from "cesium";
+import { RuntimeError } from "cesium";
 
 export default class CustomCesiumTerrainProvider extends Cesium.CesiumTerrainProvider {
   constructor(options) {
