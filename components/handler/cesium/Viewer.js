@@ -3,6 +3,7 @@ import { flyCamera } from "./Camera";
 
 function Viewer({
   terrain = undefined,
+  terrainProvider = undefined,
   selectionIndicator = false,
   infoBox = false,
   timeline = false,
@@ -16,6 +17,7 @@ function Viewer({
 } = {}) {
   const viewer = new Cesium.Viewer("cesiumContainer", {
     terrain,
+    terrainProvider,
     selectionIndicator,
     infoBox,
     timeline,
@@ -25,8 +27,10 @@ function Viewer({
     geocoder,
     baseLayerPicker,
     /* offline default imageLayer
+    추가되는 이미지가 있는 경우
     baseLayer: false 
     or
+    추가되는 이미지가 없는 경우 default 값
     baseLayer: Cesium.ImageryLayer.fromProviderAsync(
       Cesium.TileMapServiceImageryProvider.fromUrl(
         Cesium.buildModuleUrl("Assets/Textures/NaturalEarthII"),

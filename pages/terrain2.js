@@ -1,72 +1,86 @@
 import React, { useEffect, useRef, useState } from "react";
 import * as Cesium from "cesium";
-import CustomCesiumTerrainProvider from "@/components/module/CustomCesiumterrainProvider";
 import { addModelEntity } from "@/components/handler/cesium/Entity";
 import { useRecoilValue } from "recoil";
 import { tecnoModelState } from "@/recoil/atom/ModelState";
-import height from "./height";
-import useDidMountEffect from "@/components/module/useDidMountEffect";
+import createCustomTerrainProvider from "@/components/module/CustomTerrainProvider";
+import { Viewer } from "@/components/handler/cesium/Viewer";
 
 export default function Terrain() {
   const tecnoModel = useRecoilValue(tecnoModelState);
-  const [height, setHeight] = useState(-100);
+  const [height, setHeight] = useState(20);
+
   const viewerRef = useRef(null);
 
-  const tecnoPositions = Cesium.Cartesian3.fromDegreesArray([
-    127.07049, 37.62457, 127.07049, 37.64457, 127.09049, 37.64457, 127.09049,
-    37.62457,
+  const positions1 = Cesium.Cartesian3.fromDegreesArray([
+    127.178, 37.732, 127.178, 37.736, 127.182, 37.736, 127.182, 37.732,
   ]);
 
-  const positions = tecnoPositions;
+  const positions2 = Cesium.Cartesian3.fromDegreesArray([
+    127.183, 37.738, 127.183, 37.742, 127.188, 37.742, 127.188, 37.738,
+  ]);
 
   useEffect(() => {
-    function createWorldTerrain(options) {
-      const url = Cesium.IonResource.fromAssetId(1);
-      console.log(url);
-      const temp = new CustomCesiumTerrainProvider({
-        url,
-        requestVertexNormals: Cesium.defaultValue(
-          options.requestVertexNormals,
-          false,
-        ),
-        requestWaterMask: Cesium.defaultValue(options.requestWaterMask, false),
+    let viewer;
+    // terrainProvider 설정할 때는 async / await 사용
+    (async () => {
+      const defaultTerrainProvider =
+        await Cesium.CesiumTerrainProvider.fromIonAssetId(1);
+
+      const customTerrainProvider = createCustomTerrainProvider(
+        defaultTerrainProvider,
+      );
+
+      viewer = Viewer({ terrainProvider: customTerrainProvider });
+
+      viewer.extend(Cesium.viewerCesiumInspectorMixin);
+      viewer.scene.globe.depthTestAgainstTerrain = true;
+
+      const elevationDataArray = [
+        {
+          positions: positions1,
+          height,
+        },
+        {
+          positions: positions2,
+          height: 500,
+        },
+      ];
+
+      viewer.terrainProvider.setGlobalFloor(elevationDataArray);
+
+      viewerRef.current = viewer;
+
+      const tecno = addModelEntity({
+        viewer,
+        position: [127.1805, 37.73458, height],
+        orientation: [105, 0, 0],
+        modelInfo: tecnoModel.info,
       });
-      console.log(temp);
-      return temp;
-    }
 
-    const viewer = new Cesium.Viewer("cesiumContainer", {
-      terrainProvider: createWorldTerrain({}),
-    });
-
-    viewer.extend(Cesium.viewerCesiumInspectorMixin);
-    viewer.scene.globe.depthTestAgainstTerrain = true;
-
-    viewerRef.current = viewer;
-
-    const tecno = addModelEntity({
-      viewer,
-      position: [127.08049, 37.63457, height],
-      orientation: [105, 0, 0],
-      modelInfo: tecnoModel.info,
-    });
-
-    viewer.zoomTo(tecno);
+      viewer.zoomTo(tecno);
+    })();
 
     return () => {
-      viewer.destroy();
+      viewerRef.current?.destroy();
     };
   }, []);
 
-  useDidMountEffect(() => {
-    const viewer = viewerRef.current;
-    viewer.terrainProvider.setFloor(positions, height);
-    // tecno model position도 같이 움직여야함
-  }, [height]);
+  // useDidMountEffect(() => {
+  //   const viewer = viewerRef.current;
+  //   viewer.terrainProvider.setFloor(positions1, height);
+  //   // tecno model position도 같이 움직여야함
+  // }, [height]);
+
+  // useEffect(() => {
+  //   if (!viewerRef.current) return;
+  //   const viewer = viewerRef.current;
+
+  // }, [viewerRef.current]);
 
   return (
     <>
-      <div className="fixed left-5 top-5 z-10">
+      {/* <div className="fixed left-5 top-5 z-10">
         <input
           type="range"
           min="0"
@@ -78,7 +92,7 @@ export default function Terrain() {
           class="slider"
           id="myRange"
         />
-      </div>
+      </div> */}
     </>
   );
 }

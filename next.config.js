@@ -1,7 +1,7 @@
 const webpack = require("webpack");
 
 module.exports = {
-  reactStrictMode: true,
+  reactStrictMode: false,
   webpack: (config) => {
     config.plugins.push(
       new webpack.DefinePlugin({

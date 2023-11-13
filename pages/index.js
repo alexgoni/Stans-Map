@@ -6,11 +6,10 @@ import { useEffect } from "react";
 export default function Home() {
   useEffect(() => {
     // viewer 생성
-    const viewer = new Cesium.Viewer("cesiumContainer", {
-      terrainProvider: Cesium.createWorldTerrain(),
+    const viewer = Viewer("cesiumContainer", {
+      terrain: Cesium.Terrain.fromWorldTerrain(),
     });
 
-    console.log(Cesium.createWorldTerrain());
     // camera 설정
     flyCamera(viewer, [-122.4175, 37.655, 400], [0, -15, 0]);
 

@@ -1,34 +1,47 @@
 import { useEffect } from "react";
 import * as Cesium from "cesium";
 import { Viewer } from "@/components/handler/cesium/Viewer";
+import createCustomTerrainProvider from "@/components/module/CustomTerrainProvider";
 
 export default function MapTest() {
   useEffect(() => {
     const geomap = new Cesium.WebMapServiceImageryProvider({
-      url: "http://192.168.1.45:8188/geoserver/wms",
+      url: "http://localhost:8188/geoserver/wms",
       parameters: {
         format: "image/png",
         transparent: "true",
         tiled: true,
         enablePickFeatures: true,
       },
-      layers: "stans:protoMap",
+      layers: "Nowon",
       maximumLevel: 20,
     });
 
-    var version = Cesium.VERSION;
+    let viewer;
+    (async () => {
+      const defaultTerrainProvider = await Cesium.CesiumTerrainProvider.fromUrl(
+        "http://localhost:8081/",
+      );
 
-    console.log("Version is " + version);
+      const customTerrainProvider = createCustomTerrainProvider(
+        defaultTerrainProvider,
+      );
 
-    const viewer = Viewer({
-      terrain: new Cesium.Terrain(
-        Cesium.CesiumTerrainProvider.fromUrl("http://localhost:8081/"),
-      ),
-      baseLayer: geomap,
-    });
+      viewer = Viewer({
+        terrainProvider: customTerrainProvider,
+        baseLayer: geomap,
+      });
+
+      const positions = Cesium.Cartesian3.fromDegreesArray([
+        127.07049, 37.62457, 127.07049, 37.64457, 127.09049, 37.64457,
+        127.09049, 37.62457,
+      ]);
+
+      viewer.terrainProvider.setFloor(positions, -500);
+    })();
 
     return () => {
-      viewer.destroy();
+      viewer?.destroy();
     };
   }, []); // Empty dependency array ensures this useEffect runs once on mount
 
