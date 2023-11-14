@@ -5,12 +5,19 @@ import { useRecoilValue } from "recoil";
 import { tecnoModelState } from "@/recoil/atom/ModelState";
 import createCustomTerrainProvider from "@/components/module/CustomTerrainProvider";
 import { Viewer } from "@/components/handler/cesium/Viewer";
+import AreaDrawer from "@/components/module/measurement/Area";
+import useDidMountEffect from "@/components/module/useDidMountEffect";
+import TerrainAreaDrawer from "@/components/module/measurement/TerrainArea";
 
 export default function Terrain() {
   const tecnoModel = useRecoilValue(tecnoModelState);
   const [height, setHeight] = useState(20);
+  const [drawArea, setDrawArea] = useState(false);
+  const [start, setStart] = useState(false);
+  const [index, setIndex] = useState(0);
 
   const viewerRef = useRef(null);
+  const terrainAreaDrawerRef = useRef(null);
 
   const positions1 = Cesium.Cartesian3.fromDegreesArray([
     127.178, 37.732, 127.178, 37.736, 127.182, 37.736, 127.182, 37.732,
@@ -18,6 +25,17 @@ export default function Terrain() {
 
   const positions2 = Cesium.Cartesian3.fromDegreesArray([
     127.183, 37.738, 127.183, 37.742, 127.188, 37.742, 127.188, 37.738,
+  ]);
+
+  const [elevationDataArray, setElevationDataArray] = useState([
+    {
+      positions: positions1,
+      height,
+    },
+    {
+      positions: positions2,
+      height: 500,
+    },
   ]);
 
   useEffect(() => {
@@ -36,17 +54,6 @@ export default function Terrain() {
       viewer.extend(Cesium.viewerCesiumInspectorMixin);
       viewer.scene.globe.depthTestAgainstTerrain = true;
 
-      const elevationDataArray = [
-        {
-          positions: positions1,
-          height,
-        },
-        {
-          positions: positions2,
-          height: 500,
-        },
-      ];
-
       viewer.terrainProvider.setGlobalFloor(elevationDataArray);
 
       viewerRef.current = viewer;
@@ -59,12 +66,49 @@ export default function Terrain() {
       });
 
       viewer.zoomTo(tecno);
+
+      const terrainAreaDrawer = new TerrainAreaDrawer(viewer);
+      terrainAreaDrawerRef.current = terrainAreaDrawer;
     })();
 
     return () => {
       viewerRef.current?.destroy();
+      viewerRef.current = null;
     };
   }, []);
+
+  useDidMountEffect(() => {
+    const terrainAreaDrawer = terrainAreaDrawerRef.current;
+
+    drawArea
+      ? terrainAreaDrawer.startDrawing()
+      : terrainAreaDrawer.stopDrawing();
+
+    return () => {
+      terrainAreaDrawer.stopDrawing();
+    };
+  }, [drawArea]);
+
+  useDidMountEffect(() => {
+    if (!start) return;
+    const terrainAreaDrawer = terrainAreaDrawerRef.current;
+
+    const positionArr = terrainAreaDrawer.getPointPositionArr(index);
+    setIndex(index + 1);
+    const newElevationDataArray = [
+      ...elevationDataArray,
+      { positions: positionArr, height: 500 },
+    ];
+    setElevationDataArray(newElevationDataArray);
+    setStart(false);
+  }, [start]);
+
+  // elevationDataArray가 업데이트될 때마다 실행되도록 useEffect 사용
+  useDidMountEffect(() => {
+    if (!viewerRef.current) return;
+    const viewer = viewerRef.current;
+    viewer.terrainProvider.setGlobalFloor(elevationDataArray);
+  }, [elevationDataArray]);
 
   // useDidMountEffect(() => {
   //   const viewer = viewerRef.current;
@@ -80,6 +124,31 @@ export default function Terrain() {
 
   return (
     <>
+      <button
+        className="fixed left-4 top-4 z-50 bg-white p-4"
+        onClick={() => {
+          setDrawArea(true);
+        }}
+      >
+        Start Drawing Area
+      </button>
+      <button
+        className="fixed left-4 top-16 z-50 bg-white p-4"
+        onClick={() => {
+          setDrawArea(false);
+        }}
+      >
+        Clear Entities
+      </button>
+      <button
+        className="fixed left-4 top-28 z-50 bg-white p-4"
+        onClick={() => {
+          setStart(true);
+        }}
+      >
+        modify
+      </button>
+
       {/* <div className="fixed left-5 top-5 z-10">
         <input
           type="range"

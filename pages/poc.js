@@ -10,7 +10,7 @@ import {
 import Drawer from "@/components/module/measurement/Drawer";
 import useDidMountEffect from "@/components/module/useDidMountEffect";
 import Modal from "@/components/widget/Modal";
-import ToolBox from "@/components/widget/measurement/ToolBox";
+import MeasurementBox from "@/components/widget/tool/Measurement";
 import {
   areaWidgetState,
   distanceWidgetState,
@@ -143,7 +143,7 @@ export default function POC() {
         closeModal={() => setModalOpen(false)}
         filePath={uri}
       />
-      <ToolBox />
+      <MeasurementBox />
     </>
   );
 }

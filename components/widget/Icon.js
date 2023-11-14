@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { XLg } from "react-bootstrap-icons";
 
 export default function Icon({ icon, widgetOpen, clickHandler }) {

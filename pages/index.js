@@ -6,7 +6,7 @@ import { useEffect } from "react";
 export default function Home() {
   useEffect(() => {
     // viewer 생성
-    const viewer = Viewer("cesiumContainer", {
+    const viewer = Viewer({
       terrain: Cesium.Terrain.fromWorldTerrain(),
     });
 

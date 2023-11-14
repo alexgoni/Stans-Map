@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Rulers, Circle, Heptagon } from "react-bootstrap-icons";
-import Icon from "./Icon";
+import Icon from "../Icon";
 import {
   areaWidgetState,
   distanceWidgetState,
@@ -8,8 +8,8 @@ import {
 } from "@/recoil/atom/MeasurementState";
 import { useRecoilState } from "recoil";
 
-export default function ToolBox() {
-  const [toolBoxOpen, setToolBoxOpen] = useState(false);
+export default function MeasurementBox() {
+  const [boxOpen, setBoxOpen] = useState(false);
   const [distanceWidgetOpen, setDistanceWidgetOpen] =
     useRecoilState(distanceWidgetState);
   const [radiusWidgetOpen, setRadiusWidgetOpen] =
@@ -21,16 +21,16 @@ export default function ToolBox() {
       <div className="fixed bottom-8 left-10 flex flex-col-reverse gap-1">
         <Icon
           icon={<Rulers className="text-2xl text-gray-200" />}
-          widgetOpen={toolBoxOpen}
+          widgetOpen={boxOpen}
           clickHandler={() => {
-            setToolBoxOpen(!toolBoxOpen);
+            setBoxOpen(!boxOpen);
             setDistanceWidgetOpen(false);
             setRadiusWidgetOpen(false);
             setAreaWidgetOpen(false);
           }}
         />
 
-        {toolBoxOpen ? (
+        {boxOpen ? (
           <>
             <Icon
               icon={<Rulers className="text-2xl text-gray-200" />}

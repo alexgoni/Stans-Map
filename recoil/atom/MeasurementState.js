@@ -14,3 +14,8 @@ export const areaWidgetState = atom({
   key: "areaWidgetState",
   default: false,
 });
+
+export const terrainEditorState = atom({
+  key: "terrainEditorState",
+  default: false,
+});
