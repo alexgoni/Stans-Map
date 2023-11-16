@@ -52,4 +52,20 @@ function flyCamera(viewer, destination, orientation = []) {
   });
 }
 
-export { defaultCamera, flyCamera };
+function cloneCameraPosition(viewer) {
+  const currentCameraPosition = viewer.camera.position.clone();
+
+  const currentCameraHeading = viewer.camera.heading;
+  const currentCameraPitch = viewer.camera.pitch;
+  const currentCameraRoll = viewer.camera.roll;
+
+  const currentCameraOrientation = {
+    heading: currentCameraHeading,
+    pitch: currentCameraPitch,
+    roll: currentCameraRoll,
+  };
+
+  return { currentCameraPosition, currentCameraOrientation };
+}
+
+export { defaultCamera, flyCamera, cloneCameraPosition };

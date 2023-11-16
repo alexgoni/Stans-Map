@@ -5,9 +5,9 @@ import { useRecoilValue } from "recoil";
 import { tecnoModelState } from "@/recoil/atom/ModelState";
 import createCustomTerrainProvider from "@/components/module/CustomTerrainProvider";
 import { Viewer } from "@/components/handler/cesium/Viewer";
-import AreaDrawer from "@/components/module/measurement/Area";
+import AreaDrawer from "@/components/module/tool/measurement/Area";
 import useDidMountEffect from "@/components/module/useDidMountEffect";
-import TerrainAreaDrawer from "@/components/module/measurement/TerrainArea";
+import TerrainAreaDrawer from "@/components/module/tool/terrain/TerrainArea";
 
 export default function Terrain() {
   const tecnoModel = useRecoilValue(tecnoModelState);
@@ -93,7 +93,7 @@ export default function Terrain() {
     if (!start) return;
     const terrainAreaDrawer = terrainAreaDrawerRef.current;
 
-    const positionArr = terrainAreaDrawer.getPointPositionArr(index);
+    const positionArr = terrainAreaDrawer.getSelectedPositions();
     setIndex(index + 1);
     const newElevationDataArray = [
       ...elevationDataArray,
@@ -148,20 +148,6 @@ export default function Terrain() {
       >
         modify
       </button>
-
-      {/* <div className="fixed left-5 top-5 z-10">
-        <input
-          type="range"
-          min="0"
-          max="500"
-          value={height}
-          onChange={(e) => {
-            setHeight(e.target.value);
-          }}
-          class="slider"
-          id="myRange"
-        />
-      </div> */}
     </>
   );
 }

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import * as Cesium from "cesium";
-import LineDrawer from "@/components/module/measurement/Line";
+import LineDrawer from "@/components/module/tool/measurement/Line";
 import useDidMountEffect from "@/components/module/useDidMountEffect";
 import { Viewer } from "@/components/handler/cesium/Viewer";
 
@@ -22,6 +22,7 @@ export default function Test() {
       const position = Cesium.Cartographic.fromDegrees(86.925, 27.9881);
       Cesium.sampleTerrain(viewer.terrainProvider, 11, [position]).then(
         function (updatedPositions) {
+          console.log(updatedPositions);
           const height = updatedPositions[0].height;
           console.log(`높이: ${height} 미터`);
         },

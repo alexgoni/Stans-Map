@@ -14,7 +14,11 @@ export default function createCustomTerrainProvider(terrainProvdier) {
   terrainProvdier.setGlobalFloor = function (modifyData) {
     this._modifyData = [];
     modifyData.forEach((each) => {
-      const data = {};
+      const data = {
+        floorHeight: 0,
+        floorBoundingRect: null,
+        floorPolygon: null,
+      };
       data.floorHeight = each.height;
 
       data.floorBoundingRect = Cesium.Rectangle.fromCartesianArray(
@@ -25,7 +29,6 @@ export default function createCustomTerrainProvider(terrainProvdier) {
 
       for (let i = 0; i < each.positions.length; i++) {
         const carto = Cesium.Cartographic.fromCartesian(each.positions[i]);
-
         const longitude = Cesium.Math.toDegrees(carto.longitude);
         const latitude = Cesium.Math.toDegrees(carto.latitude);
 
@@ -39,13 +42,6 @@ export default function createCustomTerrainProvider(terrainProvdier) {
       this._modifyData.push(data);
     });
   };
-
-  // this._floorHeight를 바꿔야 될듯? 반복문으로 하더라도 this._floorHeight가 덮어씌워짐
-  // terrainProvdier.setGlobalFloor = function (elevationDataArray) {
-  //   elevationDataArray.forEach((element) => {
-  //     this.setFloor(element.positions, element.height);
-  //   });
-  // };
 
   terrainProvdier.requestTileGeometry = function (x, y, level, request) {
     const layers = this._layers;
@@ -69,6 +65,7 @@ export default function createCustomTerrainProvider(terrainProvdier) {
     }
     return requestTileGeometry(this, x, y, level, layerToUse, request);
   };
+
   return terrainProvdier;
 }
 
@@ -424,62 +421,64 @@ function createQuantizedMeshTerrainData(provider, buffer, level, x, y, layer) {
   );
 
   // 다중 지형 정보 수정
-  provider._modifyData.forEach((data) => {
-    if (
-      data.floorBoundingRect &&
-      Cesium.Rectangle.intersection(data.floorBoundingRect, rectangle)
-    ) {
-      const modified = modifyTerrain(
-        data,
-        rectangle,
-        minimumHeight,
-        maximumHeight,
-        vertexCount,
-        uBuffer,
-        vBuffer,
-        heightBuffer,
-      );
+  if (provider._modifyData) {
+    provider._modifyData.forEach((data) => {
+      if (
+        data.floorBoundingRect &&
+        Cesium.Rectangle.intersection(data.floorBoundingRect, rectangle)
+      ) {
+        const modified = modifyTerrain(
+          data,
+          rectangle,
+          minimumHeight,
+          maximumHeight,
+          vertexCount,
+          uBuffer,
+          vBuffer,
+          heightBuffer,
+        );
 
-      if (modified) {
-        const floorHeight = data.floorHeight;
+        if (modified) {
+          const floorHeight = data.floorHeight;
 
-        if (floorHeight < minimumHeight) {
-          minimumHeight = floorHeight;
+          if (floorHeight < minimumHeight) {
+            minimumHeight = floorHeight;
+          }
+
+          if (floorHeight > maximumHeight) {
+            maximumHeight = floorHeight;
+          }
+
+          return new QuantizedMeshTerrainData({
+            center: center,
+            minimumHeight: minimumHeight,
+            maximumHeight: maximumHeight,
+            boundingSphere: boundingSphere,
+            orientedBoundingBox: orientedBoundingBox,
+            horizonOcclusionPoint: horizonOcclusionPoint,
+            quantizedVertices: encodedVertexBuffer,
+            encodedNormals: encodedNormalBuffer,
+            indices: indices,
+            westIndices: westIndices,
+            southIndices: southIndices,
+            eastIndices: eastIndices,
+            northIndices: northIndices,
+            westSkirtHeight: skirtHeight,
+            southSkirtHeight: skirtHeight,
+            eastSkirtHeight: skirtHeight,
+            northSkirtHeight: skirtHeight,
+            childTileMask: provider.availability.computeChildMaskForTile(
+              level,
+              x,
+              y,
+            ),
+            waterMask: waterMaskBuffer,
+            credits: provider._tileCredits,
+          });
         }
-
-        if (floorHeight > maximumHeight) {
-          maximumHeight = floorHeight;
-        }
-
-        return new QuantizedMeshTerrainData({
-          center: center,
-          minimumHeight: minimumHeight,
-          maximumHeight: maximumHeight,
-          boundingSphere: boundingSphere,
-          orientedBoundingBox: orientedBoundingBox,
-          horizonOcclusionPoint: horizonOcclusionPoint,
-          quantizedVertices: encodedVertexBuffer,
-          encodedNormals: encodedNormalBuffer,
-          indices: indices,
-          westIndices: westIndices,
-          southIndices: southIndices,
-          eastIndices: eastIndices,
-          northIndices: northIndices,
-          westSkirtHeight: skirtHeight,
-          southSkirtHeight: skirtHeight,
-          eastSkirtHeight: skirtHeight,
-          northSkirtHeight: skirtHeight,
-          childTileMask: provider.availability.computeChildMaskForTile(
-            level,
-            x,
-            y,
-          ),
-          waterMask: waterMaskBuffer,
-          credits: provider._tileCredits,
-        });
       }
-    }
-  });
+    });
+  }
 
   return new QuantizedMeshTerrainData({
     center: center,

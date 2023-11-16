@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import ReactModal from "react-modal";
-import Loading from "./Loading";
+import Loading from "./loading/Loading";
 import { ArrowClockwise, XLg } from "react-bootstrap-icons";
 import FirstPerson from "./FirstPerson";
 
@@ -48,7 +48,7 @@ export default function Modal({ modalOpen, closeModal, filePath }) {
           cameraFlagState={cameraFlagState}
         />
         {loading ? (
-          <Loading />
+          <Loading transparent={true} />
         ) : (
           <div
             className="fixed bottom-12 right-12 z-50 flex h-12 w-14 cursor-pointer select-none items-center justify-center rounded-full

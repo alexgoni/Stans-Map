@@ -5,13 +5,14 @@ import { useRecoilValue } from "recoil";
 import { tecnoModelState } from "@/recoil/atom/ModelState";
 import createCustomTerrainProvider from "@/components/module/CustomTerrainProvider";
 import { Viewer } from "@/components/handler/cesium/Viewer";
-import AreaDrawer from "@/components/module/measurement/Area";
 import useDidMountEffect from "@/components/module/useDidMountEffect";
+import Loading from "@/components/widget/loading/Loading";
 
 export default function Terrain() {
   const tecnoModel = useRecoilValue(tecnoModelState);
-  const [height, setHeight] = useState(20);
-
+  const [slideValue, setSlideValue] = useState(20);
+  const [height, setHeight] = useState(slideValue);
+  const [loading, setLoading] = useState(false);
   const viewerRef = useRef(null);
   const customRef = useRef(null);
 
@@ -39,20 +40,15 @@ export default function Terrain() {
     (async () => {
       const defaultTerrainProvider =
         await Cesium.CesiumTerrainProvider.fromIonAssetId(1);
-
       const customTerrainProvider = createCustomTerrainProvider(
         defaultTerrainProvider,
       );
-
       customRef.current = customTerrainProvider;
 
       const viewer = Viewer({ terrainProvider: customTerrainProvider });
-
       viewer.extend(Cesium.viewerCesiumInspectorMixin);
       viewer.scene.globe.depthTestAgainstTerrain = true;
-
       viewer.terrainProvider.setGlobalFloor(elevationDataArray);
-
       viewerRef.current = viewer;
 
       const tecno = addModelEntity({
@@ -61,12 +57,12 @@ export default function Terrain() {
         orientation: [105, 0, 0],
         modelInfo: tecnoModel.info,
       });
-
       viewer.zoomTo(tecno);
     })();
 
     return () => {
       viewerRef.current?.destroy();
+      viewerRef.current = null;
     };
   }, []);
 
@@ -74,30 +70,45 @@ export default function Terrain() {
     if (!viewerRef.current) return;
     const viewer = viewerRef.current;
 
+    setLoading(true);
     viewer.terrainProvider.setGlobalFloor(elevationDataArray);
 
-    // viewer.scene.globe.maximumScreenSpaceError = Infinity;
-    var zoomOutDistance = 15000; // 줌아웃할 거리 (미터)
+    const currentCameraPosition = viewer.camera.position.clone();
+    const currentCameraHeading = viewer.camera.heading;
+    const currentCameraPitch = viewer.camera.pitch;
+    const currentCameraRoll = viewer.camera.roll;
 
-    viewer.camera.zoomOut(zoomOutDistance);
     setTimeout(() => {
-      // viewer.scene.globe.maximumScreenSpaceError = 2;
-      viewer.camera.zoomIn(zoomOutDistance);
-    }, 2000);
+      viewer.camera.flyHome(0);
+    }, 300);
+
+    setTimeout(() => {
+      viewer.camera.setView({
+        destination: currentCameraPosition,
+        orientation: {
+          heading: currentCameraHeading,
+          pitch: currentCameraPitch,
+          roll: currentCameraRoll,
+        },
+      });
+      setLoading(false);
+    }, 600);
   }, [height]);
 
   return (
     <>
+      {loading ? <Loading transparent={false} /> : null}
+
       <div className="fixed left-5 top-5 z-10">
         <input
           type="range"
           min="0"
           max="500"
-          value={height}
-          onChange={(e) => {
-            setHeight(Number(e.target.value));
+          value={slideValue}
+          onChange={(e) => setSlideValue(e.target.value)}
+          onMouseUp={(e) => {
+            setHeight(Number(slideValue));
           }}
-          id="myRange"
         />
       </div>
     </>
