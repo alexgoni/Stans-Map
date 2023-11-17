@@ -125,7 +125,7 @@ export default function POC() {
     const drawer = drawerRef.current;
 
     drawer.setWidgetState(widgetStateObj);
-    drawer.drawingHandler();
+    drawer.handleAllShapes();
 
     setWidgetAllClose(
       !distanceWidgetOpen && !radiusWidgetOpen && !areaWidgetOpen,

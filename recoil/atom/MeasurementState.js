@@ -15,12 +15,7 @@ export const areaWidgetState = atom({
   default: false,
 });
 
-export const terrainEditorState = atom({
-  key: "terrainEditorState",
-  default: false,
-});
-
-export const modifyTerrainFlag = atom({
-  key: "modifyTerrainFlag",
-  default: false,
+export const measureWidgetCloseState = atom({
+  key: "measureWidgetCloseState",
+  default: true,
 });

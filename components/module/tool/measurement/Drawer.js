@@ -50,7 +50,7 @@ export default class Drawer {
     }
   }
 
-  drawingHandler() {
+  handleAllShapes() {
     this.lineDrawerHandler();
     this.circleDrawerHandler();
     this.areaDrawerHandler();

@@ -1,8 +1,8 @@
-import { modifyTerrainFlag } from "@/recoil/atom/MeasurementState";
 import { useSetRecoilState } from "recoil";
 import Loading from "./Loading";
 import { useEffect } from "react";
 import { cloneCameraPosition } from "@/components/handler/cesium/Camera";
+import { modifyTerrainFlag } from "@/recoil/atom/TerrainState";
 
 export default function TerrainLoading({ viewer, setIsSelected }) {
   const setModifyState = useSetRecoilState(modifyTerrainFlag);

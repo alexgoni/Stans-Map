@@ -8,7 +8,7 @@ import { useRecoilState, useRecoilValue } from "recoil";
 import {
   modifyTerrainFlag,
   terrainEditorState,
-} from "@/recoil/atom/MeasurementState";
+} from "@/recoil/atom/TerrainState";
 import createCustomTerrainProvider from "@/components/module/CustomTerrainProvider";
 import TerrainLoading from "@/components/widget/loading/TerrainLoading";
 
