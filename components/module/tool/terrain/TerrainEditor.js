@@ -18,24 +18,28 @@ export default class TerrainEditor {
     this.terrainAreaDrawer.clearAreaGroupArr();
   }
 
-  async modifyTerrain(slideValue) {
-    const selectedPositions = this.terrainAreaDrawer.getSelectedPositions();
-    if (!selectedPositions) return;
+  async modifyTerrain(positions, slideValue) {
+    if (!positions) return;
 
     const heightArr = await Promise.all(
-      selectedPositions.map((position) => this.#getPositionHeight(position)),
+      positions.map((position) => this.#getPositionHeight(position)),
     );
 
     const averageHeight =
       heightArr.reduce((acc, cur) => acc + cur, 0) / heightArr.length;
     const targetHeight = averageHeight + slideValue;
     this.elevationDataArray.push({
-      positions: selectedPositions,
+      positions,
       height: targetHeight,
     });
-    this.viewer.terrainProvider.setGlobalFloor(this.elevationDataArray);
 
+    this.viewer.terrainProvider.setGlobalFloor(this.elevationDataArray);
     this.terrainAreaDrawer.afterEditTerrain();
+  }
+
+  getSelectedPositions() {
+    const selectedPositions = this.terrainAreaDrawer.getSelectedPositions();
+    return selectedPositions;
   }
 
   async #getPositionHeight(position) {

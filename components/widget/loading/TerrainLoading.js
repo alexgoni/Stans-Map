@@ -1,11 +1,8 @@
-import { useSetRecoilState } from "recoil";
 import Loading from "./Loading";
 import { useEffect } from "react";
 import { cloneCameraPosition } from "@/components/handler/cesium/Camera";
-import { modifyTerrainFlag } from "@/recoil/atom/TerrainState";
 
-export default function TerrainLoading({ viewer, setIsSelected }) {
-  const setModifyState = useSetRecoilState(modifyTerrainFlag);
+export default function TerrainLoading({ viewer, resetModifyState }) {
   const LOADING_DURATION = 600;
 
   useEffect(() => {
@@ -22,8 +19,7 @@ export default function TerrainLoading({ viewer, setIsSelected }) {
         orientation: currentCameraOrientation,
       });
 
-      setModifyState(false);
-      setIsSelected(false);
+      resetModifyState();
     }, LOADING_DURATION);
   }, []);
 

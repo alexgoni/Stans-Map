@@ -38,7 +38,7 @@ export default class TerrainAreaDrawer extends AreaDrawer {
 
   afterEditTerrain() {
     this.startDrawing();
-    this.clearAreaGroupArr();
+    // this.clearAreaGroupArr();
   }
 
   onRightClick() {

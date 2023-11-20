@@ -3,15 +3,19 @@ import {
   terrainEditorState,
 } from "@/recoil/atom/TerrainState";
 import { ArrowDownUp, Globe, GlobeAsiaAustralia } from "react-bootstrap-icons";
-import { useRecoilState } from "recoil";
+import { useRecoilState, useRecoilValue } from "recoil";
 import Icon from "../Icon";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import "react-bootstrap-range-slider/dist/react-bootstrap-range-slider.css";
 import RangeSlider from "react-bootstrap-range-slider";
 
-export default function TerrainEditWidget({ viewer, setSlideValue }) {
+export default function TerrainEditWidget({
+  viewer,
+  setModifyClick,
+  setSlideValue,
+}) {
+  const modifyState = useRecoilValue(modifyTerrainFlag);
   const [editorOpen, setEditorOpen] = useRecoilState(terrainEditorState);
-  const [modifyState, setModifyState] = useRecoilState(modifyTerrainFlag);
   const [value, setValue] = useState(0);
   const [wireState, setWireState] = useState(false);
 
@@ -25,6 +29,7 @@ export default function TerrainEditWidget({ viewer, setSlideValue }) {
             setEditorOpen(!editorOpen);
           }}
         />
+
         {editorOpen ? (
           <>
             <div className="mt-10">
@@ -44,7 +49,7 @@ export default function TerrainEditWidget({ viewer, setSlideValue }) {
               icon={<ArrowDownUp className="text-2xl text-gray-200" />}
               widgetOpen={modifyState}
               clickHandler={() => {
-                setModifyState(!modifyState);
+                setModifyClick(true);
               }}
             />
 

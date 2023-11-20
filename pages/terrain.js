@@ -1,7 +1,7 @@
 import { Viewer } from "@/components/handler/cesium/Viewer";
-import TerrainAreaDrawer from "@/components/module/tool/terrain/TerrainArea";
 import useDidMountEffect from "@/components/module/useDidMountEffect";
-import TerrainEditor from "@/components/widget/tool/TerrainEditor";
+import TerrainEditWidget from "@/components/widget/tool/TerrainEditor";
+import TerrainEditor from "@/components/module/tool/terrain/TerrainEditor";
 import React, { useEffect, useRef, useState } from "react";
 import * as Cesium from "cesium";
 import { useRecoilState, useRecoilValue } from "recoil";
@@ -13,13 +13,17 @@ import createCustomTerrainProvider from "@/components/module/CustomTerrainProvid
 import TerrainLoading from "@/components/widget/loading/TerrainLoading";
 
 export default function Terrain() {
-  const terrainAreaDrawerRef = useRef(null);
+  const terrainEditorRef = useRef(null);
   const viewerRef = useRef(null);
-  const terrainEditorOpen = useRecoilValue(terrainEditorState);
+  const isTerrainEditorOpen = useRecoilValue(terrainEditorState);
   const [modifyState, setModifyState] = useRecoilState(modifyTerrainFlag);
-  const [isSelected, setIsSelected] = useState(false);
   const [slideValue, setSlideValue] = useState(0);
-  const [elevationDataArray, setElevationDataArray] = useState([]);
+  const [modifyClick, setModifyClick] = useState(false);
+
+  const resetModifyState = () => {
+    setModifyClick(false);
+    setModifyState(false);
+  };
 
   // viewer
   useEffect(() => {
@@ -36,8 +40,8 @@ export default function Terrain() {
       });
       viewerRef.current = viewer;
 
-      const terrainAreaDrawer = new TerrainAreaDrawer(viewer);
-      terrainAreaDrawerRef.current = terrainAreaDrawer;
+      const terrainEditor = new TerrainEditor(viewer);
+      terrainEditorRef.current = terrainEditor;
     })();
 
     return () => {
@@ -48,66 +52,37 @@ export default function Terrain() {
 
   // terrainArea
   useDidMountEffect(() => {
-    const terrainAreaDrawer = terrainAreaDrawerRef.current;
-    if (terrainEditorOpen) terrainAreaDrawer.startDrawing();
+    const terrainEditor = terrainEditorRef.current;
 
-    return () => {
-      terrainAreaDrawer.onRightClick();
-      terrainAreaDrawer.stopDrawing();
-      terrainAreaDrawer.clearAreaGroupArr();
-    };
-  }, [terrainEditorOpen]);
+    isTerrainEditorOpen ? terrainEditor.startEdit() : terrainEditor.stopEdit();
+  }, [isTerrainEditorOpen]);
 
   // modify terrain
   useDidMountEffect(() => {
-    if (!modifyState) return;
-    const viewer = viewerRef.current;
-    const terrainAreaDrawer = terrainAreaDrawerRef.current;
+    if (!modifyClick) return;
 
-    const selectedPositions = terrainAreaDrawer.getSelectedPositions();
-    if (!selectedPositions) {
-      setIsSelected(false);
-      setModifyState(false);
-      return;
-    } else {
-      setIsSelected(true);
-    }
+    const terrainEditor = terrainEditorRef.current;
+    const selectedPositions = terrainEditor.getSelectedPositions();
+    selectedPositions ? setModifyState(true) : resetModifyState();
 
-    const heightArr = [];
-    const promises = selectedPositions.map((position) => {
-      const carto = Cesium.Cartographic.fromCartesian(position);
-      return Cesium.sampleTerrain(viewer.terrainProvider, 11, [carto]).then(
-        (updatedPositions) => {
-          heightArr.push(updatedPositions[0].height);
-        },
-      );
-    });
-    Promise.all(promises).then(() => {
-      const averageHeight =
-        heightArr.reduce((acc, cur) => {
-          return acc + cur;
-        }, 0) / heightArr.length;
-
-      const targetHeight = averageHeight + slideValue;
-      const newElevationDataArray = [
-        ...elevationDataArray,
-        { positions: selectedPositions, height: targetHeight },
-      ];
-      viewer.terrainProvider.setGlobalFloor(newElevationDataArray);
-      setElevationDataArray(newElevationDataArray);
-    });
-    terrainAreaDrawer.afterEditTerrain();
-  }, [modifyState]);
+    (async () => {
+      await terrainEditor.modifyTerrain(selectedPositions, slideValue);
+    })();
+  }, [modifyClick]);
 
   return (
     <>
-      {isSelected && modifyState ? (
+      {modifyState && (
         <TerrainLoading
           viewer={viewerRef.current}
-          setIsSelected={setIsSelected}
+          resetModifyState={resetModifyState}
         />
-      ) : null}
-      <TerrainEditor viewer={viewerRef.current} setSlideValue={setSlideValue} />
+      )}
+      <TerrainEditWidget
+        viewer={viewerRef.current}
+        setModifyClick={setModifyClick}
+        setSlideValue={setSlideValue}
+      />
     </>
   );
 }
