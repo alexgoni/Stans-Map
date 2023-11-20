@@ -9,9 +9,7 @@ export default function TerrainLoading({ viewer, resetModifyState }) {
     const { currentCameraPosition, currentCameraOrientation } =
       cloneCameraPosition(viewer);
 
-    setTimeout(() => {
-      viewer.camera.flyHome(0);
-    }, LOADING_DURATION / 2);
+    viewer.camera.zoomOut(1000000);
 
     setTimeout(() => {
       viewer.camera.setView({

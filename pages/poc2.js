@@ -1,26 +1,33 @@
 import { defaultCamera } from "@/components/handler/cesium/Camera";
 import { Viewer } from "@/components/handler/cesium/Viewer";
+import createCustomTerrainProvider from "@/components/module/CustomTerrainProvider";
 import MeasureSection from "@/sections/MeasureSection";
 import ModelEventSection from "@/sections/ModelEventSection";
+import TerrainSection from "@/sections/TerrainSection";
 import * as Cesium from "cesium";
 import { useEffect, useState } from "react";
 
 export default function POC2() {
   const [viewer, setViewer] = useState(null);
 
+  // viewer
   useEffect(() => {
-    // viewer 생성
-    const viewer = Viewer({
-      terrain: new Cesium.Terrain(
-        Cesium.CesiumTerrainProvider.fromUrl("http://localhost:8081/"),
-      ),
-      animation: false,
-      baseLayerPicker: false,
-      koreaHomeButton: true,
-    });
-    setViewer(viewer);
+    (async () => {
+      const defaultTerrainProvider = await Cesium.CesiumTerrainProvider.fromUrl(
+        "http://localhost:8081/",
+      );
+      const customTerrainProvider = createCustomTerrainProvider(
+        defaultTerrainProvider,
+      );
 
-    defaultCamera(viewer, [127.08049, 37.63457, 500]);
+      const viewer = Viewer({
+        terrainProvider: customTerrainProvider,
+        koreaHomeButton: true,
+      });
+      setViewer(viewer);
+
+      defaultCamera(viewer, [127.08049, 37.63457, 500]);
+    })();
 
     return () => {
       viewer.destroy();
@@ -33,6 +40,7 @@ export default function POC2() {
         <>
           <ModelEventSection viewer={viewer} />
           <MeasureSection viewer={viewer} />
+          <TerrainSection viewer={viewer} />
         </>
       )}
     </>
