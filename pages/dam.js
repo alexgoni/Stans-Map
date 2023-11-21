@@ -11,31 +11,14 @@ export default function Dam() {
       const defaultTerrainProvider =
         await Cesium.CesiumTerrainProvider.fromIonAssetId(1);
 
-      // const customTerrainProvider = createCustomTerrainProvider(
-      //   defaultTerrainProvider,
-      // );
-
       viewer = Viewer({ terrainProvider: defaultTerrainProvider });
 
-      viewer.extend(Cesium.viewerCesiumInspectorMixin);
-      viewer.scene.globe.depthTestAgainstTerrain = true;
-
-      // const elevationDataArray = [
-      //   {
-      //     positions: positions1,
-      //     height,
-      //   },
-      //   {
-      //     positions: positions2,
-      //     height: 500,
-      //   },
-      // ];
-
-      // viewer.terrainProvider.setGlobalFloor(elevationDataArray);
-
-      viewerRef.current = viewer;
-
       defaultCamera(viewer, [129.509444, 35.83361, 1000]);
+
+      const tileset = viewer.scene.primitives.add(
+        await Cesium.Cesium3DTileset.fromIonAssetId(2360991),
+      );
+      viewer.zoomTo(tileset);
     })();
 
     return () => {

@@ -66,5 +66,18 @@ export default class TerrainAreaDrawer extends AreaDrawer {
     areaGroupEndEvent();
     this.stopDrawing();
     this.resetAreaGroup();
+    this.#removePrevAreaGroup();
+  }
+
+  #removePrevAreaGroup() {
+    if (this.areaGroupArr.length === 1) return;
+    const prevAreaGroup = this.areaGroupArr[this.areaGroupArr.length - 2];
+    prevAreaGroup.polygonArr.forEach((entity) => {
+      this.viewer.entities.remove(entity);
+    });
+    prevAreaGroup.pointEntityArr.forEach((entity) => {
+      this.viewer.entities.remove(entity);
+    });
+    this.viewer.entities.remove(prevAreaGroup.label);
   }
 }
