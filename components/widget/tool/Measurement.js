@@ -6,7 +6,8 @@ import {
   distanceWidgetState,
   radiusWidgetState,
 } from "@/recoil/atom/MeasurementState";
-import { useRecoilState } from "recoil";
+import { useRecoilState, useSetRecoilState } from "recoil";
+import { exclusiveToolSelector } from "@/recoil/selector/ToolSelector";
 
 export default function MeasurementBox() {
   const [boxOpen, setBoxOpen] = useState(false);
@@ -15,6 +16,8 @@ export default function MeasurementBox() {
   const [radiusWidgetOpen, setRadiusWidgetOpen] =
     useRecoilState(radiusWidgetState);
   const [areaWidgetOpen, setAreaWidgetOpen] = useRecoilState(areaWidgetState);
+
+  const setExclusiveTool = useSetRecoilState(exclusiveToolSelector);
 
   return (
     <>
@@ -30,43 +33,34 @@ export default function MeasurementBox() {
           }}
         />
 
-        {boxOpen ? (
+        {boxOpen && (
           <>
             <Icon
               icon={<Rulers className="text-2xl text-gray-200" />}
               widgetOpen={distanceWidgetOpen}
               clickHandler={() => {
+                if (!distanceWidgetOpen) setExclusiveTool("distance");
                 setDistanceWidgetOpen(!distanceWidgetOpen);
-                if (!distanceWidgetOpen) {
-                  setRadiusWidgetOpen(false);
-                  setAreaWidgetOpen(false);
-                }
               }}
             />
             <Icon
               icon={<Circle className="text-2xl text-gray-200" />}
               widgetOpen={radiusWidgetOpen}
               clickHandler={() => {
+                if (!radiusWidgetOpen) setExclusiveTool("radius");
                 setRadiusWidgetOpen(!radiusWidgetOpen);
-                if (!radiusWidgetOpen) {
-                  setDistanceWidgetOpen(false);
-                  setAreaWidgetOpen(false);
-                }
               }}
             />
             <Icon
               icon={<Heptagon className="text-2xl text-gray-200" />}
               widgetOpen={areaWidgetOpen}
               clickHandler={() => {
+                if (!areaWidgetOpen) setExclusiveTool("area");
                 setAreaWidgetOpen(!areaWidgetOpen);
-                if (!areaWidgetOpen) {
-                  setDistanceWidgetOpen(false);
-                  setRadiusWidgetOpen(false);
-                }
               }}
             />
           </>
-        ) : null}
+        )}
       </div>
     </>
   );

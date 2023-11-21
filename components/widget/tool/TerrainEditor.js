@@ -3,11 +3,12 @@ import {
   terrainEditorState,
 } from "@/recoil/atom/TerrainState";
 import { ArrowDownUp, Globe, GlobeAsiaAustralia } from "react-bootstrap-icons";
-import { useRecoilState, useRecoilValue } from "recoil";
+import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
 import Icon from "../Icon";
 import { useState } from "react";
 import "react-bootstrap-range-slider/dist/react-bootstrap-range-slider.css";
 import RangeSlider from "react-bootstrap-range-slider";
+import { exclusiveToolSelector } from "@/recoil/selector/ToolSelector";
 
 export default function TerrainEditWidget({
   viewer,
@@ -16,6 +17,7 @@ export default function TerrainEditWidget({
 }) {
   const modifyState = useRecoilValue(modifyTerrainFlag);
   const [editorOpen, setEditorOpen] = useRecoilState(terrainEditorState);
+  const setExclusiveTool = useSetRecoilState(exclusiveToolSelector);
   const [value, setValue] = useState(0);
   const [wireState, setWireState] = useState(false);
 
@@ -26,6 +28,7 @@ export default function TerrainEditWidget({
           icon={<GlobeAsiaAustralia className="text-2xl text-gray-200" />}
           widgetOpen={editorOpen}
           clickHandler={() => {
+            if (!editorOpen) setExclusiveTool("terrain");
             setEditorOpen(!editorOpen);
           }}
         />

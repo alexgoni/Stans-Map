@@ -15,7 +15,7 @@ export const areaWidgetState = atom({
   default: false,
 });
 
-export const measureWidgetCloseState = atom({
-  key: "measureWidgetCloseState",
-  default: true,
+export const measureEventOnState = atom({
+  key: "measureEventOnState",
+  default: false,
 });

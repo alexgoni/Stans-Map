@@ -24,6 +24,7 @@ export default function POC2() {
         terrainProvider: customTerrainProvider,
         koreaHomeButton: true,
       });
+      viewer.scene.globe.depthTestAgainstTerrain = true;
       setViewer(viewer);
 
       defaultCamera(viewer, [127.08049, 37.63457, 500]);

@@ -6,18 +6,21 @@ import {
   ModelGroupInfo,
 } from "@/components/module/model/ModelGroup";
 import Modal from "@/components/widget/Modal";
-import { measureWidgetCloseState } from "@/recoil/atom/MeasurementState";
+import { measureEventOnState } from "@/recoil/atom/MeasurementState";
 import { floorsModelState, tecnoModelState } from "@/recoil/atom/ModelState";
+import { terrainEditorState } from "@/recoil/atom/TerrainState";
 import { useEffect, useRef, useState } from "react";
 import { useRecoilValue } from "recoil";
 
 export default function ModelEventSection({ viewer }) {
   const tecnoModel = useRecoilValue(tecnoModelState);
   const floorsModel = useRecoilValue(floorsModelState);
-  const measureWidgetClose = useRecoilValue(measureWidgetCloseState);
+  const measureEventOn = useRecoilValue(measureEventOnState);
   const [modalOpen, setModalOpen] = useState(false);
   const [uri, setUri] = useState("");
   const modelEventRef = useRef(null);
+
+  const terrainEditorOpen = useRecoilValue(terrainEditorState);
 
   const clickInnerModelHandler = (uri) => {
     setModalOpen(true);
@@ -70,7 +73,7 @@ export default function ModelEventSection({ viewer }) {
 
   // Model
   useEffect(() => {
-    if (!measureWidgetClose) return;
+    if (measureEventOn || terrainEditorOpen) return;
 
     const modelEvent = modelEventRef.current;
     modelEvent.startEvent();
@@ -78,7 +81,7 @@ export default function ModelEventSection({ viewer }) {
     return () => {
       modelEvent.stopEvent();
     };
-  }, [measureWidgetClose]);
+  }, [measureEventOn, terrainEditorOpen]);
 
   return (
     <Modal
