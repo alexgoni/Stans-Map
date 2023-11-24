@@ -28,7 +28,7 @@ export default function TerrainEditWidget({ viewer }) {
           terrainWidgetOpen ? "translate-x-0 " : "translate-x-80"
         }`}
       >
-        <div className="z-50 float-right mt-6 inline-block rounded-lg border-b-2 border-gray-300 bg-white p-2 shadow-2xl">
+        <div className="z-50 float-right mt-6 inline-block rounded-lg border-b-2 border-gray-300 bg-gray-100 p-2 shadow-2xl">
           <div className="flex items-center gap-2">
             <span className="w-10 select-none text-center text-sm font-medium">
               높이
