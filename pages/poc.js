@@ -1,6 +1,7 @@
 import { defaultCamera } from "@/components/handler/cesium/Camera";
 import { Viewer } from "@/components/handler/cesium/Viewer";
 import createCustomTerrainProvider from "@/components/module/CustomTerrainProvider";
+import UIWrapper from "@/components/widget/ui/UIWrapper";
 import MeasureSection from "@/sections/MeasureSection";
 import ModelEventSection from "@/sections/ModelEventSection";
 import TerrainSection from "@/sections/TerrainSection";
@@ -13,16 +14,18 @@ export default function POC() {
   // viewer
   useEffect(() => {
     (async () => {
-      const defaultTerrainProvider = await Cesium.CesiumTerrainProvider.fromUrl(
-        "http://localhost:8081/",
-      );
+      // const defaultTerrainProvider = await Cesium.CesiumTerrainProvider.fromUrl(
+      //   "http://localhost:8081/",
+      // );
+      const defaultTerrainProvider =
+        await Cesium.CesiumTerrainProvider.fromIonAssetId(1);
       const customTerrainProvider = createCustomTerrainProvider(
         defaultTerrainProvider,
       );
 
       const viewer = Viewer({
         terrainProvider: customTerrainProvider,
-        koreaHomeButton: true,
+        homeButton: false,
       });
       viewer.scene.globe.depthTestAgainstTerrain = true;
       setViewer(viewer);
@@ -39,7 +42,8 @@ export default function POC() {
     <>
       {viewer && (
         <>
-          <ModelEventSection viewer={viewer} />
+          <UIWrapper viewer={viewer} />
+          {/* <ModelEventSection viewer={viewer} /> */}
           <MeasureSection viewer={viewer} />
           <TerrainSection viewer={viewer} />
         </>

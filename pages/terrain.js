@@ -1,13 +1,13 @@
 import { Viewer } from "@/components/handler/cesium/Viewer";
 import useDidMountEffect from "@/components/module/useDidMountEffect";
-import TerrainEditWidget from "@/components/widget/tool/TerrainEditor";
+import TerrainEditWidget from "@/components/widget/ui/tool/TerrainEditWidget";
 import TerrainEditor from "@/components/module/tool/terrain/TerrainEditor";
 import React, { useEffect, useRef, useState } from "react";
 import * as Cesium from "cesium";
 import { useRecoilState, useRecoilValue } from "recoil";
 import {
-  modifyTerrainFlag,
-  terrainEditorState,
+  modifyTerrainState,
+  terrainWidgetState,
 } from "@/recoil/atom/TerrainState";
 import createCustomTerrainProvider from "@/components/module/CustomTerrainProvider";
 import TerrainLoading from "@/components/widget/loading/TerrainLoading";
@@ -15,8 +15,8 @@ import TerrainLoading from "@/components/widget/loading/TerrainLoading";
 export default function Terrain() {
   const terrainEditorRef = useRef(null);
   const viewerRef = useRef(null);
-  const isTerrainEditorOpen = useRecoilValue(terrainEditorState);
-  const [modifyState, setModifyState] = useRecoilState(modifyTerrainFlag);
+  const isTerrainEditorOpen = useRecoilValue(terrainWidgetState);
+  const [modifyState, setModifyState] = useRecoilState(modifyTerrainState);
   const [slideValue, setSlideValue] = useState(0);
   const [modifyClick, setModifyClick] = useState(false);
 
@@ -36,7 +36,7 @@ export default function Terrain() {
 
       const viewer = Viewer({
         terrainProvider: customTerrainProvider,
-        geocoder: true,
+        homeButton: false,
       });
       viewerRef.current = viewer;
 
@@ -54,7 +54,7 @@ export default function Terrain() {
   useDidMountEffect(() => {
     const terrainEditor = terrainEditorRef.current;
 
-    isTerrainEditorOpen ? terrainEditor.startEdit() : terrainEditor.stopEdit();
+    isTerrainEditorOpen ? terrainEditor.startDraw() : terrainEditor.stopDraw();
   }, [isTerrainEditorOpen]);
 
   // modify terrain
@@ -72,17 +72,17 @@ export default function Terrain() {
 
   return (
     <>
+      <TerrainEditWidget
+        viewer={viewerRef.current}
+        setModifyClick={setModifyClick}
+        setSlideValue={setSlideValue}
+      />
       {modifyState && (
         <TerrainLoading
           viewer={viewerRef.current}
           resetModifyState={resetModifyState}
         />
       )}
-      <TerrainEditWidget
-        viewer={viewerRef.current}
-        setModifyClick={setModifyClick}
-        setSlideValue={setSlideValue}
-      />
     </>
   );
 }

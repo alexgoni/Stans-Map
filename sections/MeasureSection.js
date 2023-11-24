@@ -1,6 +1,5 @@
 import Drawer from "@/components/module/tool/measurement/Drawer";
 import useDidMountEffect from "@/components/module/useDidMountEffect";
-import MeasurementBox from "@/components/widget/tool/Measurement";
 import {
   areaWidgetState,
   distanceWidgetState,
@@ -40,5 +39,5 @@ export default function MeasureSection({ viewer }) {
     };
   }, [distanceWidgetOpen, radiusWidgetOpen, areaWidgetOpen]);
 
-  return <MeasurementBox />;
+  return <></>;
 }

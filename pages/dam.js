@@ -1,32 +1,33 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import * as Cesium from "cesium";
 import { Viewer } from "@/components/handler/cesium/Viewer";
 import { defaultCamera } from "@/components/handler/cesium/Camera";
 
 export default function Dam() {
-  const viewerRef = useRef(null);
+  const [viewer, setViewer] = useState(null);
   useEffect(() => {
-    let viewer;
     (async () => {
       const defaultTerrainProvider =
         await Cesium.CesiumTerrainProvider.fromIonAssetId(1);
 
-      viewer = Viewer({ terrainProvider: defaultTerrainProvider });
-
+      const viewer = Viewer({ terrainProvider: defaultTerrainProvider });
+      setViewer(viewer);
       defaultCamera(viewer, [129.509444, 35.83361, 1000]);
+      viewer.extend(Cesium.viewerCesiumInspectorMixin);
 
+      // token 변경
       const tileset = viewer.scene.primitives.add(
         await Cesium.Cesium3DTileset.fromIonAssetId(2360991),
       );
+      console.log(tileset);
+
       viewer.zoomTo(tileset);
     })();
 
     return () => {
-      viewerRef.current?.destroy();
+      viewer.destroy();
     };
   }, []);
 
   return <></>;
 }
-
-Cesium.Draco;

@@ -13,7 +13,10 @@ function Viewer({
   geocoder = false,
   baseLayerPicker = false,
   baseLayer = undefined,
+  homeButton = true,
   koreaHomeButton = false,
+  scene3DOnly = true,
+  fullscreenButton = false,
 } = {}) {
   const viewer = new Cesium.Viewer("cesiumContainer", {
     terrain,
@@ -26,6 +29,9 @@ function Viewer({
     navigationHelpButton,
     geocoder,
     baseLayerPicker,
+    homeButton,
+    scene3DOnly,
+    fullscreenButton,
     /* offline default imageLayer
     추가되는 이미지가 있는 경우
     baseLayer: false 

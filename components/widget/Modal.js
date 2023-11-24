@@ -25,6 +25,7 @@ export default function Modal({ modalOpen, closeModal, filePath }) {
         style={{
           overlay: {
             backgroundColor: "rgba(0, 0, 0, 0.5)",
+            zIndex: 999,
           },
           content: {
             padding: "0",

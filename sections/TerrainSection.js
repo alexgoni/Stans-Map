@@ -1,8 +1,8 @@
 import TerrainLoading from "@/components/widget/loading/TerrainLoading";
-import TerrainEditWidget from "@/components/widget/tool/TerrainEditor";
 import {
-  modifyTerrainFlag,
-  terrainEditorState,
+  modifyButtonClickState,
+  targetHeightValue,
+  terrainWidgetState,
 } from "@/recoil/atom/TerrainState";
 import { useEffect, useRef, useState } from "react";
 import { useRecoilState, useRecoilValue } from "recoil";
@@ -10,15 +10,17 @@ import TerrainEditor from "@/components/module/tool/terrain/TerrainEditor";
 import useDidMountEffect from "@/components/module/useDidMountEffect";
 
 export default function TerrainSection({ viewer }) {
-  const isTerrainEditorOpen = useRecoilValue(terrainEditorState);
-  const [modifyState, setModifyState] = useRecoilState(modifyTerrainFlag);
-  const [modifyClick, setModifyClick] = useState(false);
-  const [slideValue, setSlideValue] = useState(0);
+  const terrainWidgetOpen = useRecoilValue(terrainWidgetState);
+  const targetHeight = useRecoilValue(targetHeightValue);
+  const [modifyButtonClick, setModifyButtonClick] = useRecoilState(
+    modifyButtonClickState,
+  );
+  const [terrainLoadingOn, setTerrainLoadingOn] = useState(false);
   const terrainEditorRef = useRef(null);
 
   const resetModifyState = () => {
-    setModifyClick(false);
-    setModifyState(false);
+    setModifyButtonClick(false);
+    setTerrainLoadingOn(false);
   };
 
   useEffect(() => {
@@ -30,32 +32,29 @@ export default function TerrainSection({ viewer }) {
   useDidMountEffect(() => {
     const terrainEditor = terrainEditorRef.current;
 
-    isTerrainEditorOpen ? terrainEditor.startEdit() : terrainEditor.stopEdit();
-  }, [isTerrainEditorOpen]);
+    // viewer.scene.globe._surface.tileProvider._debug.wireframe =
+    //   terrainWidgetOpen;
+    terrainWidgetOpen ? terrainEditor.startDraw() : terrainEditor.stopDraw();
+  }, [terrainWidgetOpen]);
 
   // modify terrain
   useDidMountEffect(() => {
-    if (!modifyClick) return;
+    if (!modifyButtonClick) return;
 
     const terrainEditor = terrainEditorRef.current;
     const selectedPositions = terrainEditor.getSelectedPositions();
-    selectedPositions ? setModifyState(true) : resetModifyState();
+    selectedPositions ? setTerrainLoadingOn(true) : resetModifyState();
 
     (async () => {
-      await terrainEditor.modifyTerrain(selectedPositions, slideValue);
+      await terrainEditor.modifyTerrain(selectedPositions, targetHeight);
     })();
-  }, [modifyClick]);
+  }, [modifyButtonClick]);
 
   return (
     <>
-      {modifyState && (
+      {terrainLoadingOn && (
         <TerrainLoading viewer={viewer} resetModifyState={resetModifyState} />
       )}
-      <TerrainEditWidget
-        viewer={viewer}
-        setModifyClick={setModifyClick}
-        setSlideValue={setSlideValue}
-      />
     </>
   );
 }

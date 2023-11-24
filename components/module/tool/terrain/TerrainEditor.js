@@ -8,11 +8,11 @@ export default class TerrainEditor {
     this.elevationDataArray = [];
   }
 
-  startEdit() {
+  startDraw() {
     this.terrainAreaDrawer.startDrawing();
   }
 
-  stopEdit() {
+  stopDraw() {
     this.terrainAreaDrawer.onRightClick();
     this.terrainAreaDrawer.stopDrawing();
     this.terrainAreaDrawer.clearAreaGroupArr();
