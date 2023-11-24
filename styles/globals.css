@@ -19,3 +19,20 @@ body {
 .font-comfortaa {
   font-family: "Comfortaa";
 }
+
+.scrollbar {
+  overflow: auto;
+}
+
+.scrollbar::-webkit-scrollbar {
+  width: 10px;
+}
+
+.scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(160, 160, 160);
+  border-radius: 10px;
+}
+
+.scrollbar::-webkit-scrollbar-track {
+  background: rgba(252, 252, 252, 0);
+}
