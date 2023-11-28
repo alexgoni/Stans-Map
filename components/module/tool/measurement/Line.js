@@ -11,10 +11,12 @@ import {
   getRayPosition,
 } from "@/components/handler/cesium/GeoInfo";
 import { ShapeGroup, ShapeDrawer } from "./Shape";
+import { distanceFormatter } from "../../formatter";
 
 class LineGroup extends ShapeGroup {
   constructor(viewer) {
     super(viewer);
+    this.name = null;
     this.polylineArr = [];
     this.distance = this.value;
   }
@@ -59,25 +61,35 @@ class LineGroup extends ShapeGroup {
     this.#updateLabel();
   }
 
+  toggleShow(showState) {
+    this.pointEntityArr.forEach((entity) => {
+      entity.show = showState;
+    });
+    this.polylineArr.forEach((entity) => {
+      entity.show = showState;
+    });
+    this.label.show = showState;
+  }
+
   #updateLabel() {
     this.label.label.text = new Cesium.CallbackProperty(() => {
-      if (this.distance > 1) {
-        return `${this.distance.toFixed(2)}km`;
-      }
-      return `${(this.distance * 1000).toFixed(2)}m`;
+      return distanceFormatter(this.distance);
     }, false);
   }
 }
 
 export default class LineDrawer extends ShapeDrawer {
-  constructor(viewer, handleDataChange) {
+  static nextId = 1;
+
+  constructor(viewer) {
     super(viewer);
     this.floatingPointCoordinate = null;
     this.dashLine = null;
 
     this.lineGroup = new LineGroup(this.viewer);
     this.lineGroupArr = [];
-    this.handleDataChange = handleDataChange;
+    this._readData = null;
+    this.dataStack = [];
   }
 
   clearLineGroupArr() {
@@ -86,6 +98,7 @@ export default class LineDrawer extends ShapeDrawer {
     });
 
     this.lineGroupArr = [];
+    this.dataStack = [];
   }
 
   onLeftClick(click) {
@@ -124,6 +137,39 @@ export default class LineDrawer extends ShapeDrawer {
     else this.#lineGroupEndEvent();
 
     this.#resetLineGroup();
+  }
+
+  toggleShowLineGroup(id, showState) {
+    this.lineGroupArr.forEach((lineGroup) => {
+      if (lineGroup.id !== id) return;
+      lineGroup.toggleShow(showState);
+    });
+  }
+
+  zoomToLineGroup(id) {
+    this.lineGroupArr.forEach((lineGroup) => {
+      if (lineGroup.id !== id) return;
+      const offset = new Cesium.HeadingPitchRange(0, -90, 800);
+      this.viewer.zoomTo(lineGroup.label, offset);
+    });
+  }
+
+  deleteLineGroup(id) {
+    this.lineGroupArr = this.lineGroupArr.filter((lineGroup) => {
+      if (lineGroup.id !== id) {
+        return true;
+      } else {
+        this.#deleteLineGroupEntities(lineGroup);
+        return false;
+      }
+    });
+  }
+
+  /**
+   * @param {function} handler
+   */
+  set readData(handler) {
+    this._readData = handler;
   }
 
   #deleteLineGroupEntities(lineGroup) {
@@ -190,9 +236,26 @@ export default class LineDrawer extends ShapeDrawer {
 
   #lineGroupEndEvent() {
     this.lineGroup.calculateDistanceAndUpdateLabel();
+    this.lineGroup.id = LineDrawer.nextId++;
+    this.lineGroup.name = `Distance ${this.lineGroupArr.length + 1}`;
     this.lineGroupArr.push(this.lineGroup);
+    this.#updateDataStack();
+  }
 
-    this.handleDataChange([...this.lineGroupArr]);
+  #updateDataStack() {
+    if (!this._readData) return;
+    const data = {
+      id: this.lineGroup.id,
+      name: this.lineGroup.name,
+      value: this.lineGroup.distance,
+      // entity: {
+      //   label: this.lineGroup.label,
+      //   pointEntityArr: this.lineGroup.pointEntityArr,
+      //   polylineArr: this.lineGroup.polylineArr,
+      // },
+    };
+    this.dataStack.push(data);
+    this._readData([...this.dataStack]);
   }
 
   #resetLineGroup() {

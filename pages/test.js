@@ -15,7 +15,7 @@ export default function Test() {
   useEffect(() => {
     const viewer = Viewer();
 
-    const lineDrawer = new LineDrawer(viewer, handleDataChange);
+    const lineDrawer = new LineDrawer(viewer);
     lineDrawerRef.current = lineDrawer;
 
     return () => {
@@ -29,6 +29,7 @@ export default function Test() {
 
   useDidMountEffect(() => {
     const lineDrawer = lineDrawerRef.current;
+    lineDrawer.handleDataChange = handleDataChange;
 
     if (drawLine) {
       lineDrawer.startDrawing();
