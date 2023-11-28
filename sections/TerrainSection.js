@@ -9,7 +9,7 @@ import { useRecoilState, useRecoilValue } from "recoil";
 import TerrainEditor from "@/components/module/tool/terrain/TerrainEditor";
 import useDidMountEffect from "@/components/module/useDidMountEffect";
 
-export default function TerrainSection({ viewer }) {
+export default function TerrainSection({ viewer, setTerrainRef }) {
   const terrainWidgetOpen = useRecoilValue(terrainWidgetState);
   const targetHeight = useRecoilValue(targetHeightValue);
   const [modifyButtonClick, setModifyButtonClick] = useRecoilState(
@@ -26,14 +26,12 @@ export default function TerrainSection({ viewer }) {
   useEffect(() => {
     const terrainEditor = new TerrainEditor(viewer);
     terrainEditorRef.current = terrainEditor;
+    setTerrainRef(terrainEditor);
   }, []);
 
   // terrainArea
   useDidMountEffect(() => {
     const terrainEditor = terrainEditorRef.current;
-
-    // viewer.scene.globe._surface.tileProvider._debug.wireframe =
-    //   terrainWidgetOpen;
     terrainWidgetOpen ? terrainEditor.startDraw() : terrainEditor.stopDraw();
   }, [terrainWidgetOpen]);
 

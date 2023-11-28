@@ -9,7 +9,7 @@ import {
 import { useEffect, useRef } from "react";
 import { useRecoilValue, useSetRecoilState } from "recoil";
 
-export default function MeasureSection({ viewer }) {
+export default function MeasureSection({ viewer, setDrawerRef }) {
   const distanceWidgetOpen = useRecoilValue(distanceWidgetState);
   const radiusWidgetOpen = useRecoilValue(radiusWidgetState);
   const areaWidgetOpen = useRecoilValue(areaWidgetState);
@@ -24,6 +24,7 @@ export default function MeasureSection({ viewer }) {
   useEffect(() => {
     const drawer = new Drawer(viewer);
     drawerRef.current = drawer;
+    setDrawerRef(drawer);
   }, []);
 
   useDidMountEffect(() => {

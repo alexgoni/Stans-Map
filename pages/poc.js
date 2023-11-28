@@ -10,6 +10,9 @@ import { useEffect, useState } from "react";
 
 export default function POC() {
   const [viewer, setViewer] = useState(null);
+  const [drawerRef, setDrawerRef] = useState(null);
+  const [terrainRef, setTerrainRef] = useState(null);
+  const [toolData, setToolData] = useState(null);
 
   // viewer
   useEffect(() => {
@@ -38,14 +41,18 @@ export default function POC() {
     };
   }, []);
 
+  useEffect(() => {
+    setToolData({ drawerRef, terrainRef });
+  }, [drawerRef, terrainRef]);
+
   return (
     <>
       {viewer && (
         <>
-          <UIWrapper viewer={viewer} />
+          <UIWrapper viewer={viewer} toolData={toolData} />
           {/* <ModelEventSection viewer={viewer} /> */}
-          <MeasureSection viewer={viewer} />
-          <TerrainSection viewer={viewer} />
+          <MeasureSection viewer={viewer} setDrawerRef={setDrawerRef} />
+          <TerrainSection viewer={viewer} setTerrainRef={setTerrainRef} />
         </>
       )}
     </>

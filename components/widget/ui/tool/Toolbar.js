@@ -5,7 +5,7 @@ import TerrainTool from "./TerrainTool";
 import TerrainEditWidget from "./TerrainEditWidget";
 import LayerStack from "./LayerStack";
 
-export default function Toolbar({ viewer }) {
+export default function Toolbar({ viewer, toolData }) {
   return (
     <>
       <div className="fixed right-5 top-6 z-50">
@@ -22,7 +22,7 @@ export default function Toolbar({ viewer }) {
         <TerrainEditWidget viewer={viewer} />
       </div>
 
-      <LayerStack />
+      <LayerStack toolData={toolData} />
       <Description />
     </>
   );

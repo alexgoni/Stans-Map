@@ -54,7 +54,12 @@ class LineGroup extends ShapeGroup {
     this.label = createLabel({ viewer: this.viewer, position });
   }
 
-  updateLabel() {
+  calculateDistanceAndUpdateLabel() {
+    this.distance = calculateDistance(this.pointPositionArr);
+    this.#updateLabel();
+  }
+
+  #updateLabel() {
     this.label.label.text = new Cesium.CallbackProperty(() => {
       if (this.distance > 1) {
         return `${this.distance.toFixed(2)}km`;
@@ -62,43 +67,22 @@ class LineGroup extends ShapeGroup {
       return `${(this.distance * 1000).toFixed(2)}m`;
     }, false);
   }
-
-  calculateDistanceAndUpdateLabel() {
-    this.distance = calculateDistance(this.pointPositionArr);
-    this.updateLabel();
-  }
 }
 
 export default class LineDrawer extends ShapeDrawer {
-  constructor(viewer) {
+  constructor(viewer, handleDataChange) {
     super(viewer);
     this.floatingPointCoordinate = null;
     this.dashLine = null;
 
     this.lineGroup = new LineGroup(this.viewer);
     this.lineGroupArr = [];
-  }
-
-  resetLineGroup() {
-    this.viewer.entities.remove(this.floatingPoint);
-    this.viewer.entities.remove(this.dashLine);
-
-    this.floatingPoint = null;
-    this.floatingPointCoordinate = null;
-    this.dashLine = null;
-
-    this.lineGroup = new LineGroup(this.viewer);
+    this.handleDataChange = handleDataChange;
   }
 
   clearLineGroupArr() {
     this.lineGroupArr.forEach((lineGroup) => {
-      lineGroup.pointEntityArr.forEach((entity) =>
-        this.viewer.entities.remove(entity),
-      );
-      lineGroup.polylineArr.forEach((entity) =>
-        this.viewer.entities.remove(entity),
-      );
-      this.viewer.entities.remove(lineGroup.label);
+      this.#deleteLineGroupEntities(lineGroup);
     });
 
     this.lineGroupArr = [];
@@ -111,72 +95,23 @@ export default class LineDrawer extends ShapeDrawer {
     });
     if (!Cesium.defined(clickPosition)) return;
 
-    const lineGroupFirstClickHandler = () => {
-      this.floatingPoint = createLinePoint({
-        viewer: this.viewer,
-        position: clickPosition,
-      });
-      this.lineGroup.addPointPosition(clickPosition);
-      this.lineGroup.addLabelToViewer(this.floatingPoint.position);
-
-      const dynamicPolylinePosition = new Cesium.CallbackProperty(() => {
-        // last fixed point position
-        const prevCoordinate =
-          this.lineGroup.pointPositionArr[
-            this.lineGroup.pointEntityArr.length - 1
-          ];
-        if (!prevCoordinate) return;
-
-        const prevLongitude = prevCoordinate[0];
-        const prevLatitude = prevCoordinate[1];
-
-        // first click 이후 움직이지 않을 때 return null
-        if (!this.floatingPointCoordinate) return;
-
-        return [
-          Cesium.Cartesian3.fromDegrees(prevLongitude, prevLatitude),
-          Cesium.Cartesian3.fromDegrees(
-            this.floatingPointCoordinate[0],
-            this.floatingPointCoordinate[1],
-          ),
-        ];
-      }, false);
-
-      this.dashLine = createDashline({
-        viewer: this.viewer,
-        positions: dynamicPolylinePosition,
-      });
-    };
-
     if (this.lineGroup.pointEntityNum === 0) {
-      lineGroupFirstClickHandler();
+      this.#lineGroupFirstClickHandler(clickPosition);
     }
-
     this.lineGroup.addPointToViewer(clickPosition);
     this.lineGroup.addPolylineToViewer();
   }
 
   onMouseMove(movement) {
     if (!Cesium.defined(this.floatingPoint)) return;
-
     const newPosition = getRayPosition({
       viewer: this.viewer,
       position: movement.endPosition,
     });
     if (!Cesium.defined(newPosition)) return;
 
-    const updateFloatingPoint = () => {
-      this.floatingPoint.position.setValue(newPosition);
-      this.floatingPointCoordinate = getCoordinate(newPosition);
-    };
-
-    const updatePointPositionArr = () => {
-      this.lineGroup.pointPositionArr.pop();
-      this.lineGroup.pointPositionArr.push(this.floatingPointCoordinate);
-    };
-
-    updateFloatingPoint();
-    updatePointPositionArr();
+    this.#updateFloatingPoint(newPosition);
+    this.#updatePointPositionArr();
     this.lineGroup.calculateDistanceAndUpdateLabel();
   }
 
@@ -185,20 +120,89 @@ export default class LineDrawer extends ShapeDrawer {
 
     // movement event에서 마지막으로 push된 element 제거
     this.lineGroup.removeLastPointPosition();
+    if (this.lineGroup.pointEntityNum === 1) this.#removeOneClickEntities();
+    else this.#lineGroupEndEvent();
 
-    const removeOneClickEntities = () => {
-      this.viewer.entities.remove(this.lineGroup.pointEntityArr[0]);
-      this.viewer.entities.remove(this.lineGroup.label);
-    };
+    this.#resetLineGroup();
+  }
 
-    const lineGroupEndEvent = () => {
-      this.lineGroup.calculateDistanceAndUpdateLabel();
-      this.lineGroupArr.push(this.lineGroup);
-    };
+  #deleteLineGroupEntities(lineGroup) {
+    lineGroup.pointEntityArr.forEach((entity) =>
+      this.viewer.entities.remove(entity),
+    );
+    lineGroup.polylineArr.forEach((entity) =>
+      this.viewer.entities.remove(entity),
+    );
+    this.viewer.entities.remove(lineGroup.label);
+  }
 
-    if (this.lineGroup.pointEntityNum === 1) removeOneClickEntities();
-    else lineGroupEndEvent();
+  #lineGroupFirstClickHandler(clickPosition) {
+    this.floatingPoint = createLinePoint({
+      viewer: this.viewer,
+      position: clickPosition,
+    });
+    this.lineGroup.addPointPosition(clickPosition);
+    this.lineGroup.addLabelToViewer(this.floatingPoint.position);
 
-    this.resetLineGroup();
+    const dynamicPolylinePosition = new Cesium.CallbackProperty(() => {
+      // last fixed point position
+      const prevCoordinate =
+        this.lineGroup.pointPositionArr[
+          this.lineGroup.pointEntityArr.length - 1
+        ];
+      if (!prevCoordinate) return;
+
+      const prevLongitude = prevCoordinate[0];
+      const prevLatitude = prevCoordinate[1];
+
+      // first click 이후 움직이지 않을 때 return null
+      if (!this.floatingPointCoordinate) return;
+
+      return [
+        Cesium.Cartesian3.fromDegrees(prevLongitude, prevLatitude),
+        Cesium.Cartesian3.fromDegrees(
+          this.floatingPointCoordinate[0],
+          this.floatingPointCoordinate[1],
+        ),
+      ];
+    }, false);
+
+    this.dashLine = createDashline({
+      viewer: this.viewer,
+      positions: dynamicPolylinePosition,
+    });
+  }
+
+  #updateFloatingPoint(newPosition) {
+    this.floatingPoint.position.setValue(newPosition);
+    this.floatingPointCoordinate = getCoordinate(newPosition);
+  }
+
+  #updatePointPositionArr() {
+    this.lineGroup.pointPositionArr.pop();
+    this.lineGroup.pointPositionArr.push(this.floatingPointCoordinate);
+  }
+
+  #removeOneClickEntities() {
+    this.viewer.entities.remove(this.lineGroup.pointEntityArr[0]);
+    this.viewer.entities.remove(this.lineGroup.label);
+  }
+
+  #lineGroupEndEvent() {
+    this.lineGroup.calculateDistanceAndUpdateLabel();
+    this.lineGroupArr.push(this.lineGroup);
+
+    this.handleDataChange([...this.lineGroupArr]);
+  }
+
+  #resetLineGroup() {
+    this.viewer.entities.remove(this.floatingPoint);
+    this.viewer.entities.remove(this.dashLine);
+
+    this.floatingPoint = null;
+    this.floatingPointCoordinate = null;
+    this.dashLine = null;
+
+    this.lineGroup = new LineGroup(this.viewer);
   }
 }

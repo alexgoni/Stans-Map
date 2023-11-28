@@ -30,17 +30,9 @@ class AreaGroup extends ShapeGroup {
     this.addPointAndTurfPosition(position);
   }
 
-  addPointPosition(position) {
-    this.pointPositionArr.push(position);
-  }
-
-  addTurfPointPosition(position) {
-    this.turfPointPositionArr.push(getCoordinate(position));
-  }
-
   addPointAndTurfPosition(position) {
-    this.addPointPosition(position);
-    this.addTurfPointPosition(position);
+    this.#addPointPosition(position);
+    this.#addTurfPointPosition(position);
   }
 
   get pointEntityNum() {
@@ -65,7 +57,24 @@ class AreaGroup extends ShapeGroup {
     this.label.label.text = "0.00 m²";
   }
 
-  updateLabel() {
+  calculateAreaAndUpdateLabel() {
+    const modifiedTurfArr = [
+      ...this.turfPointPositionArr,
+      this.turfPointPositionArr[0],
+    ];
+    this.area = calculateArea(modifiedTurfArr);
+    this.#updateLabel();
+  }
+
+  #addPointPosition(position) {
+    this.pointPositionArr.push(position);
+  }
+
+  #addTurfPointPosition(position) {
+    this.turfPointPositionArr.push(getCoordinate(position));
+  }
+
+  #updateLabel() {
     function addCommasToNumber(number) {
       return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
     }
@@ -83,15 +92,6 @@ class AreaGroup extends ShapeGroup {
     this.label.label.text = new Cesium.CallbackProperty(() => {
       return formattedArea;
     }, false);
-  }
-
-  calculateAreaAndUpdateLabel() {
-    const modifiedTurfArr = [
-      ...this.turfPointPositionArr,
-      this.turfPointPositionArr[0],
-    ];
-    this.area = calculateArea(modifiedTurfArr);
-    this.updateLabel();
   }
 }
 
