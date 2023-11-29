@@ -10,7 +10,7 @@ import { useEffect, useState } from "react";
 
 export default function POC() {
   const [viewer, setViewer] = useState(null);
-  const [drawerRef, setDrawerRef] = useState(null);
+  const [measureRef, setMeasureRef] = useState(null);
   const [terrainRef, setTerrainRef] = useState(null);
   const [toolData, setToolData] = useState(null);
 
@@ -42,8 +42,8 @@ export default function POC() {
   }, []);
 
   useEffect(() => {
-    setToolData({ drawerRef, terrainRef });
-  }, [drawerRef, terrainRef]);
+    setToolData({ measureRef, terrainRef });
+  }, [measureRef, terrainRef]);
 
   return (
     <>
@@ -51,7 +51,7 @@ export default function POC() {
         <>
           <UIWrapper viewer={viewer} toolData={toolData} />
           {/* <ModelEventSection viewer={viewer} /> */}
-          <MeasureSection viewer={viewer} setDrawerRef={setDrawerRef} />
+          <MeasureSection viewer={viewer} setMeasureRef={setMeasureRef} />
           <TerrainSection viewer={viewer} setTerrainRef={setTerrainRef} />
         </>
       )}

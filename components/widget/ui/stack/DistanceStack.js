@@ -23,8 +23,8 @@ export default function DistanceStack({ toolData }) {
   };
 
   useEffect(() => {
-    if (!toolData.drawerRef) return;
-    toolData.drawerRef.lineDrawer.readData = handleData;
+    if (!toolData.measureRef) return;
+    toolData.measureRef.lineController.lineStack.readData = handleData;
   }, [toolData, distanceWidgetOpen]);
 
   useEffect(() => {
@@ -38,7 +38,7 @@ export default function DistanceStack({ toolData }) {
       <DistanceLayer
         key={newData.id}
         data={newData}
-        lineDrawer={toolData.drawerRef.lineDrawer}
+        lineController={toolData.measureRef.lineController}
         onDelete={() => {
           handleDeleteLayer(newData.id);
         }}
@@ -56,7 +56,7 @@ export default function DistanceStack({ toolData }) {
   );
 }
 
-function DistanceLayer({ data, lineDrawer, onDelete }) {
+function DistanceLayer({ data, lineController, onDelete }) {
   const [showState, setShowState] = useState(false);
   const { id, name, value } = data;
 
@@ -66,7 +66,7 @@ function DistanceLayer({ data, lineDrawer, onDelete }) {
         <div
           className="flex h-10 w-10 cursor-pointer items-center justify-center"
           onClick={() => {
-            lineDrawer.toggleShowLineGroup(id, showState);
+            lineController.toggleShowLineGroup(id, showState);
             setShowState(!showState);
           }}
         >
@@ -89,7 +89,7 @@ function DistanceLayer({ data, lineDrawer, onDelete }) {
           <div
             className="flex h-10 w-8 cursor-pointer items-center justify-center text-slate-500 hover:text-blue-500"
             onClick={() => {
-              lineDrawer.zoomToLineGroup(id);
+              lineController.zoomToLineGroup(id);
             }}
           >
             <SendFill className="text-xl" />
@@ -101,7 +101,7 @@ function DistanceLayer({ data, lineDrawer, onDelete }) {
             className="flex h-10 w-8 cursor-pointer items-center justify-center text-slate-500 hover:text-red-600"
             onClick={() => {
               onDelete();
-              lineDrawer.deleteLineGroup(id);
+              lineController.deleteLineGroup(id);
             }}
           >
             <Trash className="text-xl" />

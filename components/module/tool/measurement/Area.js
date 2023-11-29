@@ -10,7 +10,7 @@ import {
   getRayPosition,
 } from "@/components/handler/cesium/GeoInfo";
 import * as Cesium from "cesium";
-import { ShapeGroup, ShapeDrawer } from "./Shape";
+import { ShapeGroup, ShapeController } from "./Shape";
 
 class AreaGroup extends ShapeGroup {
   constructor(viewer) {
@@ -95,7 +95,7 @@ class AreaGroup extends ShapeGroup {
   }
 }
 
-export default class AreaDrawer extends ShapeDrawer {
+export default class AreaController extends ShapeController {
   constructor(viewer) {
     super(viewer);
     this.activeShape = null;

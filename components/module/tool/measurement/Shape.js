@@ -14,7 +14,7 @@ class ShapeGroup {
   }
 }
 
-class ShapeDrawer {
+class ShapeController {
   constructor(viewer) {
     this.viewer = viewer;
     this.handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
@@ -52,4 +52,4 @@ class ShapeDrawer {
   onRightClick() {}
 }
 
-export { ShapeGroup, ShapeDrawer };
+export { ShapeGroup, ShapeController };

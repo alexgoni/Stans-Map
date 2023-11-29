@@ -10,7 +10,7 @@ import {
   getCoordinate,
   getRayPosition,
 } from "@/components/handler/cesium/GeoInfo";
-import { ShapeGroup, ShapeDrawer } from "./Shape";
+import { ShapeGroup, ShapeController } from "./Shape";
 import { distanceFormatter } from "../../formatter";
 
 class LineGroup extends ShapeGroup {
@@ -78,7 +78,70 @@ class LineGroup extends ShapeGroup {
   }
 }
 
-export default class LineDrawer extends ShapeDrawer {
+class LineStack {
+  static OFFSET = [0, -90, 800];
+
+  constructor(viewer) {
+    this.viewer = viewer;
+    this._readData = null;
+    this.dataStack = [];
+  }
+
+  /**
+   * @param {function} handler
+   */
+  set readData(handler) {
+    this._readData = handler;
+  }
+
+  updateData(lineGroup) {
+    if (!this._readData) return;
+    const data = {
+      id: lineGroup.id,
+      name: lineGroup.name,
+      value: lineGroup.distance,
+    };
+    this.dataStack.push(data);
+    this._readData([...this.dataStack]);
+  }
+
+  toggleShowLineGroup(lineGroupArr, id, showState) {
+    lineGroupArr.forEach((lineGroup) => {
+      if (lineGroup.id !== id) return;
+      lineGroup.toggleShow(showState);
+    });
+  }
+
+  zoomToLineGroup(lineGroupArr, id) {
+    lineGroupArr.forEach((lineGroup) => {
+      if (lineGroup.id !== id) return;
+      const offset = new Cesium.HeadingPitchRange(...LineStack.OFFSET);
+      this.viewer.zoomTo(lineGroup.label, offset);
+    });
+  }
+
+  deleteLineGroup(lineGroupArr, id) {
+    return lineGroupArr.filter((lineGroup) => {
+      if (lineGroup.id !== id) return true;
+      else {
+        this.#deleteLineGroupEntities(lineGroup);
+        return false;
+      }
+    });
+  }
+
+  #deleteLineGroupEntities(lineGroup) {
+    lineGroup.pointEntityArr.forEach((entity) =>
+      this.viewer.entities.remove(entity),
+    );
+    lineGroup.polylineArr.forEach((entity) =>
+      this.viewer.entities.remove(entity),
+    );
+    this.viewer.entities.remove(lineGroup.label);
+  }
+}
+
+export default class LineController extends ShapeController {
   static nextId = 1;
 
   constructor(viewer) {
@@ -88,8 +151,7 @@ export default class LineDrawer extends ShapeDrawer {
 
     this.lineGroup = new LineGroup(this.viewer);
     this.lineGroupArr = [];
-    this._readData = null;
-    this.dataStack = [];
+    this.lineStack = new LineStack(viewer);
   }
 
   clearLineGroupArr() {
@@ -98,7 +160,7 @@ export default class LineDrawer extends ShapeDrawer {
     });
 
     this.lineGroupArr = [];
-    this.dataStack = [];
+    this.lineStack.dataStack = [];
   }
 
   onLeftClick(click) {
@@ -140,35 +202,15 @@ export default class LineDrawer extends ShapeDrawer {
   }
 
   toggleShowLineGroup(id, showState) {
-    this.lineGroupArr.forEach((lineGroup) => {
-      if (lineGroup.id !== id) return;
-      lineGroup.toggleShow(showState);
-    });
+    this.lineStack.toggleShowLineGroup(this.lineGroupArr, id, showState);
   }
 
   zoomToLineGroup(id) {
-    this.lineGroupArr.forEach((lineGroup) => {
-      if (lineGroup.id !== id) return;
-      const offset = new Cesium.HeadingPitchRange(0, -90, 800);
-      this.viewer.zoomTo(lineGroup.label, offset);
-    });
+    this.lineStack.zoomToLineGroup(this.lineGroupArr, id);
   }
 
   deleteLineGroup(id) {
-    this.lineGroupArr = this.lineGroupArr.filter((lineGroup) => {
-      if (lineGroup.id !== id) return true;
-      else {
-        this.#deleteLineGroupEntities(lineGroup);
-        return false;
-      }
-    });
-  }
-
-  /**
-   * @param {function} handler
-   */
-  set readData(handler) {
-    this._readData = handler;
+    this.lineGroupArr = this.lineStack.deleteLineGroup(this.lineGroupArr, id);
   }
 
   #deleteLineGroupEntities(lineGroup) {
@@ -235,21 +277,10 @@ export default class LineDrawer extends ShapeDrawer {
 
   #lineGroupEndEvent() {
     this.lineGroup.calculateDistanceAndUpdateLabel();
-    this.lineGroup.id = LineDrawer.nextId++;
+    this.lineGroup.id = LineController.nextId++;
     this.lineGroup.name = `Distance ${this.lineGroupArr.length + 1}`;
     this.lineGroupArr.push(this.lineGroup);
-    this.#updateDataStack();
-  }
-
-  #updateDataStack() {
-    if (!this._readData) return;
-    const data = {
-      id: this.lineGroup.id,
-      name: this.lineGroup.name,
-      value: this.lineGroup.distance,
-    };
-    this.dataStack.push(data);
-    this._readData([...this.dataStack]);
+    this.lineStack.updateData(this.lineGroup);
   }
 
   #resetLineGroup() {

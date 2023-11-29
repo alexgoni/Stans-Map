@@ -1,4 +1,4 @@
-import Drawer from "@/components/module/tool/measurement/Drawer";
+import MeasureController from "@/components/module/tool/measurement/Controller";
 import useDidMountEffect from "@/components/module/useDidMountEffect";
 import {
   areaWidgetState,
@@ -9,12 +9,12 @@ import {
 import { useEffect, useRef } from "react";
 import { useRecoilValue, useSetRecoilState } from "recoil";
 
-export default function MeasureSection({ viewer, setDrawerRef }) {
+export default function MeasureSection({ viewer, setMeasureRef }) {
   const distanceWidgetOpen = useRecoilValue(distanceWidgetState);
   const radiusWidgetOpen = useRecoilValue(radiusWidgetState);
   const areaWidgetOpen = useRecoilValue(areaWidgetState);
   const isMeasureEventOn = useSetRecoilState(measureEventOnState);
-  const drawerRef = useRef(null);
+  const controllerRef = useRef(null);
   const widgetStateObj = {
     distanceWidgetOpen,
     radiusWidgetOpen,
@@ -22,21 +22,21 @@ export default function MeasureSection({ viewer, setDrawerRef }) {
   };
 
   useEffect(() => {
-    const drawer = new Drawer(viewer);
-    drawerRef.current = drawer;
-    setDrawerRef(drawer);
+    const controller = new MeasureController(viewer);
+    controllerRef.current = controller;
+    setMeasureRef(controller);
   }, []);
 
   useDidMountEffect(() => {
-    const drawer = drawerRef.current;
+    const controller = controllerRef.current;
 
-    drawer.setWidgetState(widgetStateObj);
-    drawer.handleAllShapes();
+    controller.setWidgetState(widgetStateObj);
+    controller.handleAllShapes();
 
     isMeasureEventOn(distanceWidgetOpen || radiusWidgetOpen || areaWidgetOpen);
 
     return () => {
-      drawer.cleanUpDrawer();
+      controller.cleanUpDrawing();
     };
   }, [distanceWidgetOpen, radiusWidgetOpen, areaWidgetOpen]);
 

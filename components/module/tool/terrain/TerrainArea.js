@@ -1,7 +1,7 @@
-import AreaDrawer from "../measurement/Area";
+import AreaController from "../measurement/Area";
 import * as Cesium from "cesium";
 
-export default class TerrainAreaDrawer extends AreaDrawer {
+export default class TerrainAreaDrawer extends AreaController {
   constructor(viewer) {
     super(viewer);
   }
