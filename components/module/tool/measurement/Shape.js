@@ -14,7 +14,26 @@ class ShapeGroup {
   }
 }
 
+class ShapeLayer {
+  static OFFSET = [0, -90, 800];
+
+  constructor(viewer) {
+    this.viewer = viewer;
+    this._readData = null;
+    this.dataStack = [];
+  }
+
+  /**
+   * @param {function} handler
+   */
+  set readData(handler) {
+    this._readData = handler;
+  }
+}
+
 class ShapeController {
+  static nextId = 1;
+
   constructor(viewer) {
     this.viewer = viewer;
     this.handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
@@ -52,4 +71,4 @@ class ShapeController {
   onRightClick() {}
 }
 
-export { ShapeGroup, ShapeController };
+export { ShapeGroup, ShapeLayer, ShapeController };

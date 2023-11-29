@@ -104,29 +104,6 @@ export default class AreaController extends ShapeController {
     this.areaGroupArr = [];
   }
 
-  resetAreaGroup() {
-    this.areaGroup = new AreaGroup(this.viewer);
-    this.viewer.entities.remove(this.floatingPoint);
-    this.viewer.entities.remove(this.activeShape);
-
-    this.floatingPoint = null;
-    this.activeShape = null;
-  }
-
-  clearAreaGroupArr() {
-    this.areaGroupArr.forEach((areaGroup) => {
-      areaGroup.polygonArr.forEach((entity) => {
-        this.viewer.entities.remove(entity);
-      });
-      areaGroup.pointEntityArr.forEach((entity) => {
-        this.viewer.entities.remove(entity);
-      });
-      this.viewer.entities.remove(areaGroup.label);
-    });
-
-    this.areaGroupArr = [];
-  }
-
   onLeftClick(click) {
     const clickPosition = getRayPosition({
       viewer: this.viewer,
@@ -193,21 +170,59 @@ export default class AreaController extends ShapeController {
     // movement event에서 마지막으로 push된 element 제거
     this.areaGroup.removeLastPointPosition();
 
-    const removeInvalidEntitiesFromPolygon = () => {
-      this.viewer.entities.remove(this.areaGroup.pointEntityArr[0]);
-      this.viewer.entities.remove(this.areaGroup.pointEntityArr[1]);
-      this.viewer.entities.remove(this.areaGroup.label);
-    };
-
-    const areaGroupEndEvent = () => {
-      this.areaGroup.addPolygonToViewer();
-      this.areaGroup.calculateAreaAndUpdateLabel();
-      this.areaGroupArr.push(this.areaGroup);
-    };
-
-    if (this.areaGroup.pointEntityNum <= 2) removeInvalidEntitiesFromPolygon();
-    else areaGroupEndEvent();
+    if (this.areaGroup.pointEntityNum <= 2) {
+      this.#removeInvalidEntitiesFromPolygon();
+    } else this.#areaGroupEndEvent();
 
     this.resetAreaGroup();
+  }
+
+  resetAreaGroup() {
+    this.areaGroup = new AreaGroup(this.viewer);
+    this.viewer.entities.remove(this.floatingPoint);
+    this.viewer.entities.remove(this.activeShape);
+
+    this.floatingPoint = null;
+    this.activeShape = null;
+  }
+
+  forceReset() {
+    if (!Cesium.defined(this.floatingPoint)) return;
+
+    // movement event에서 마지막으로 push된 element 제거
+    this.areaGroup.removeLastPointPosition();
+
+    if (this.areaGroup.pointEntityNum <= 2) {
+      this.#removeInvalidEntitiesFromPolygon();
+    } else this.areaGroupArr.push(this.areaGroup);
+
+    this.resetAreaGroup();
+    this.#clearAreaGroupArr();
+  }
+
+  #removeInvalidEntitiesFromPolygon() {
+    this.viewer.entities.remove(this.areaGroup.pointEntityArr[0]);
+    this.viewer.entities.remove(this.areaGroup.pointEntityArr[1]);
+    this.viewer.entities.remove(this.areaGroup.label);
+  }
+
+  #areaGroupEndEvent() {
+    this.areaGroup.addPolygonToViewer();
+    this.areaGroup.calculateAreaAndUpdateLabel();
+    this.areaGroupArr.push(this.areaGroup);
+  }
+
+  #clearAreaGroupArr() {
+    this.areaGroupArr.forEach((areaGroup) => {
+      areaGroup.polygonArr.forEach((entity) => {
+        this.viewer.entities.remove(entity);
+      });
+      areaGroup.pointEntityArr.forEach((entity) => {
+        this.viewer.entities.remove(entity);
+      });
+      this.viewer.entities.remove(areaGroup.label);
+    });
+
+    this.areaGroupArr = [];
   }
 }

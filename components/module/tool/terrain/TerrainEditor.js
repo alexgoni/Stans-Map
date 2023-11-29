@@ -12,10 +12,10 @@ export default class TerrainEditor {
     this.terrainAreaDrawer.startDrawing();
   }
 
+  // FIXME: forceReset으로 변경
   stopDraw() {
-    this.terrainAreaDrawer.onRightClick();
     this.terrainAreaDrawer.stopDrawing();
-    this.terrainAreaDrawer.clearAreaGroupArr();
+    this.terrainAreaDrawer.forceReset();
   }
 
   async modifyTerrain(positions, slideValue) {

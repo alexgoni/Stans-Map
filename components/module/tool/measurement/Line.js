@@ -10,7 +10,7 @@ import {
   getCoordinate,
   getRayPosition,
 } from "@/components/handler/cesium/GeoInfo";
-import { ShapeGroup, ShapeController } from "./Shape";
+import { ShapeGroup, ShapeController, ShapeLayer } from "./Shape";
 import { distanceFormatter } from "../../formatter";
 
 class LineGroup extends ShapeGroup {
@@ -73,25 +73,14 @@ class LineGroup extends ShapeGroup {
 
   #updateLabel() {
     this.label.label.text = new Cesium.CallbackProperty(() => {
-      return distanceFormatter(this.distance);
+      return distanceFormatter(this.distance, 2);
     }, false);
   }
 }
 
-class LineStack {
-  static OFFSET = [0, -90, 800];
-
+class LineStack extends ShapeLayer {
   constructor(viewer) {
-    this.viewer = viewer;
-    this._readData = null;
-    this.dataStack = [];
-  }
-
-  /**
-   * @param {function} handler
-   */
-  set readData(handler) {
-    this._readData = handler;
+    super(viewer);
   }
 
   updateData(lineGroup) {
@@ -115,7 +104,7 @@ class LineStack {
   zoomToLineGroup(lineGroupArr, id) {
     lineGroupArr.forEach((lineGroup) => {
       if (lineGroup.id !== id) return;
-      const offset = new Cesium.HeadingPitchRange(...LineStack.OFFSET);
+      const offset = new Cesium.HeadingPitchRange(...ShapeLayer.OFFSET);
       this.viewer.zoomTo(lineGroup.label, offset);
     });
   }
@@ -142,25 +131,13 @@ class LineStack {
 }
 
 export default class LineController extends ShapeController {
-  static nextId = 1;
-
   constructor(viewer) {
     super(viewer);
     this.floatingPointCoordinate = null;
     this.dashLine = null;
-
-    this.lineGroup = new LineGroup(this.viewer);
+    this.lineGroup = new LineGroup(viewer);
     this.lineGroupArr = [];
     this.lineStack = new LineStack(viewer);
-  }
-
-  clearLineGroupArr() {
-    this.lineGroupArr.forEach((lineGroup) => {
-      this.#deleteLineGroupEntities(lineGroup);
-    });
-
-    this.lineGroupArr = [];
-    this.lineStack.dataStack = [];
   }
 
   onLeftClick(click) {
@@ -201,6 +178,18 @@ export default class LineController extends ShapeController {
     this.#resetLineGroup();
   }
 
+  forceReset() {
+    if (!Cesium.defined(this.floatingPoint)) return;
+
+    // movement event에서 마지막으로 push된 element 제거
+    this.lineGroup.removeLastPointPosition();
+    if (this.lineGroup.pointEntityNum === 1) this.#removeOneClickEntities();
+    else this.lineGroupArr.push(this.lineGroup);
+
+    this.#resetLineGroup();
+    this.#clearLineGroupArr();
+  }
+
   toggleShowLineGroup(id, showState) {
     this.lineStack.toggleShowLineGroup(this.lineGroupArr, id, showState);
   }
@@ -211,16 +200,6 @@ export default class LineController extends ShapeController {
 
   deleteLineGroup(id) {
     this.lineGroupArr = this.lineStack.deleteLineGroup(this.lineGroupArr, id);
-  }
-
-  #deleteLineGroupEntities(lineGroup) {
-    lineGroup.pointEntityArr.forEach((entity) =>
-      this.viewer.entities.remove(entity),
-    );
-    lineGroup.polylineArr.forEach((entity) =>
-      this.viewer.entities.remove(entity),
-    );
-    this.viewer.entities.remove(lineGroup.label);
   }
 
   #lineGroupFirstClickHandler(clickPosition) {
@@ -277,7 +256,7 @@ export default class LineController extends ShapeController {
 
   #lineGroupEndEvent() {
     this.lineGroup.calculateDistanceAndUpdateLabel();
-    this.lineGroup.id = LineController.nextId++;
+    this.lineGroup.id = ShapeController.nextId++;
     this.lineGroup.name = `Distance ${this.lineGroupArr.length + 1}`;
     this.lineGroupArr.push(this.lineGroup);
     this.lineStack.updateData(this.lineGroup);
@@ -292,5 +271,24 @@ export default class LineController extends ShapeController {
     this.dashLine = null;
 
     this.lineGroup = new LineGroup(this.viewer);
+  }
+
+  #clearLineGroupArr() {
+    this.lineGroupArr.forEach((lineGroup) => {
+      this.#deleteLineGroupEntities(lineGroup);
+    });
+
+    this.lineGroupArr = [];
+    this.lineStack.dataStack = [];
+  }
+
+  #deleteLineGroupEntities(lineGroup) {
+    lineGroup.pointEntityArr.forEach((entity) =>
+      this.viewer.entities.remove(entity),
+    );
+    lineGroup.polylineArr.forEach((entity) =>
+      this.viewer.entities.remove(entity),
+    );
+    this.viewer.entities.remove(lineGroup.label);
   }
 }

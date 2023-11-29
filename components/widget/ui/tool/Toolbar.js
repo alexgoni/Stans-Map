@@ -5,7 +5,7 @@ import TerrainTool from "./TerrainTool";
 import TerrainEditWidget from "./TerrainEditWidget";
 import StackContainer from "../stack/StackContainer";
 
-export default function Toolbar({ viewer, toolData }) {
+export default function Toolbar({ viewer, toolController }) {
   return (
     <>
       <div className="fixed right-5 top-6 z-50">
@@ -22,7 +22,7 @@ export default function Toolbar({ viewer, toolData }) {
         <TerrainEditWidget viewer={viewer} />
       </div>
 
-      <StackContainer toolData={toolData} />
+      <StackContainer toolController={toolController} />
       <Description />
     </>
   );

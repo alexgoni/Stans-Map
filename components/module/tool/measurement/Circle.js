@@ -8,7 +8,8 @@ import {
   getRayPosition,
 } from "@/components/handler/cesium/GeoInfo";
 import * as Cesium from "cesium";
-import { ShapeGroup, ShapeController } from "./Shape";
+import { ShapeGroup, ShapeController, ShapeLayer } from "./Shape";
+import { radiusFormatter } from "../../formatter";
 
 class CircleGroup extends ShapeGroup {
   constructor(viewer) {
@@ -19,34 +20,45 @@ class CircleGroup extends ShapeGroup {
     this.radius = this.value;
   }
 
-  addPointerToViewer() {
+  addCircleGroupToViewer() {
+    this.#addPointerToViewer();
+    this.#addCircleToViewer();
+    this.#addLabelToViewer();
+  }
+
+  registerCircleGroupCallback() {
+    this.#registerRadiusCallBack(this.radius);
+    this.#registerLabelCallBack(this.radius);
+  }
+
+  toggleShow(showState) {
+    this.centerPoint.show = showState;
+    this.circle.show = showState;
+    this.label.show = showState;
+  }
+
+  #addPointerToViewer() {
     this.centerPoint = createCenterPoint({
       viewer: this.viewer,
       position: this.centerPosition,
     });
   }
 
-  addCircleToViewer() {
+  #addCircleToViewer() {
     this.circle = createCircle({
       viewer: this.viewer,
       position: this.centerPosition,
     });
   }
 
-  addLabelToViewer() {
+  #addLabelToViewer() {
     this.label = createLabel({
       viewer: this.viewer,
       position: this.centerPosition,
     });
   }
 
-  addCircleGroupToViewer() {
-    this.addPointerToViewer();
-    this.addCircleToViewer();
-    this.addLabelToViewer();
-  }
-
-  registerRadiusCallBack() {
+  #registerRadiusCallBack() {
     /* 
     CallbackPropery로 실시간 동적 업데이트
     최소값 설정(각 axis값 0이 될 시 에러 발생) 
@@ -60,19 +72,58 @@ class CircleGroup extends ShapeGroup {
     }, false);
   }
 
-  registerLabelCallBack() {
+  #registerLabelCallBack() {
     this.label.label.text = new Cesium.CallbackProperty(() => {
-      if (this.radius >= 1000) {
-        return `${(this.radius / 1000).toFixed(2)}km`;
-      } else {
-        return `${this.radius.toFixed(2)}m`;
-      }
+      return radiusFormatter(this.radius, 2);
     }, false);
   }
+}
 
-  registerCircleGroupCallback() {
-    this.registerRadiusCallBack(this.radius);
-    this.registerLabelCallBack(this.radius);
+class CircleStack extends ShapeLayer {
+  constructor(viewer) {
+    super(viewer);
+  }
+
+  updateData(circleGroup) {
+    if (!this._readData) return;
+    const data = {
+      id: circleGroup.id,
+      name: circleGroup.name,
+      value: circleGroup.radius,
+    };
+    this.dataStack.push(data);
+    this._readData([...this.dataStack]);
+  }
+
+  toggleShowCircleGroup(circleGroupArr, id, showState) {
+    circleGroupArr.forEach((circleGroup) => {
+      if (circleGroup.id !== id) return;
+      circleGroup.toggleShow(showState);
+    });
+  }
+
+  zoomToCircleGroup(circleGroupArr, id) {
+    circleGroupArr.forEach((circleGroup) => {
+      if (circleGroup.id !== id) return;
+      const offset = new Cesium.HeadingPitchRange(...ShapeLayer.OFFSET);
+      this.viewer.zoomTo(circleGroup.circle, offset);
+    });
+  }
+
+  deleteCircleGroup(circleGroupArr, id) {
+    return circleGroupArr.filter((circleGroup) => {
+      if (circleGroup.id !== id) return true;
+      else {
+        this.#deleteCircleGroupEntities(circleGroup);
+        return false;
+      }
+    });
+  }
+
+  #deleteCircleGroupEntities(circleGroup) {
+    this.viewer.entities.remove(circleGroup.centerPoint);
+    this.viewer.entities.remove(circleGroup.circle);
+    this.viewer.entities.remove(circleGroup.label);
   }
 }
 
@@ -80,8 +131,9 @@ export default class CircleController extends ShapeController {
   constructor(viewer) {
     super(viewer);
     this.isDrawing = false;
-    this.circleGroup = new CircleGroup(this.viewer);
+    this.circleGroup = new CircleGroup(viewer);
     this.circleGroupArr = [];
+    this.circleStack = new CircleStack(viewer);
   }
 
   startDrawing() {
@@ -100,23 +152,9 @@ export default class CircleController extends ShapeController {
     this.handler.removeInputAction(Cesium.ScreenSpaceEventType.MOUSE_MOVE);
   }
 
-  clearCircleGroupArr() {
-    this.circleGroupArr.forEach((circleGroup) => {
-      this.viewer.entities.remove(circleGroup.centerPoint);
-      this.viewer.entities.remove(circleGroup.circle);
-      this.viewer.entities.remove(circleGroup.label);
-    });
-
-    this.circleGroupArr = [];
-  }
-
   forceReset() {
-    this.clearCircleGroupArr();
-    this.isDrawing = false;
-    this.viewer.entities.remove(this.circleGroup.centerPoint);
-    this.viewer.entities.remove(this.circleGroup.circle);
-    this.viewer.entities.remove(this.circleGroup.label);
-    this.circleGroup = new CircleGroup(this.viewer);
+    this.#clearCircleGroupArr();
+    this.#resetCircleGroup();
   }
 
   onLeftClick(click) {
@@ -126,23 +164,8 @@ export default class CircleController extends ShapeController {
     });
     if (!Cesium.defined(clickPosition)) return;
 
-    const firstClickHandler = () => {
-      this.isDrawing = true;
-
-      this.circleGroup.centerPosition = clickPosition;
-      this.circleGroup.addCircleGroupToViewer(clickPosition);
-      this.circleGroup.registerCircleGroupCallback();
-    };
-
-    const secondClickHandler = () => {
-      this.isDrawing = false;
-
-      this.circleGroupArr.push(this.circleGroup);
-      this.circleGroup = new CircleGroup(this.viewer);
-    };
-
-    if (!this.isDrawing) firstClickHandler();
-    else secondClickHandler();
+    if (!this.isDrawing) this.#firstClickHandler(clickPosition);
+    else this.#secondClickHandler();
   }
 
   onMouseMove(movement) {
@@ -158,5 +181,59 @@ export default class CircleController extends ShapeController {
       this.circleGroup.centerPosition,
       newPosition,
     );
+  }
+
+  toggleShowCircleGroup(id, showState) {
+    this.circleStack.toggleShowCircleGroup(this.circleGroupArr, id, showState);
+  }
+
+  zoomToCircleGroup(id) {
+    this.circleStack.zoomToCircleGroup(this.circleGroupArr, id);
+  }
+
+  deleteCircleGroup(id) {
+    this.circleGroupArr = this.circleStack.deleteCircleGroup(
+      this.circleGroupArr,
+      id,
+    );
+  }
+
+  #deleteCircleGroupEntities(circleGroup) {
+    this.viewer.entities.remove(circleGroup.centerPoint);
+    this.viewer.entities.remove(circleGroup.circle);
+    this.viewer.entities.remove(circleGroup.label);
+  }
+
+  #clearCircleGroupArr() {
+    this.circleGroupArr.forEach((circleGroup) => {
+      this.#deleteCircleGroupEntities(circleGroup);
+    });
+
+    this.circleGroupArr = [];
+    this.circleStack.dataStack = [];
+  }
+
+  #resetCircleGroup() {
+    this.isDrawing = false;
+    this.#deleteCircleGroupEntities(this.circleGroup);
+    this.circleGroup = new CircleGroup(this.viewer);
+  }
+
+  #firstClickHandler(clickPosition) {
+    this.isDrawing = true;
+
+    this.circleGroup.centerPosition = clickPosition;
+    this.circleGroup.addCircleGroupToViewer(clickPosition);
+    this.circleGroup.registerCircleGroupCallback();
+  }
+
+  #secondClickHandler() {
+    this.isDrawing = false;
+
+    this.circleGroup.id = ShapeController.nextId++;
+    this.circleGroup.name = `Radius ${this.circleGroupArr.length + 1}`;
+    this.circleGroupArr.push(this.circleGroup);
+    this.circleStack.updateData(this.circleGroup);
+    this.circleGroup = new CircleGroup(this.viewer);
   }
 }

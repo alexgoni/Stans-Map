@@ -12,7 +12,7 @@ export default function POC() {
   const [viewer, setViewer] = useState(null);
   const [measureRef, setMeasureRef] = useState(null);
   const [terrainRef, setTerrainRef] = useState(null);
-  const [toolData, setToolData] = useState(null);
+  const [toolController, setToolController] = useState(null);
 
   // viewer
   useEffect(() => {
@@ -42,14 +42,14 @@ export default function POC() {
   }, []);
 
   useEffect(() => {
-    setToolData({ measureRef, terrainRef });
+    setToolController({ measure: measureRef, terrain: terrainRef });
   }, [measureRef, terrainRef]);
 
   return (
     <>
       {viewer && (
         <>
-          <UIWrapper viewer={viewer} toolData={toolData} />
+          <UIWrapper viewer={viewer} toolController={toolController} />
           {/* <ModelEventSection viewer={viewer} /> */}
           <MeasureSection viewer={viewer} setMeasureRef={setMeasureRef} />
           <TerrainSection viewer={viewer} setTerrainRef={setTerrainRef} />

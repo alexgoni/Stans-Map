@@ -1,19 +1,19 @@
+import useDidMountEffect from "@/components/module/useDidMountEffect";
+import { radiusWidgetState } from "@/recoil/atom/MeasurementState";
+import { useEffect, useState } from "react";
 import { useRecoilValue } from "recoil";
-import { distanceWidgetState } from "@/recoil/atom/MeasurementState";
+import StackForm from "./StackForm";
 import { EyeFill, EyeSlashFill, SendFill, Trash } from "react-bootstrap-icons";
 import Tooltip from "../../assets/Tooltip";
-import { useEffect, useState } from "react";
-import useDidMountEffect from "@/components/module/useDidMountEffect";
-import { distanceFormatter } from "@/components/module/formatter";
-import StackForm from "./StackForm";
+import { radiusFormatter } from "@/components/module/formatter";
 
-export default function DistanceStack({ toolController }) {
-  const distanceWidgetOpen = useRecoilValue(distanceWidgetState);
-  const [distanceData, setDistanceData] = useState([]);
+export default function RadiusStack({ toolController }) {
+  const radiusWidgetOpen = useRecoilValue(radiusWidgetState);
+  const [radiusData, setRadiusData] = useState([]);
   const [layerArray, setLayerArray] = useState([]);
 
   const handleData = (newData) => {
-    setDistanceData(newData);
+    setRadiusData(newData);
   };
 
   const handleDeleteLayer = (layerId) => {
@@ -24,41 +24,41 @@ export default function DistanceStack({ toolController }) {
 
   useEffect(() => {
     if (!toolController.measure) return;
-    const lineController = toolController.measure.lineController;
-    lineController.lineStack.readData = handleData;
+    const circleController = toolController.measure.circleController;
+    circleController.circleStack.readData = handleData;
   }, [toolController]);
 
   useEffect(() => {
-    if (distanceWidgetOpen) return;
+    if (radiusWidgetOpen) return;
     setLayerArray([]);
-  }, [distanceWidgetOpen]);
+  }, [radiusWidgetOpen]);
 
   useDidMountEffect(() => {
-    const newData = distanceData[distanceData.length - 1];
+    const newData = radiusData[radiusData.length - 1];
     if (!newData) return;
     const newLayer = (
-      <DistanceLayer
+      <RadiusLayer
         key={newData.id}
         data={newData}
-        lineController={toolController.measure.lineController}
+        circleController={toolController.measure.circleController}
         onDelete={() => {
           handleDeleteLayer(newData.id);
         }}
       />
     );
     setLayerArray((prevLayers) => [...prevLayers, newLayer]);
-  }, [distanceData]);
+  }, [radiusData]);
 
   return (
     <StackForm
-      widgetState={distanceWidgetOpen}
-      header={"Distance List"}
+      widgetState={radiusWidgetOpen}
+      header={"Radius List"}
       layerArray={layerArray}
     />
   );
 }
 
-function DistanceLayer({ data, lineController, onDelete }) {
+function RadiusLayer({ data, circleController, onDelete }) {
   const [showState, setShowState] = useState(false);
   const { id, name, value } = data;
 
@@ -68,7 +68,7 @@ function DistanceLayer({ data, lineController, onDelete }) {
         <div
           className="flex h-10 w-10 cursor-pointer items-center justify-center"
           onClick={() => {
-            lineController.toggleShowLineGroup(id, showState);
+            circleController.toggleShowCircleGroup(id, showState);
             setShowState(!showState);
           }}
         >
@@ -80,7 +80,7 @@ function DistanceLayer({ data, lineController, onDelete }) {
         </div>
         <div className="flex flex-col justify-center">
           <span className="text-sm font-semibold text-gray-600">{name}</span>
-          <span className="text-xs text-gray-500">{`거리: ${distanceFormatter(
+          <span className="text-xs text-gray-500">{`반경: ${radiusFormatter(
             value,
             4,
           )}`}</span>
@@ -92,7 +92,7 @@ function DistanceLayer({ data, lineController, onDelete }) {
           <div
             className="flex h-10 w-8 cursor-pointer items-center justify-center text-slate-500 hover:text-blue-500"
             onClick={() => {
-              lineController.zoomToLineGroup(id);
+              circleController.zoomToCircleGroup(id);
             }}
           >
             <SendFill className="text-xl" />
@@ -104,7 +104,7 @@ function DistanceLayer({ data, lineController, onDelete }) {
             className="flex h-10 w-8 cursor-pointer items-center justify-center text-slate-500 hover:text-red-600"
             onClick={() => {
               onDelete();
-              lineController.deleteLineGroup(id);
+              circleController.deleteCircleGroup(id);
             }}
           >
             <Trash className="text-xl" />

@@ -24,9 +24,8 @@ export default class MeasureController {
     if (this.distanceWidgetOpen) {
       this.lineController.startDrawing();
     } else {
-      this.lineController.onRightClick();
       this.lineController.stopDrawing();
-      this.lineController.clearLineGroupArr();
+      this.lineController.forceReset();
     }
   }
 
@@ -35,7 +34,6 @@ export default class MeasureController {
       this.circleController.startDrawing();
     } else {
       this.circleController.stopDrawing();
-      this.circleController.clearCircleGroupArr();
       this.circleController.forceReset();
     }
   }
@@ -44,9 +42,8 @@ export default class MeasureController {
     if (this.areaWidgetOpen) {
       this.areaController.startDrawing();
     } else {
-      this.areaController.onRightClick();
       this.areaController.stopDrawing();
-      this.areaController.clearAreaGroupArr();
+      this.areaController.forceReset();
     }
   }
 

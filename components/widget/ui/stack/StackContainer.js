@@ -1,9 +1,11 @@
 import DistanceStack from "./DistanceStack";
+import RadiusStack from "./RadiusStack";
 
-export default function StackContainer({ toolData }) {
+export default function StackContainer({ toolController }) {
   return (
     <>
-      <DistanceStack toolData={toolData} />
+      <DistanceStack toolController={toolController} />
+      <RadiusStack toolController={toolController} />
     </>
   );
 }
