@@ -10,7 +10,8 @@ import {
   getRayPosition,
 } from "@/components/handler/cesium/GeoInfo";
 import * as Cesium from "cesium";
-import { ShapeGroup, ShapeController } from "./Shape";
+import { ShapeGroup, ShapeController, ShapeLayer } from "./Shape";
+import { areaFormatter } from "../../formatter";
 
 class AreaGroup extends ShapeGroup {
   constructor(viewer) {
@@ -33,10 +34,6 @@ class AreaGroup extends ShapeGroup {
   addPointAndTurfPosition(position) {
     this.#addPointPosition(position);
     this.#addTurfPointPosition(position);
-  }
-
-  get pointEntityNum() {
-    return this.pointEntityArr.length;
   }
 
   removeLastPointPosition() {
@@ -66,6 +63,20 @@ class AreaGroup extends ShapeGroup {
     this.#updateLabel();
   }
 
+  toggleShow(showState) {
+    this.pointEntityArr.forEach((entity) => {
+      entity.show = showState;
+    });
+    this.polygonArr.forEach((entity) => {
+      entity.show = showState;
+    });
+    this.label.show = showState;
+  }
+
+  get pointEntityNum() {
+    return this.pointEntityArr.length;
+  }
+
   #addPointPosition(position) {
     this.pointPositionArr.push(position);
   }
@@ -75,23 +86,61 @@ class AreaGroup extends ShapeGroup {
   }
 
   #updateLabel() {
-    function addCommasToNumber(number) {
-      return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-    }
-
-    let formattedArea;
-
-    if (this.area >= 1000000) {
-      const areaInSquareKilometers = this.area / 1000000;
-      formattedArea =
-        addCommasToNumber(areaInSquareKilometers.toFixed(2)) + " km²";
-    } else {
-      formattedArea = addCommasToNumber(this.area.toFixed(2)) + " m²";
-    }
-
     this.label.label.text = new Cesium.CallbackProperty(() => {
-      return formattedArea;
+      return areaFormatter(this.area, 2);
     }, false);
+  }
+}
+
+class AreaStack extends ShapeLayer {
+  constructor(viewer) {
+    super(viewer);
+  }
+
+  updateData(areaGroup) {
+    if (!this._readData) return;
+    const data = {
+      id: areaGroup.id,
+      name: areaGroup.name,
+      value: areaGroup.area,
+    };
+    this.dataStack.push(data);
+    this._readData([...this.dataStack]);
+  }
+
+  toggleShowAreaGroup(areaGroupArr, id, showState) {
+    areaGroupArr.forEach((areaGroup) => {
+      if (areaGroup.id !== id) return;
+      areaGroup.toggleShow(showState);
+    });
+  }
+
+  zoomToAreaGroup(areaGroupArr, id) {
+    areaGroupArr.forEach((areaGroup) => {
+      if (areaGroup.id !== id) return;
+      const offset = new Cesium.HeadingPitchRange(...ShapeLayer.OFFSET);
+      this.viewer.zoomTo(areaGroup.label, offset);
+    });
+  }
+
+  deleteAreaGroup(areaGroupArr, id) {
+    return areaGroupArr.filter((areaGroup) => {
+      if (areaGroup.id !== id) return true;
+      else {
+        this.#deleteAreaGroupEntities(areaGroup);
+        return false;
+      }
+    });
+  }
+
+  #deleteAreaGroupEntities(areaGroup) {
+    areaGroup.polygonArr.forEach((entity) => {
+      this.viewer.entities.remove(entity);
+    });
+    areaGroup.pointEntityArr.forEach((entity) => {
+      this.viewer.entities.remove(entity);
+    });
+    this.viewer.entities.remove(areaGroup.label);
   }
 }
 
@@ -99,9 +148,9 @@ export default class AreaController extends ShapeController {
   constructor(viewer) {
     super(viewer);
     this.activeShape = null;
-
-    this.areaGroup = new AreaGroup(this.viewer);
+    this.areaGroup = new AreaGroup(viewer);
     this.areaGroupArr = [];
+    this.areaStack = new AreaStack(viewer);
   }
 
   onLeftClick(click) {
@@ -111,30 +160,9 @@ export default class AreaController extends ShapeController {
     });
     if (!Cesium.defined(clickPosition)) return;
 
-    const areaGroupFirstClickHandler = () => {
-      this.floatingPoint = createAreaPoint({
-        viewer: this.viewer,
-        position: clickPosition,
-      });
-
-      this.areaGroup.addPointAndTurfPosition(clickPosition);
-      this.areaGroup.addLabelToViewer(this.floatingPoint.position);
-
-      const dynamicPositions = new Cesium.CallbackProperty(() => {
-        if (this.areaGroup.pointEntityArr.length < 2)
-          return this.areaGroup.pointPositionArr.flat();
-        const clonePointPositonArr = [...this.areaGroup.pointPositionArr];
-        clonePointPositonArr.push(clonePointPositonArr[0]);
-        return clonePointPositonArr.flat();
-      }, false);
-
-      this.activeShape = createAreaPolyline({
-        viewer: this.viewer,
-        positions: dynamicPositions,
-      });
-    };
-
-    if (this.areaGroup.pointEntityNum === 0) areaGroupFirstClickHandler();
+    if (this.areaGroup.pointEntityNum === 0) {
+      this.#areaGroupFirstClickHandler(clickPosition);
+    }
     this.areaGroup.addPointToViewer(clickPosition);
   }
 
@@ -147,17 +175,8 @@ export default class AreaController extends ShapeController {
     });
     if (!Cesium.defined(newPosition)) return;
 
-    const updatePositionArr = () => {
-      this.areaGroup.pointPositionArr.pop();
-      this.areaGroup.pointPositionArr.push(newPosition);
-
-      this.areaGroup.turfPointPositionArr.pop();
-      this.areaGroup.turfPointPositionArr.push(getCoordinate(newPosition));
-    };
-    // floating point 위치 변경
     this.floatingPoint.position.setValue(newPosition);
-
-    updatePositionArr();
+    this.#updatePositionArr(newPosition);
 
     // update area
     if (this.areaGroup.pointEntityNum < 2) return;
@@ -200,6 +219,49 @@ export default class AreaController extends ShapeController {
     this.#clearAreaGroupArr();
   }
 
+  toggleShowAreaGroup(id, showState) {
+    this.areaStack.toggleShowAreaGroup(this.areaGroupArr, id, showState);
+  }
+
+  zoomToAreaGroup(id) {
+    this.areaStack.zoomToAreaGroup(this.areaGroupArr, id);
+  }
+
+  deleteAreaGroup(id) {
+    this.areaGroupArr = this.areaStack.deleteAreaGroup(this.areaGroupArr, id);
+  }
+
+  #areaGroupFirstClickHandler(clickPosition) {
+    this.floatingPoint = createAreaPoint({
+      viewer: this.viewer,
+      position: clickPosition,
+    });
+
+    this.areaGroup.addPointAndTurfPosition(clickPosition);
+    this.areaGroup.addLabelToViewer(this.floatingPoint.position);
+
+    const dynamicPositions = new Cesium.CallbackProperty(() => {
+      if (this.areaGroup.pointEntityArr.length < 2)
+        return this.areaGroup.pointPositionArr.flat();
+      const clonePointPositonArr = [...this.areaGroup.pointPositionArr];
+      clonePointPositonArr.push(clonePointPositonArr[0]);
+      return clonePointPositonArr.flat();
+    }, false);
+
+    this.activeShape = createAreaPolyline({
+      viewer: this.viewer,
+      positions: dynamicPositions,
+    });
+  }
+
+  #updatePositionArr(newPosition) {
+    this.areaGroup.pointPositionArr.pop();
+    this.areaGroup.pointPositionArr.push(newPosition);
+
+    this.areaGroup.turfPointPositionArr.pop();
+    this.areaGroup.turfPointPositionArr.push(getCoordinate(newPosition));
+  }
+
   #removeInvalidEntitiesFromPolygon() {
     this.viewer.entities.remove(this.areaGroup.pointEntityArr[0]);
     this.viewer.entities.remove(this.areaGroup.pointEntityArr[1]);
@@ -209,20 +271,28 @@ export default class AreaController extends ShapeController {
   #areaGroupEndEvent() {
     this.areaGroup.addPolygonToViewer();
     this.areaGroup.calculateAreaAndUpdateLabel();
+    this.areaGroup.id = ShapeController.nextId++;
+    this.areaGroup.name = `Area ${this.areaGroupArr.length + 1}`;
     this.areaGroupArr.push(this.areaGroup);
+    this.areaStack.updateData(this.areaGroup);
   }
 
   #clearAreaGroupArr() {
     this.areaGroupArr.forEach((areaGroup) => {
-      areaGroup.polygonArr.forEach((entity) => {
-        this.viewer.entities.remove(entity);
-      });
-      areaGroup.pointEntityArr.forEach((entity) => {
-        this.viewer.entities.remove(entity);
-      });
-      this.viewer.entities.remove(areaGroup.label);
+      this.#deleteAreaGroupEntities(areaGroup);
     });
 
     this.areaGroupArr = [];
+    this.areaStack.dataStack = [];
+  }
+
+  #deleteAreaGroupEntities(areaGroup) {
+    areaGroup.polygonArr.forEach((entity) => {
+      this.viewer.entities.remove(entity);
+    });
+    areaGroup.pointEntityArr.forEach((entity) => {
+      this.viewer.entities.remove(entity);
+    });
+    this.viewer.entities.remove(areaGroup.label);
   }
 }
