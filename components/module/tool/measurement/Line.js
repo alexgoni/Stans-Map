@@ -156,9 +156,8 @@ export default class LineDrawer extends ShapeDrawer {
 
   deleteLineGroup(id) {
     this.lineGroupArr = this.lineGroupArr.filter((lineGroup) => {
-      if (lineGroup.id !== id) {
-        return true;
-      } else {
+      if (lineGroup.id !== id) return true;
+      else {
         this.#deleteLineGroupEntities(lineGroup);
         return false;
       }
@@ -248,11 +247,6 @@ export default class LineDrawer extends ShapeDrawer {
       id: this.lineGroup.id,
       name: this.lineGroup.name,
       value: this.lineGroup.distance,
-      // entity: {
-      //   label: this.lineGroup.label,
-      //   pointEntityArr: this.lineGroup.pointEntityArr,
-      //   polylineArr: this.lineGroup.polylineArr,
-      // },
     };
     this.dataStack.push(data);
     this._readData([...this.dataStack]);

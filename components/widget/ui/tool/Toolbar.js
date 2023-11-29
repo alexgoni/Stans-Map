@@ -3,7 +3,7 @@ import MeasureTool from "./MeasureTool";
 import Description from "../../assets/Description";
 import TerrainTool from "./TerrainTool";
 import TerrainEditWidget from "./TerrainEditWidget";
-import LayerStack from "./LayerStack";
+import StackContainer from "../stack/StackContainer";
 
 export default function Toolbar({ viewer, toolData }) {
   return (
@@ -22,7 +22,7 @@ export default function Toolbar({ viewer, toolData }) {
         <TerrainEditWidget viewer={viewer} />
       </div>
 
-      <LayerStack toolData={toolData} />
+      <StackContainer toolData={toolData} />
       <Description />
     </>
   );
