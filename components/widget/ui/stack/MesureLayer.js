@@ -1,6 +1,34 @@
-// TODO: 다른 measure tool layer만들고 적용가능한지 o => MeasureLayer
-export default function MesureLayerForm({ data, drawer, onDelete }) {
+import {
+  areaFormatter,
+  distanceFormatter,
+  radiusFormatter,
+} from "@/components/module/formatter";
+import { useState } from "react";
+import { EyeFill, EyeSlashFill, SendFill, Trash } from "react-bootstrap-icons";
+import Tooltip from "../../assets/Tooltip";
+
+export default function MeasureLayer({
+  data,
+  widgetState,
+  controller,
+  onDelete,
+}) {
+  const [showState, setShowState] = useState(false);
   const { id, name, value } = data;
+
+  const widgetConfig = {
+    distanceWidgetState: {
+      description: `거리: ${distanceFormatter(value, 4)}`,
+    },
+    radiusWidgetState: {
+      description: `반경: ${radiusFormatter(value, 4)}`,
+    },
+    areaWidgetState: {
+      description: `면적: ${areaFormatter(value, 4)}`,
+    },
+  };
+
+  const { description } = widgetConfig[widgetState.key] || {};
 
   return (
     <div className="flex h-16 w-full items-center justify-between border-b border-gray-300 bg-gray-200 shadow-lg">
@@ -8,7 +36,7 @@ export default function MesureLayerForm({ data, drawer, onDelete }) {
         <div
           className="flex h-10 w-10 cursor-pointer items-center justify-center"
           onClick={() => {
-            drawer.toggleShowLineGroup(id, showState);
+            controller.toggleShowGroup(id, showState);
             setShowState(!showState);
           }}
         >
@@ -20,9 +48,7 @@ export default function MesureLayerForm({ data, drawer, onDelete }) {
         </div>
         <div className="flex flex-col justify-center">
           <span className="text-sm font-semibold text-gray-600">{name}</span>
-          <span className="text-xs text-gray-500">{`거리: ${detailDistanceFormatter(
-            value,
-          )}`}</span>
+          <span className="text-xs text-gray-500">{description}</span>
         </div>
       </div>
 
@@ -31,7 +57,7 @@ export default function MesureLayerForm({ data, drawer, onDelete }) {
           <div
             className="flex h-10 w-8 cursor-pointer items-center justify-center text-slate-500 hover:text-blue-500"
             onClick={() => {
-              lineDrawer.zoomToLineGroup(id);
+              controller.zoomToGroup(id);
             }}
           >
             <SendFill className="text-xl" />
@@ -43,7 +69,7 @@ export default function MesureLayerForm({ data, drawer, onDelete }) {
             className="flex h-10 w-8 cursor-pointer items-center justify-center text-slate-500 hover:text-red-600"
             onClick={() => {
               onDelete();
-              lineDrawer.deleteLineGroup(id);
+              controller.deleteGroup(id);
             }}
           >
             <Trash className="text-xl" />

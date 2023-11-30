@@ -179,10 +179,6 @@ export default class LineController extends ShapeController {
   }
 
   forceReset() {
-    if (!Cesium.defined(this.floatingPoint)) return;
-
-    // movement event에서 마지막으로 push된 element 제거
-    this.lineGroup.removeLastPointPosition();
     if (this.lineGroup.pointEntityNum === 1) this.#removeOneClickEntities();
     else this.lineGroupArr.push(this.lineGroup);
 
@@ -190,15 +186,15 @@ export default class LineController extends ShapeController {
     this.#clearLineGroupArr();
   }
 
-  toggleShowLineGroup(id, showState) {
+  toggleShowGroup(id, showState) {
     this.lineStack.toggleShowLineGroup(this.lineGroupArr, id, showState);
   }
 
-  zoomToLineGroup(id) {
+  zoomToGroup(id) {
     this.lineStack.zoomToLineGroup(this.lineGroupArr, id);
   }
 
-  deleteLineGroup(id) {
+  deleteGroup(id) {
     this.lineGroupArr = this.lineStack.deleteLineGroup(this.lineGroupArr, id);
   }
 

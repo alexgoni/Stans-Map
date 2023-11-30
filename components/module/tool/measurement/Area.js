@@ -206,11 +206,6 @@ export default class AreaController extends ShapeController {
   }
 
   forceReset() {
-    if (!Cesium.defined(this.floatingPoint)) return;
-
-    // movement event에서 마지막으로 push된 element 제거
-    this.areaGroup.removeLastPointPosition();
-
     if (this.areaGroup.pointEntityNum <= 2) {
       this.#removeInvalidEntitiesFromPolygon();
     } else this.areaGroupArr.push(this.areaGroup);
@@ -219,15 +214,15 @@ export default class AreaController extends ShapeController {
     this.#clearAreaGroupArr();
   }
 
-  toggleShowAreaGroup(id, showState) {
+  toggleShowGroup(id, showState) {
     this.areaStack.toggleShowAreaGroup(this.areaGroupArr, id, showState);
   }
 
-  zoomToAreaGroup(id) {
+  zoomToGroup(id) {
     this.areaStack.zoomToAreaGroup(this.areaGroupArr, id);
   }
 
-  deleteAreaGroup(id) {
+  deleteGroup(id) {
     this.areaGroupArr = this.areaStack.deleteAreaGroup(this.areaGroupArr, id);
   }
 

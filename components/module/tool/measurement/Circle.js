@@ -95,14 +95,14 @@ class CircleStack extends ShapeLayer {
     this._readData([...this.dataStack]);
   }
 
-  toggleShowCircleGroup(circleGroupArr, id, showState) {
+  toggleShowGroup(circleGroupArr, id, showState) {
     circleGroupArr.forEach((circleGroup) => {
       if (circleGroup.id !== id) return;
       circleGroup.toggleShow(showState);
     });
   }
 
-  zoomToCircleGroup(circleGroupArr, id) {
+  zoomToGroup(circleGroupArr, id) {
     circleGroupArr.forEach((circleGroup) => {
       if (circleGroup.id !== id) return;
       const offset = new Cesium.HeadingPitchRange(...ShapeLayer.OFFSET);
@@ -110,7 +110,7 @@ class CircleStack extends ShapeLayer {
     });
   }
 
-  deleteCircleGroup(circleGroupArr, id) {
+  deleteGroup(circleGroupArr, id) {
     return circleGroupArr.filter((circleGroup) => {
       if (circleGroup.id !== id) return true;
       else {
