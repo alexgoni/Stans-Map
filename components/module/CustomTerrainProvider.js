@@ -11,9 +11,10 @@ import { QuantizedMeshTerrainData } from "cesium";
 import { RuntimeError } from "cesium";
 
 export default function createCustomTerrainProvider(terrainProvdier) {
-  terrainProvdier.setGlobalFloor = function (modifyData) {
+  terrainProvdier.setGlobalFloor = function (elevationDataObj) {
     this._modifyData = [];
-    modifyData.forEach((each) => {
+    const elevationDataArray = Object.values(elevationDataObj);
+    elevationDataArray.forEach((each) => {
       const data = {
         floorHeight: 0,
         floorBoundingRect: null,

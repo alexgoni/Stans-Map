@@ -4,6 +4,7 @@ import Description from "../../assets/Description";
 import TerrainTool from "./TerrainTool";
 import TerrainEditWidget from "./TerrainEditWidget";
 import StackContainer from "../stack/StackContainer";
+import { CursorHandler } from "@/components/handler/cesium/Viewer";
 
 export default function Toolbar({ viewer, toolController }) {
   return (
@@ -24,6 +25,7 @@ export default function Toolbar({ viewer, toolController }) {
 
       <StackContainer toolController={toolController} />
       <Description />
+      <CursorHandler viewer={viewer} />
     </>
   );
 }

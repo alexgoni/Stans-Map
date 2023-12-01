@@ -8,8 +8,6 @@ export default class TerrainAreaDrawer extends AreaController {
   }
 
   startDrawing() {
-    this.viewer.container.style.cursor = "crosshair";
-
     this.handler.setInputAction(
       this.onLeftClick,
       Cesium.ScreenSpaceEventType.LEFT_CLICK,
@@ -25,8 +23,6 @@ export default class TerrainAreaDrawer extends AreaController {
   }
 
   stopDrawing() {
-    this.viewer.container.style.cursor = "default";
-
     this.handler.removeInputAction(Cesium.ScreenSpaceEventType.LEFT_CLICK);
     this.handler.removeInputAction(Cesium.ScreenSpaceEventType.MOUSE_MOVE);
     this.handler.removeInputAction(Cesium.ScreenSpaceEventType.RIGHT_CLICK);

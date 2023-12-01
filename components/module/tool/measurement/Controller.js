@@ -1,4 +1,3 @@
-import { cursorHandler } from "@/components/handler/cesium/Viewer";
 import AreaController from "./Area";
 import CircleController from "./Circle";
 import LineController from "./Line";
@@ -16,8 +15,6 @@ export default class MeasureController {
     this.distanceWidgetOpen = widgetStateObj.distanceWidgetOpen;
     this.radiusWidgetOpen = widgetStateObj.radiusWidgetOpen;
     this.areaWidgetOpen = widgetStateObj.areaWidgetOpen;
-
-    cursorHandler(this.viewer, widgetStateObj);
   }
 
   lineControllerHandler() {

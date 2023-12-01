@@ -1,5 +1,13 @@
 import * as Cesium from "cesium";
 import { flyCamera } from "./Camera";
+import {
+  areaWidgetState,
+  distanceWidgetState,
+  radiusWidgetState,
+} from "@/recoil/atom/MeasurementState";
+import { terrainWidgetState } from "@/recoil/atom/TerrainState";
+import { useEffect } from "react";
+import { useRecoilValue } from "recoil";
 
 function Viewer({
   terrain = undefined,
@@ -81,14 +89,24 @@ function Viewer({
   return viewer;
 }
 
-function cursorHandler(viewer, widgetStateObj) {
-  const { distanceWidgetOpen, radiusWidgetOpen, areaWidgetOpen } =
-    widgetStateObj;
-  if (distanceWidgetOpen || radiusWidgetOpen || areaWidgetOpen) {
-    viewer.container.style.cursor = "crosshair";
-  } else {
-    viewer.container.style.cursor = "default";
-  }
+function CursorHandler({ viewer }) {
+  const distanceWidgetOpen = useRecoilValue(distanceWidgetState);
+  const radiusWidgetOpen = useRecoilValue(radiusWidgetState);
+  const areaWidgetOpen = useRecoilValue(areaWidgetState);
+  const terrainWidgetOpen = useRecoilValue(terrainWidgetState);
+
+  useEffect(() => {
+    if (
+      distanceWidgetOpen ||
+      radiusWidgetOpen ||
+      areaWidgetOpen ||
+      terrainWidgetOpen
+    ) {
+      viewer.container.style.cursor = "crosshair";
+    } else {
+      viewer.container.style.cursor = "default";
+    }
+  }, [distanceWidgetOpen, radiusWidgetOpen, areaWidgetOpen, terrainWidgetOpen]);
 }
 
-export { Viewer, cursorHandler };
+export { Viewer, CursorHandler };

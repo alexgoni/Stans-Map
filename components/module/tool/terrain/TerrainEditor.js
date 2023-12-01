@@ -1,4 +1,4 @@
-import { ShapeController, ShapeLayer } from "../measurement/Shape";
+import { ShapeLayer } from "../measurement/Shape";
 import TerrainAreaDrawer from "./TerrainArea";
 import * as Cesium from "cesium";
 
@@ -30,10 +30,12 @@ class TerrainStack extends ShapeLayer {
 }
 
 export default class TerrainEditor {
+  static nextId = 1;
+
   constructor(viewer) {
     this.viewer = viewer;
     this.terrainAreaDrawer = new TerrainAreaDrawer(viewer);
-    this.elevationDataArray = [];
+    this.elevationDataObj = {};
     this.terrainStack = new TerrainStack(viewer);
   }
 
@@ -57,7 +59,7 @@ export default class TerrainEditor {
     const targetHeight = averageHeight + slideValue;
 
     this.#updateGlobalFloor(positions, targetHeight);
-    this.#updateDataStack(slideValue, targetHeight);
+    this.#updateTerrainStack(slideValue, targetHeight);
 
     this.terrainAreaDrawer.startDrawing();
   }
@@ -96,21 +98,20 @@ export default class TerrainEditor {
   }
 
   #updateGlobalFloor(positions, targetHeight) {
-    this.elevationDataArray.push({
-      positions,
-      height: targetHeight,
-    });
-    this.viewer.terrainProvider.setGlobalFloor(this.elevationDataArray);
+    const key = TerrainEditor.nextId;
+    this.elevationDataObj[key] = { positions, height: targetHeight };
+
+    this.viewer.terrainProvider.setGlobalFloor(this.elevationDataObj);
   }
 
-  #updateDataStack(slideValue, targetHeight) {
+  #updateTerrainStack(slideValue, targetHeight) {
     const lastAreaGroup =
       this.terrainAreaDrawer.areaGroupArr[
         this.terrainAreaDrawer.areaGroupArr.length - 1
       ];
 
     const data = {
-      id: lastAreaGroup.id,
+      id: TerrainEditor.nextId++,
       name: lastAreaGroup.name,
       area: lastAreaGroup.area,
       slideHeight: slideValue,
