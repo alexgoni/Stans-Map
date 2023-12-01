@@ -39,15 +39,11 @@ export default function MeasureStack({ toolController, widgetState }) {
   };
 
   useEffect(() => {
-    if (!toolController.measure) return;
+    const measureController = toolController.measure;
+    if (!measureController) return;
 
-    toolController.measure[controllerType][stackType].readData = handleData;
+    measureController[controllerType][stackType].readData = handleData;
   }, [toolController]);
-
-  useEffect(() => {
-    if (widgetOpen) return;
-    setLayerArray([]);
-  }, [widgetOpen]);
 
   useDidMountEffect(() => {
     const newData = data[data.length - 1];

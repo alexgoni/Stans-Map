@@ -4,6 +4,7 @@ import {
   radiusWidgetState,
 } from "@/recoil/atom/MeasurementState";
 import MeasureStack from "./MeasureStack";
+import TerrainStack from "./TerrainStack";
 
 export default function StackContainer({ toolController }) {
   return (
@@ -20,6 +21,7 @@ export default function StackContainer({ toolController }) {
         toolController={toolController}
         widgetState={areaWidgetState}
       />
+      <TerrainStack toolController={toolController} />
     </>
   );
 }

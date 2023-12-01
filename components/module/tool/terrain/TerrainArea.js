@@ -1,5 +1,6 @@
 import AreaController from "../measurement/Area";
 import * as Cesium from "cesium";
+import { ShapeController } from "../measurement/Shape";
 
 export default class TerrainAreaDrawer extends AreaController {
   constructor(viewer) {
@@ -36,48 +37,31 @@ export default class TerrainAreaDrawer extends AreaController {
     return this.areaGroupArr[this.areaGroupArr.length - 1].pointPositionArr;
   }
 
-  afterEditTerrain() {
-    this.startDrawing();
-    // this.clearAreaGroupArr();
-  }
-
   onRightClick() {
     if (!Cesium.defined(this.floatingPoint)) return;
     this.areaGroup.removeLastPointPosition();
 
-    const removeInvalidEntitiesFromPolygon = () => {
-      this.viewer.entities.remove(this.areaGroup.pointEntityArr[0]);
-      this.viewer.entities.remove(this.areaGroup.pointEntityArr[1]);
-      this.viewer.entities.remove(this.areaGroup.label);
-    };
-
-    const areaGroupEndEvent = () => {
-      this.areaGroup.addPolygonToViewer();
-      this.areaGroup.calculateAreaAndUpdateLabel();
-      this.areaGroupArr.push(this.areaGroup);
-    };
-
     if (this.areaGroup.pointEntityNum <= 2) {
-      removeInvalidEntitiesFromPolygon();
-      this.resetAreaGroup();
-      return;
+      this.#removeInvalidEntitiesFromPolygon();
+    } else {
+      this.#areaGroupEndEvent();
+      this.stopDrawing();
     }
 
-    areaGroupEndEvent();
-    this.stopDrawing();
     this.resetAreaGroup();
-    this.#removePrevAreaGroup();
   }
 
-  #removePrevAreaGroup() {
-    if (this.areaGroupArr.length === 1) return;
-    const prevAreaGroup = this.areaGroupArr[this.areaGroupArr.length - 2];
-    prevAreaGroup.polygonArr.forEach((entity) => {
-      this.viewer.entities.remove(entity);
-    });
-    prevAreaGroup.pointEntityArr.forEach((entity) => {
-      this.viewer.entities.remove(entity);
-    });
-    this.viewer.entities.remove(prevAreaGroup.label);
+  #removeInvalidEntitiesFromPolygon() {
+    this.viewer.entities.remove(this.areaGroup.pointEntityArr[0]);
+    this.viewer.entities.remove(this.areaGroup.pointEntityArr[1]);
+    this.viewer.entities.remove(this.areaGroup.label);
+  }
+
+  #areaGroupEndEvent() {
+    this.areaGroup.addPolygonToViewer();
+    this.areaGroup.calculateAreaAndUpdateLabel();
+    this.areaGroup.id = ShapeController.nextId++;
+    this.areaGroup.name = `Terrain Area ${this.areaGroupArr.length + 1}`;
+    this.areaGroupArr.push(this.areaGroup);
   }
 }

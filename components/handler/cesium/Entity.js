@@ -103,9 +103,14 @@ function createAreaPolyline({ viewer, positions }) {
 }
 
 function createKinkedPolygon({ viewer, turfPointPositionArr }) {
-  turfPointPositionArr.push(turfPointPositionArr[0]);
+  // 같은 곳 여러번 클릭으로 생기는 중복 정점 제거
+  const uniquePoints = turfPointPositionArr.filter(
+    (point, index, self) =>
+      index === self.findIndex((p) => p[0] === point[0] && p[1] === point[1]),
+  );
+  uniquePoints.push(uniquePoints[0]);
 
-  const poly = turf.polygon([turfPointPositionArr]);
+  const poly = turf.polygon([uniquePoints]);
   const unkinkPolygon = turf.unkinkPolygon(poly).features;
 
   const polygonArr = [];

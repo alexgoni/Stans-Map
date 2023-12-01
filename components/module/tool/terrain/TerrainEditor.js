@@ -1,45 +1,80 @@
+import { ShapeController, ShapeLayer } from "../measurement/Shape";
 import TerrainAreaDrawer from "./TerrainArea";
 import * as Cesium from "cesium";
+
+class TerrainStack extends ShapeLayer {
+  constructor(viewer) {
+    super(viewer);
+  }
+
+  updateData(data) {
+    if (!this._readData) return;
+    this.dataStack.push(data);
+    this._readData([...this.dataStack]);
+  }
+
+  toggleShowTerrainGroup(terrainGroupArr, id, showState) {
+    terrainGroupArr.forEach((terrainGroup) => {
+      if (terrainGroup.id !== id) return;
+      terrainGroup.toggleShow(showState);
+    });
+  }
+
+  zoomToTerrainGroup(terrainGroupArr, id) {
+    terrainGroupArr.forEach((terrainGroup) => {
+      if (terrainGroup.id !== id) return;
+      const offset = new Cesium.HeadingPitchRange(...ShapeLayer.OFFSET);
+      this.viewer.zoomTo(terrainGroup.label, offset);
+    });
+  }
+}
 
 export default class TerrainEditor {
   constructor(viewer) {
     this.viewer = viewer;
     this.terrainAreaDrawer = new TerrainAreaDrawer(viewer);
     this.elevationDataArray = [];
+    this.terrainStack = new TerrainStack(viewer);
   }
 
   startDraw() {
     this.terrainAreaDrawer.startDrawing();
   }
 
-  // FIXME: forceReset으로 변경
   stopDraw() {
     this.terrainAreaDrawer.stopDrawing();
-    this.terrainAreaDrawer.forceReset();
-  }
-
-  async modifyTerrain(positions, slideValue) {
-    if (!positions) return;
-
-    const heightArr = await Promise.all(
-      positions.map((position) => this.#getPositionHeight(position)),
-    );
-
-    const averageHeight =
-      heightArr.reduce((acc, cur) => acc + cur, 0) / heightArr.length;
-    const targetHeight = averageHeight + slideValue;
-    this.elevationDataArray.push({
-      positions,
-      height: targetHeight,
-    });
-
-    this.viewer.terrainProvider.setGlobalFloor(this.elevationDataArray);
-    this.terrainAreaDrawer.afterEditTerrain();
   }
 
   getSelectedPositions() {
     const selectedPositions = this.terrainAreaDrawer.getSelectedPositions();
     return selectedPositions;
+  }
+
+  async modifyTerrain(positions, slideValue) {
+    if (!positions) return;
+
+    const averageHeight = await this.#getAverageHeight(positions);
+    const targetHeight = averageHeight + slideValue;
+
+    this.#updateGlobalFloor(positions, targetHeight);
+    this.#updateDataStack(slideValue, targetHeight);
+
+    this.terrainAreaDrawer.startDrawing();
+  }
+
+  toggleShowGroup(id, showState) {
+    this.terrainStack.toggleShowTerrainGroup(
+      this.terrainAreaDrawer.areaGroupArr,
+      id,
+      showState,
+    );
+  }
+
+  zoomToGroup(id) {
+    this.terrainStack.zoomToTerrainGroup(
+      this.terrainAreaDrawer.areaGroupArr,
+      id,
+    );
   }
 
   async #getPositionHeight(position) {
@@ -50,5 +85,37 @@ export default class TerrainEditor {
       [carto],
     );
     return updatedPositions[0].height;
+  }
+
+  async #getAverageHeight(positions) {
+    const heightArr = await Promise.all(
+      positions.map((position) => this.#getPositionHeight(position)),
+    );
+
+    return heightArr.reduce((acc, cur) => acc + cur, 0) / heightArr.length;
+  }
+
+  #updateGlobalFloor(positions, targetHeight) {
+    this.elevationDataArray.push({
+      positions,
+      height: targetHeight,
+    });
+    this.viewer.terrainProvider.setGlobalFloor(this.elevationDataArray);
+  }
+
+  #updateDataStack(slideValue, targetHeight) {
+    const lastAreaGroup =
+      this.terrainAreaDrawer.areaGroupArr[
+        this.terrainAreaDrawer.areaGroupArr.length - 1
+      ];
+
+    const data = {
+      id: lastAreaGroup.id,
+      name: lastAreaGroup.name,
+      area: lastAreaGroup.area,
+      slideHeight: slideValue,
+      targetHeight,
+    };
+    this.terrainStack.updateData(data);
   }
 }

@@ -25,7 +25,6 @@ export default class MeasureController {
       this.lineController.startDrawing();
     } else {
       this.lineController.stopDrawing();
-      this.lineController.forceReset();
     }
   }
 
@@ -34,7 +33,6 @@ export default class MeasureController {
       this.circleController.startDrawing();
     } else {
       this.circleController.stopDrawing();
-      this.circleController.forceReset();
     }
   }
 
@@ -43,7 +41,6 @@ export default class MeasureController {
       this.areaController.startDrawing();
     } else {
       this.areaController.stopDrawing();
-      this.areaController.forceReset();
     }
   }
 
