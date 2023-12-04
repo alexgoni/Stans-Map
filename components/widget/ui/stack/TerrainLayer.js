@@ -12,14 +12,16 @@ import {
   currentTerrainLayerId,
   terrainResetButtonClickState,
 } from "@/recoil/atom/TerrainState";
-import { useSetRecoilState } from "recoil";
+import { useRecoilState, useSetRecoilState } from "recoil";
 
 export default function TerrainLayer({ data, controller, onDelete }) {
   const setResetButtonClick = useSetRecoilState(terrainResetButtonClickState);
+  const [currentTerrainId, setCurrentTerrainId] = useRecoilState(
+    currentTerrainLayerId,
+  );
   const [showState, setShowState] = useState(false);
   const [editState, setEditState] = useState(false);
   const { id, name, area, slideHeight, targetHeight } = data;
-  const setCurrentTerrainId = useSetRecoilState(currentTerrainLayerId);
 
   return (
     <div className="flex h-24 w-full items-center justify-between border-b border-gray-300 bg-gray-200 shadow-lg">
@@ -58,18 +60,18 @@ export default function TerrainLayer({ data, controller, onDelete }) {
           <div
             className="flex h-10 w-8 cursor-pointer items-center justify-center text-slate-500 hover:text-blue-500"
             onClick={() => {
-              controller.zoomToGroup(id);
+              if (!editState) controller.zoomToGroup(id);
               editState ? setCurrentTerrainId(null) : setCurrentTerrainId(id);
               setEditState(!editState);
             }}
           >
-            {editState ? (
+            {editState && id === currentTerrainId ? (
               <PencilFill className="text-orange-500 hover:text-orange-600" />
             ) : (
               <PencilFill className="text-slate-500 hover:text-slate-600" />
             )}
           </div>
-          <Tooltip contents={"Go To"} />
+          <Tooltip contents={"Edit Height"} />
         </div>
         <div className="group relative w-max">
           <div

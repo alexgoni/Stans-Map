@@ -1,4 +1,5 @@
 import {
+  currentTerrainLayerId,
   modifyButtonClickState,
   targetHeightValue,
   terrainWidgetState,
@@ -14,6 +15,7 @@ export default function TerrainEditWidget({ viewer }) {
   const terrainWidgetOpen = useRecoilValue(terrainWidgetState);
   const setTargetHeight = useSetRecoilState(targetHeightValue);
   const setModifyButtonClick = useSetRecoilState(modifyButtonClickState);
+  const editTerrainOn = useRecoilValue(currentTerrainLayerId);
   const [slideValue, setSlideValue] = useState(0);
   const [wireView, setWireView] = useState(false);
 
@@ -29,6 +31,15 @@ export default function TerrainEditWidget({ viewer }) {
         }`}
       >
         <div className="fixed z-50 float-right mt-6 inline-block rounded-lg border-b-2 border-gray-300 bg-gray-100 p-2 shadow-2xl">
+          <span
+            className={`relative left-1 top-1 h-3 w-3 ${
+              editTerrainOn ? "flex" : "hidden"
+            }`}
+          >
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-orange-400 opacity-75"></span>
+            <span className="relative inline-flex h-3 w-3 rounded-full bg-orange-500"></span>
+          </span>
+
           <div className="flex items-center gap-2">
             <span className="w-10 select-none text-center text-sm font-medium">
               높이

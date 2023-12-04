@@ -42,24 +42,15 @@ export default function TerrainSection({ viewer, setTerrainRef }) {
     terrainWidgetOpen ? terrainEditor.startDraw() : terrainEditor.stopDraw();
   }, [terrainWidgetOpen]);
 
-  useEffect(() => {
-    console.log(currentTerrainId);
-  }, [currentTerrainId]);
-
   // modify terrain
   useDidMountEffect(() => {
     if (!modifyButtonClick) return;
 
-    debugger;
     const terrainEditor = terrainEditorRef.current;
-    let selectedPositions;
-    if (!currentTerrainId) {
-      selectedPositions = terrainEditor.getSelectedPositions();
-    } else {
-      selectedPositions =
-        terrainEditor.getSelectedPositionsById(currentTerrainId);
-    }
 
+    const selectedPositions = currentTerrainId
+      ? terrainEditor.getSelectedPositions(currentTerrainId)
+      : terrainEditor.getSelectedPositions();
     selectedPositions ? setTerrainLoadingOn(true) : resetModifyState();
 
     (async () => {

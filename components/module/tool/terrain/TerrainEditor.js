@@ -66,37 +66,20 @@ export default class TerrainEditor {
     this.terrainAreaDrawer.stopDrawing();
   }
 
-  // id 추가 => 기존 selected된 area 설정도 막아줄 수 있다?
-  getSelectedPositions() {
+  getSelectedPositions(id) {
+    if (id) {
+      const selectedPositions =
+        this.terrainStack.dataStack[id]?.positions || [];
+      return selectedPositions;
+    }
     const selectedPositions = this.terrainAreaDrawer.getSelectedPositions();
-    return selectedPositions;
-  }
-
-  getSelectedPositionsById(id) {
-    const selectedPositions = this.terrainStack.dataStack[id].positions;
     return selectedPositions;
   }
 
   async modifyTerrain(positions, slideValue) {
     if (!positions) return;
 
-    // 기존 selected된 area 설정할 때
-    const existingData = Object.values(this.terrainStack.dataStack).find(
-      (data) => data.positions === positions,
-    );
-    if (existingData) {
-      const data = this.terrainStack.dataStack[existingData.id];
-      const averageHeight = data.targetHeight - data.slideHeight;
-      const newTargetHeight = averageHeight + slideValue;
-
-      this.#updateTerrainStack(existingData.id, slideValue, newTargetHeight);
-    } else {
-      const averageHeight = await this.#getAverageHeight(positions);
-      const targetHeight = averageHeight + slideValue;
-
-      this.#addTerrainStack(positions, slideValue, targetHeight);
-    }
-
+    await this.#upsertTerrainData(positions, slideValue);
     this.viewer.terrainProvider.setGlobalFloor(this.terrainStack.dataStack);
     this.terrainAreaDrawer.startDrawing();
   }
@@ -144,7 +127,7 @@ export default class TerrainEditor {
     return heightArr.reduce((acc, cur) => acc + cur, 0) / heightArr.length;
   }
 
-  #addTerrainStack(positions, slideValue, targetHeight) {
+  #insertTerrainStack(positions, slideValue, targetHeight) {
     const lastAreaGroup =
       this.terrainAreaDrawer.areaGroupArr[
         this.terrainAreaDrawer.areaGroupArr.length - 1
@@ -168,6 +151,25 @@ export default class TerrainEditor {
     this.terrainStack.dataStack[id].slideHeight = slideValue;
     this.terrainStack.dataStack[id].targetHeight = targetHeight;
     this.terrainStack.updateData();
+  }
+
+  async #upsertTerrainData(positions, slideValue) {
+    const existingData = Object.values(this.terrainStack.dataStack).find(
+      (data) => data.positions === positions,
+    );
+
+    if (existingData) {
+      const data = this.terrainStack.dataStack[existingData.id];
+      const averageHeight = data.targetHeight - data.slideHeight;
+      const newTargetHeight = averageHeight + slideValue;
+
+      this.#updateTerrainStack(existingData.id, slideValue, newTargetHeight);
+    } else {
+      const averageHeight = await this.#getAverageHeight(positions);
+      const targetHeight = averageHeight + slideValue;
+
+      this.#insertTerrainStack(positions, slideValue, targetHeight);
+    }
   }
 
   #popTerrainData(id) {
