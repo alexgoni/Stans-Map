@@ -63,7 +63,21 @@ export default class TerrainEditor {
   }
 
   stopDraw() {
+    this.viewer.container.style.cursor = "default";
     this.terrainAreaDrawer.stopDrawing();
+  }
+
+  stopDrawWidgetSwitch() {
+    this.terrainAreaDrawer.stopDrawing();
+  }
+
+  clearNoModifyEntity() {
+    if (
+      this.terrainAreaDrawer.areaGroupArr.length !==
+      Object.keys(this.terrainStack.dataStack).length
+    ) {
+      this.terrainAreaDrawer.popAreaGroupArr();
+    }
   }
 
   getSelectedPositions(id) {

@@ -26,8 +26,6 @@ export default class TerrainAreaDrawer extends AreaController {
   }
 
   stopDrawing() {
-    this.viewer.container.style.cursor = "default";
-
     this.handler.removeInputAction(Cesium.ScreenSpaceEventType.LEFT_CLICK);
     this.handler.removeInputAction(Cesium.ScreenSpaceEventType.MOUSE_MOVE);
     this.handler.removeInputAction(Cesium.ScreenSpaceEventType.RIGHT_CLICK);
@@ -50,6 +48,19 @@ export default class TerrainAreaDrawer extends AreaController {
     }
 
     this.resetAreaGroup();
+  }
+
+  popAreaGroupArr() {
+    const lastAreaGroup = this.areaGroupArr.pop();
+    lastAreaGroup.polygonArr.forEach((entity) => {
+      this.viewer.entities.remove(entity);
+    });
+    lastAreaGroup.pointEntityArr.forEach((entity) => {
+      this.viewer.entities.remove(entity);
+    });
+    this.viewer.entities.remove(lastAreaGroup.label);
+
+    TerrainAreaDrawer.nextId--;
   }
 
   #removeInvalidEntitiesFromPolygon() {

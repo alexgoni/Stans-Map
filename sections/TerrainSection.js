@@ -39,8 +39,19 @@ export default function TerrainSection({ viewer, setTerrainRef }) {
   // terrainArea
   useDidMountEffect(() => {
     const terrainEditor = terrainEditorRef.current;
-    terrainWidgetOpen ? terrainEditor.startDraw() : terrainEditor.stopDraw();
+
+    if (terrainWidgetOpen) {
+      terrainEditor.startDraw();
+    } else {
+      terrainEditor.stopDrawWidgetSwitch();
+      terrainEditor.clearNoModifyEntity();
+    }
   }, [terrainWidgetOpen]);
+
+  useDidMountEffect(() => {
+    const terrainEditor = terrainEditorRef.current;
+    currentTerrainId ? terrainEditor.stopDraw() : terrainEditor.startDraw();
+  }, [currentTerrainId]);
 
   // modify terrain
   useDidMountEffect(() => {
