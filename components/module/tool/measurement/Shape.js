@@ -32,8 +32,6 @@ class ShapeLayer {
 }
 
 class ShapeController {
-  static nextId = 1;
-
   constructor(viewer) {
     this.viewer = viewer;
     this.handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);

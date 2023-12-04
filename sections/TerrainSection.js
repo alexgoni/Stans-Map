@@ -1,7 +1,9 @@
 import TerrainLoading from "@/components/widget/loading/TerrainLoading";
 import {
+  currentTerrainLayerId,
   modifyButtonClickState,
   targetHeightValue,
+  terrainResetButtonClickState,
   terrainWidgetState,
 } from "@/recoil/atom/TerrainState";
 import { useEffect, useRef, useState } from "react";
@@ -15,12 +17,17 @@ export default function TerrainSection({ viewer, setTerrainRef }) {
   const [modifyButtonClick, setModifyButtonClick] = useRecoilState(
     modifyButtonClickState,
   );
+  const [resetButtonClick, setResetButtonClick] = useRecoilState(
+    terrainResetButtonClickState,
+  );
+  const currentTerrainId = useRecoilValue(currentTerrainLayerId);
   const [terrainLoadingOn, setTerrainLoadingOn] = useState(false);
   const terrainEditorRef = useRef(null);
 
   const resetModifyState = () => {
     setModifyButtonClick(false);
     setTerrainLoadingOn(false);
+    setResetButtonClick(false);
   };
 
   useEffect(() => {
@@ -35,12 +42,24 @@ export default function TerrainSection({ viewer, setTerrainRef }) {
     terrainWidgetOpen ? terrainEditor.startDraw() : terrainEditor.stopDraw();
   }, [terrainWidgetOpen]);
 
+  useEffect(() => {
+    console.log(currentTerrainId);
+  }, [currentTerrainId]);
+
   // modify terrain
   useDidMountEffect(() => {
     if (!modifyButtonClick) return;
 
+    debugger;
     const terrainEditor = terrainEditorRef.current;
-    const selectedPositions = terrainEditor.getSelectedPositions();
+    let selectedPositions;
+    if (!currentTerrainId) {
+      selectedPositions = terrainEditor.getSelectedPositions();
+    } else {
+      selectedPositions =
+        terrainEditor.getSelectedPositionsById(currentTerrainId);
+    }
+
     selectedPositions ? setTerrainLoadingOn(true) : resetModifyState();
 
     (async () => {
@@ -50,7 +69,7 @@ export default function TerrainSection({ viewer, setTerrainRef }) {
 
   return (
     <>
-      {terrainLoadingOn && (
+      {(terrainLoadingOn || resetButtonClick) && (
         <TerrainLoading viewer={viewer} resetModifyState={resetModifyState} />
       )}
     </>

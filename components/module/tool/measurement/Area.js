@@ -145,6 +145,8 @@ class AreaStack extends ShapeLayer {
 }
 
 export default class AreaController extends ShapeController {
+  static nextId = 1;
+
   constructor(viewer) {
     super(viewer);
     this.activeShape = null;
@@ -266,8 +268,8 @@ export default class AreaController extends ShapeController {
   #areaGroupEndEvent() {
     this.areaGroup.addPolygonToViewer();
     this.areaGroup.calculateAreaAndUpdateLabel();
-    this.areaGroup.id = ShapeController.nextId++;
-    this.areaGroup.name = `Area ${this.areaGroupArr.length + 1}`;
+    this.areaGroup.id = AreaController.nextId;
+    this.areaGroup.name = `Area ${AreaController.nextId++}`;
     this.areaGroupArr.push(this.areaGroup);
     this.areaStack.updateData(this.areaGroup);
   }

@@ -20,7 +20,7 @@ export default function createCustomTerrainProvider(terrainProvdier) {
         floorBoundingRect: null,
         floorPolygon: null,
       };
-      data.floorHeight = each.height;
+      data.floorHeight = each.targetHeight;
 
       data.floorBoundingRect = Cesium.Rectangle.fromCartesianArray(
         each.positions,

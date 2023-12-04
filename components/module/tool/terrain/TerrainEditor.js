@@ -5,12 +5,12 @@ import * as Cesium from "cesium";
 class TerrainStack extends ShapeLayer {
   constructor(viewer) {
     super(viewer);
+    this.dataStack = {};
   }
 
-  updateData(data) {
+  updateData() {
     if (!this._readData) return;
-    this.dataStack.push(data);
-    this._readData([...this.dataStack]);
+    this._readData([...Object.values(this.dataStack)]);
   }
 
   toggleShowTerrainGroup(terrainGroupArr, id, showState) {
@@ -27,6 +27,26 @@ class TerrainStack extends ShapeLayer {
       this.viewer.zoomTo(terrainGroup.label, offset);
     });
   }
+
+  deleteTerrainGroup(areaGroupArr, id) {
+    return areaGroupArr.filter((areaGroup) => {
+      if (areaGroup.id !== id) return true;
+      else {
+        this.#deleteAreaGroupEntities(areaGroup);
+        return false;
+      }
+    });
+  }
+
+  #deleteAreaGroupEntities(areaGroup) {
+    areaGroup.polygonArr.forEach((entity) => {
+      this.viewer.entities.remove(entity);
+    });
+    areaGroup.pointEntityArr.forEach((entity) => {
+      this.viewer.entities.remove(entity);
+    });
+    this.viewer.entities.remove(areaGroup.label);
+  }
 }
 
 export default class TerrainEditor {
@@ -35,7 +55,6 @@ export default class TerrainEditor {
   constructor(viewer) {
     this.viewer = viewer;
     this.terrainAreaDrawer = new TerrainAreaDrawer(viewer);
-    this.elevationDataObj = {};
     this.terrainStack = new TerrainStack(viewer);
   }
 
@@ -47,20 +66,38 @@ export default class TerrainEditor {
     this.terrainAreaDrawer.stopDrawing();
   }
 
+  // id 추가 => 기존 selected된 area 설정도 막아줄 수 있다?
   getSelectedPositions() {
     const selectedPositions = this.terrainAreaDrawer.getSelectedPositions();
+    return selectedPositions;
+  }
+
+  getSelectedPositionsById(id) {
+    const selectedPositions = this.terrainStack.dataStack[id].positions;
     return selectedPositions;
   }
 
   async modifyTerrain(positions, slideValue) {
     if (!positions) return;
 
-    const averageHeight = await this.#getAverageHeight(positions);
-    const targetHeight = averageHeight + slideValue;
+    // 기존 selected된 area 설정할 때
+    const existingData = Object.values(this.terrainStack.dataStack).find(
+      (data) => data.positions === positions,
+    );
+    if (existingData) {
+      const data = this.terrainStack.dataStack[existingData.id];
+      const averageHeight = data.targetHeight - data.slideHeight;
+      const newTargetHeight = averageHeight + slideValue;
 
-    this.#updateGlobalFloor(positions, targetHeight);
-    this.#updateTerrainStack(slideValue, targetHeight);
+      this.#updateTerrainStack(existingData.id, slideValue, newTargetHeight);
+    } else {
+      const averageHeight = await this.#getAverageHeight(positions);
+      const targetHeight = averageHeight + slideValue;
 
+      this.#addTerrainStack(positions, slideValue, targetHeight);
+    }
+
+    this.viewer.terrainProvider.setGlobalFloor(this.terrainStack.dataStack);
     this.terrainAreaDrawer.startDrawing();
   }
 
@@ -77,6 +114,16 @@ export default class TerrainEditor {
       this.terrainAreaDrawer.areaGroupArr,
       id,
     );
+  }
+
+  resetModifiedTerrain(id) {
+    this.terrainAreaDrawer.areaGroupArr = this.terrainStack.deleteTerrainGroup(
+      this.terrainAreaDrawer.areaGroupArr,
+      id,
+    );
+
+    this.#popTerrainData(id);
+    this.viewer.terrainProvider.setGlobalFloor(this.terrainStack.dataStack);
   }
 
   async #getPositionHeight(position) {
@@ -97,26 +144,33 @@ export default class TerrainEditor {
     return heightArr.reduce((acc, cur) => acc + cur, 0) / heightArr.length;
   }
 
-  #updateGlobalFloor(positions, targetHeight) {
-    const key = TerrainEditor.nextId;
-    this.elevationDataObj[key] = { positions, height: targetHeight };
-
-    this.viewer.terrainProvider.setGlobalFloor(this.elevationDataObj);
-  }
-
-  #updateTerrainStack(slideValue, targetHeight) {
+  #addTerrainStack(positions, slideValue, targetHeight) {
     const lastAreaGroup =
       this.terrainAreaDrawer.areaGroupArr[
         this.terrainAreaDrawer.areaGroupArr.length - 1
       ];
 
-    const data = {
-      id: TerrainEditor.nextId++,
+    const key = TerrainEditor.nextId;
+    this.terrainStack.dataStack[key] = {
+      id: key,
       name: lastAreaGroup.name,
+      positions,
       area: lastAreaGroup.area,
       slideHeight: slideValue,
       targetHeight,
     };
-    this.terrainStack.updateData(data);
+    TerrainEditor.nextId++;
+
+    this.terrainStack.updateData();
+  }
+
+  #updateTerrainStack(id, slideValue, targetHeight) {
+    this.terrainStack.dataStack[id].slideHeight = slideValue;
+    this.terrainStack.dataStack[id].targetHeight = targetHeight;
+    this.terrainStack.updateData();
+  }
+
+  #popTerrainData(id) {
+    delete this.terrainStack.dataStack[id];
   }
 }

@@ -10,7 +10,17 @@ export const modifyButtonClickState = atom({
   default: false,
 });
 
+export const terrainResetButtonClickState = atom({
+  key: "terrainResetButtonClickState",
+  default: false,
+});
+
 export const targetHeightValue = atom({
   key: "targetHeightValue",
   default: 0,
+});
+
+export const currentTerrainLayerId = atom({
+  key: "currentTerrainLayerId",
+  default: null,
 });

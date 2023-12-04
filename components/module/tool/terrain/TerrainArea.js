@@ -1,13 +1,16 @@
 import AreaController from "../measurement/Area";
 import * as Cesium from "cesium";
-import { ShapeController } from "../measurement/Shape";
 
 export default class TerrainAreaDrawer extends AreaController {
+  static nextId = 1;
+
   constructor(viewer) {
     super(viewer);
   }
 
   startDrawing() {
+    this.viewer.container.style.cursor = "crosshair";
+
     this.handler.setInputAction(
       this.onLeftClick,
       Cesium.ScreenSpaceEventType.LEFT_CLICK,
@@ -23,6 +26,8 @@ export default class TerrainAreaDrawer extends AreaController {
   }
 
   stopDrawing() {
+    this.viewer.container.style.cursor = "default";
+
     this.handler.removeInputAction(Cesium.ScreenSpaceEventType.LEFT_CLICK);
     this.handler.removeInputAction(Cesium.ScreenSpaceEventType.MOUSE_MOVE);
     this.handler.removeInputAction(Cesium.ScreenSpaceEventType.RIGHT_CLICK);
@@ -56,8 +61,8 @@ export default class TerrainAreaDrawer extends AreaController {
   #areaGroupEndEvent() {
     this.areaGroup.addPolygonToViewer();
     this.areaGroup.calculateAreaAndUpdateLabel();
-    this.areaGroup.id = ShapeController.nextId++;
-    this.areaGroup.name = `Terrain Area ${this.areaGroupArr.length + 1}`;
+    this.areaGroup.id = TerrainAreaDrawer.nextId;
+    this.areaGroup.name = `Terrain Area ${TerrainAreaDrawer.nextId++}`;
     this.areaGroupArr.push(this.areaGroup);
   }
 }

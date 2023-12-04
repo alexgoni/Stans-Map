@@ -131,6 +131,8 @@ class LineStack extends ShapeLayer {
 }
 
 export default class LineController extends ShapeController {
+  static nextId = 1;
+
   constructor(viewer) {
     super(viewer);
     this.floatingPointCoordinate = null;
@@ -252,8 +254,8 @@ export default class LineController extends ShapeController {
 
   #lineGroupEndEvent() {
     this.lineGroup.calculateDistanceAndUpdateLabel();
-    this.lineGroup.id = ShapeController.nextId++;
-    this.lineGroup.name = `Distance ${this.lineGroupArr.length + 1}`;
+    this.lineGroup.id = LineController.nextId;
+    this.lineGroup.name = `Distance ${LineController.nextId++}`;
     this.lineGroupArr.push(this.lineGroup);
     this.lineStack.updateData(this.lineGroup);
   }

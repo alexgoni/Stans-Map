@@ -128,6 +128,8 @@ class CircleStack extends ShapeLayer {
 }
 
 export default class CircleController extends ShapeController {
+  static nextId = 1;
+
   constructor(viewer) {
     super(viewer);
     this.isDrawing = false;
@@ -230,8 +232,8 @@ export default class CircleController extends ShapeController {
   #secondClickHandler() {
     this.isDrawing = false;
 
-    this.circleGroup.id = ShapeController.nextId++;
-    this.circleGroup.name = `Radius ${this.circleGroupArr.length + 1}`;
+    this.circleGroup.id = CircleController.nextId;
+    this.circleGroup.name = `Radius ${CircleController.nextId++}`;
     this.circleGroupArr.push(this.circleGroup);
     this.circleStack.updateData(this.circleGroup);
     this.circleGroup = new CircleGroup(this.viewer);

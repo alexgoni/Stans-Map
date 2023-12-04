@@ -32,17 +32,41 @@ export default function TerrainStack({ toolController }) {
     if (!newData) return;
 
     const controller = toolController.terrain;
-    const newLayer = (
-      <TerrainLayer
-        key={newData.id}
-        data={newData}
-        controller={controller}
-        onDelete={() => {
-          handleDeleteLayer(newData.id);
-        }}
-      />
+
+    const existingLayerIndex = layerArray.findIndex(
+      (layer) => layer.props.data.id === newData.id,
     );
-    setLayerArray((prevLayers) => [...prevLayers, newLayer]);
+
+    if (existingLayerIndex !== -1) {
+      // 기존 레이어가 이미 있는 경우 업데이트
+      setLayerArray((prevLayers) => {
+        const updatedLayers = [...prevLayers];
+        updatedLayers[existingLayerIndex] = (
+          <TerrainLayer
+            key={newData.id}
+            data={newData}
+            controller={controller}
+            onDelete={() => {
+              handleDeleteLayer(newData.id);
+            }}
+          />
+        );
+        return updatedLayers;
+      });
+    } else {
+      // 기존 레이어가 없는 경우 추가
+      setLayerArray((prevLayers) => [
+        ...prevLayers,
+        <TerrainLayer
+          key={newData.id}
+          data={newData}
+          controller={controller}
+          onDelete={() => {
+            handleDeleteLayer(newData.id);
+          }}
+        />,
+      ]);
+    }
   }, [data]);
 
   return (
