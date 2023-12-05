@@ -2,14 +2,10 @@ import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { PointerLockControls } from "three/examples/jsm/controls/PointerLockControls";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
-import useDidMountEffect from "../module/useDidMountEffect";
+import useDidMountEffect from "../../module/lib/useDidMountEffect";
 import { PlayCircle, Plus } from "react-bootstrap-icons";
-import {
-  rendererCleanUp,
-  rendererConfig,
-  resizeRenderer,
-} from "../module/Renderer";
-import { fourWayDirectionLight } from "../handler/three/Light";
+import { rendererCleanUp, rendererConfig, resizeRenderer } from "./Renderer";
+import { fourWayDirectionLight } from "./Light";
 
 export default function FirstPerson({
   filePath,

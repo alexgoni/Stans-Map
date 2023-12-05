@@ -9,7 +9,7 @@ import {
 import { useEffect, useRef, useState } from "react";
 import { useRecoilState, useRecoilValue } from "recoil";
 import TerrainEditor from "@/components/module/tool/terrain/TerrainEditor";
-import useDidMountEffect from "@/components/module/useDidMountEffect";
+import useDidMountEffect from "@/components/module/lib/useDidMountEffect";
 
 export default function TerrainSection({ viewer, setTerrainRef }) {
   const terrainWidgetOpen = useRecoilValue(terrainWidgetState);

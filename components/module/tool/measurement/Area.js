@@ -11,7 +11,7 @@ import {
 } from "@/components/handler/cesium/GeoInfo";
 import * as Cesium from "cesium";
 import { ShapeGroup, ShapeController, ShapeLayer } from "./Shape";
-import { areaFormatter } from "../../formatter";
+import { areaFormatter } from "../../lib/formatter";
 
 class AreaGroup extends ShapeGroup {
   constructor(viewer) {

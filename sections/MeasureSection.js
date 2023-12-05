@@ -1,5 +1,5 @@
 import MeasureController from "@/components/module/tool/measurement/Controller";
-import useDidMountEffect from "@/components/module/useDidMountEffect";
+import useDidMountEffect from "@/components/module/lib/useDidMountEffect";
 import {
   areaWidgetState,
   distanceWidgetState,

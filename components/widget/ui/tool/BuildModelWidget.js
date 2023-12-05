@@ -5,8 +5,8 @@ import {
   buildWidgetState,
 } from "@/recoil/atom/BuildState";
 import { useRecoilValue, useSetRecoilState } from "recoil";
-import BuildingImage from "../stack/BuildingImage";
 import { buildingModelOnOffSelector } from "@/recoil/selector/BuildSelector";
+import BuildingImage from "../../assets/BuildingImage";
 
 export default function BuildModelWidget() {
   const buildWidgetOpen = useRecoilValue(buildWidgetState);

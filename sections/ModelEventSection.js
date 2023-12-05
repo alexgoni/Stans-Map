@@ -5,7 +5,7 @@ import {
   ModelGroup,
   ModelGroupInfo,
 } from "@/components/module/model/ModelGroup";
-import Modal from "@/components/widget/Modal";
+import Modal from "@/components/handler/three/Modal";
 import { buildWidgetState } from "@/recoil/atom/BuildState";
 import { measureEventOnState } from "@/recoil/atom/MeasurementState";
 import { floorsModelState, tecnoModelState } from "@/recoil/atom/ModelState";

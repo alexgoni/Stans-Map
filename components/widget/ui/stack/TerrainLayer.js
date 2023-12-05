@@ -6,7 +6,10 @@ import {
   Trash,
 } from "react-bootstrap-icons";
 import Tooltip from "../../assets/Tooltip";
-import { areaFormatter, radiusFormatter } from "@/components/module/formatter";
+import {
+  areaFormatter,
+  formatByMeter,
+} from "@/components/module/lib/formatter";
 import {
   currentTerrainLayerId,
   terrainResetButtonClickState,
@@ -47,7 +50,7 @@ export default function TerrainLayer({ data, controller, onDelete }) {
             4,
           )}`}</span>
           <span className="text-xs text-gray-500">{`평탄화 높이: ${slideHeight}m`}</span>
-          <span className="text-xs text-gray-500">{`해발고도: ${radiusFormatter(
+          <span className="text-xs text-gray-500">{`해발고도: ${formatByMeter(
             targetHeight,
             4,
           )}`}</span>

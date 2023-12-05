@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import ReactModal from "react-modal";
-import Loading from "./loading/Loading";
+import Loading from "../../widget/loading/Loading";
 import { ArrowClockwise, XLg } from "react-bootstrap-icons";
 import FirstPerson from "./FirstPerson";
 

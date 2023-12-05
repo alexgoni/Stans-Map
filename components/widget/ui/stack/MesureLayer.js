@@ -1,8 +1,8 @@
 import {
   areaFormatter,
-  distanceFormatter,
-  radiusFormatter,
-} from "@/components/module/formatter";
+  formatByKilo,
+  formatByMeter,
+} from "@/components/module/lib/formatter";
 import { useState } from "react";
 import { EyeFill, EyeSlashFill, SendFill, Trash } from "react-bootstrap-icons";
 import Tooltip from "../../assets/Tooltip";
@@ -18,10 +18,10 @@ export default function MeasureLayer({
 
   const widgetConfig = {
     distanceWidgetState: {
-      description: `거리: ${distanceFormatter(value, 4)}`,
+      description: `거리: ${formatByKilo(value, 4)}`,
     },
     radiusWidgetState: {
-      description: `반경: ${radiusFormatter(value, 4)}`,
+      description: `반경: ${formatByMeter(value, 4)}`,
     },
     areaWidgetState: {
       description: `면적: ${areaFormatter(value, 4)}`,

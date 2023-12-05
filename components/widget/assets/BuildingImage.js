@@ -1,5 +1,4 @@
 import Image from "next/image";
-import { useEffect } from "react";
 import { useRecoilState } from "recoil";
 
 export default function BuildingImage({

@@ -1,7 +1,7 @@
 import "@/styles/globals.css";
 import { RecoilRoot } from "recoil";
 import * as Cesium from "cesium";
-import Layout from "@/components/module/Layout";
+import Layout from "@/components/module/lib/Layout";
 
 export default function App({ Component, pageProps }) {
   // In offline, you can delete this

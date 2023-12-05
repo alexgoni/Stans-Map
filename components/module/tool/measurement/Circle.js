@@ -9,7 +9,7 @@ import {
 } from "@/components/handler/cesium/GeoInfo";
 import * as Cesium from "cesium";
 import { ShapeGroup, ShapeController, ShapeLayer } from "./Shape";
-import { radiusFormatter } from "../../formatter";
+import { formatByMeter } from "../../lib/formatter";
 
 class CircleGroup extends ShapeGroup {
   constructor(viewer) {
@@ -74,7 +74,7 @@ class CircleGroup extends ShapeGroup {
 
   #registerLabelCallBack() {
     this.label.label.text = new Cesium.CallbackProperty(() => {
-      return radiusFormatter(this.radius, 2);
+      return formatByMeter(this.radius, 2);
     }, false);
   }
 }

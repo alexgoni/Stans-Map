@@ -11,7 +11,7 @@ import {
   getRayPosition,
 } from "@/components/handler/cesium/GeoInfo";
 import { ShapeGroup, ShapeController, ShapeLayer } from "./Shape";
-import { distanceFormatter } from "../../formatter";
+import { formatByKilo } from "../../lib/formatter";
 
 class LineGroup extends ShapeGroup {
   constructor(viewer) {
@@ -73,7 +73,7 @@ class LineGroup extends ShapeGroup {
 
   #updateLabel() {
     this.label.label.text = new Cesium.CallbackProperty(() => {
-      return distanceFormatter(this.distance, 2);
+      return formatByKilo(this.distance, 2);
     }, false);
   }
 }
