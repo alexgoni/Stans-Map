@@ -13,18 +13,19 @@ class TerrainStack extends ShapeLayer {
     this._readData([...Object.values(this.dataStack)]);
   }
 
-  toggleShowTerrainGroup(terrainGroupArr, id, showState) {
-    terrainGroupArr.forEach((terrainGroup) => {
-      if (terrainGroup.id !== id) return;
-      terrainGroup.toggleShow(showState);
+  toggleShowTerrainGroup(areaGroupArr, id, showState) {
+    areaGroupArr.forEach((areaGroup) => {
+      if (areaGroup.id !== id) return;
+      areaGroup.toggleShow(showState);
     });
   }
 
-  zoomToTerrainGroup(terrainGroupArr, id) {
-    terrainGroupArr.forEach((terrainGroup) => {
-      if (terrainGroup.id !== id) return;
+  zoomToTerrainGroup(areaGroupArr, id) {
+    areaGroupArr.forEach((areaGroup) => {
+      if (areaGroup.id !== id) return;
       const offset = new Cesium.HeadingPitchRange(...ShapeLayer.OFFSET);
-      this.viewer.zoomTo(terrainGroup.label, offset);
+      this.viewer.zoomTo(areaGroup.label, offset);
+      this.#highlightLabel(areaGroup);
     });
   }
 
@@ -46,6 +47,18 @@ class TerrainStack extends ShapeLayer {
       this.viewer.entities.remove(entity);
     });
     this.viewer.entities.remove(areaGroup.label);
+  }
+
+  #highlightLabel(areaGroup) {
+    areaGroup.label.label.backgroundColor = new Cesium.Color(
+      ...ShapeLayer.HIGHLIGHT,
+    );
+
+    setTimeout(() => {
+      areaGroup.label.label.backgroundColor = new Cesium.Color(
+        ...ShapeLayer.BG_DEFAULT,
+      );
+    }, ShapeLayer.DURATION);
   }
 }
 

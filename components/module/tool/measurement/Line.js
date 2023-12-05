@@ -106,6 +106,7 @@ class LineStack extends ShapeLayer {
       if (lineGroup.id !== id) return;
       const offset = new Cesium.HeadingPitchRange(...ShapeLayer.OFFSET);
       this.viewer.zoomTo(lineGroup.label, offset);
+      this.#highlightLabel(lineGroup);
     });
   }
 
@@ -117,6 +118,18 @@ class LineStack extends ShapeLayer {
         return false;
       }
     });
+  }
+
+  #highlightLabel(lineGroup) {
+    lineGroup.label.label.backgroundColor = new Cesium.Color(
+      ...ShapeLayer.HIGHLIGHT,
+    );
+
+    setTimeout(() => {
+      lineGroup.label.label.backgroundColor = new Cesium.Color(
+        ...ShapeLayer.BG_DEFAULT,
+      );
+    }, ShapeLayer.DURATION);
   }
 
   #deleteLineGroupEntities(lineGroup) {

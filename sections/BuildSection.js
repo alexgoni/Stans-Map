@@ -1,4 +1,5 @@
 import {
+  buildKhalifaModelState,
   buildOfficeModelState,
   buildTechnoModelState,
   buildWidgetState,
@@ -12,6 +13,7 @@ export default function BuildSection({ viewer }) {
   const buildWidgetOpen = useRecoilValue(buildWidgetState);
   const buildTechnoModel = useRecoilValue(buildTechnoModelState);
   const buildOfficeModel = useRecoilValue(buildOfficeModelState);
+  const buildKhalifaModel = useRecoilValue(buildKhalifaModelState);
 
   useEffect(() => {
     if (!buildWidgetOpen) return;
@@ -44,6 +46,15 @@ export default function BuildSection({ viewer }) {
             },
           });
           break;
+        case buildKhalifaModel:
+          viewer.entities.add({
+            position: clickPosition,
+            model: {
+              uri: "/glb/burj_khalifa.glb",
+              scale: 30,
+            },
+          });
+          break;
         default:
           break;
       }
@@ -52,7 +63,7 @@ export default function BuildSection({ viewer }) {
     return () => {
       handler.destroy();
     };
-  }, [buildWidgetOpen, buildTechnoModel, buildOfficeModel]);
+  }, [buildWidgetOpen, buildTechnoModel, buildOfficeModel, buildKhalifaModel]);
 
   return <></>;
 }

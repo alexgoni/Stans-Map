@@ -14,3 +14,8 @@ export const buildOfficeModelState = atom({
   key: "buildOfficeModelState",
   default: false,
 });
+
+export const buildKhalifaModelState = atom({
+  key: "buildKhalifaModelState",
+  default: false,
+});

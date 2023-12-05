@@ -1,4 +1,5 @@
 import {
+  buildKhalifaModelState,
   buildOfficeModelState,
   buildTechnoModelState,
   buildWidgetState,
@@ -38,6 +39,15 @@ export default function BuildModelWidget() {
               buildModelState={buildOfficeModelState}
               setBuildingModelOn={() => {
                 setBuildingModelOn("office");
+              }}
+            />
+
+            <BuildingImage
+              src={"/img/burj_khalifa.jpg"}
+              text={"Burj Khalifa"}
+              buildModelState={buildKhalifaModelState}
+              setBuildingModelOn={() => {
+                setBuildingModelOn("khalifa");
               }}
             />
           </div>

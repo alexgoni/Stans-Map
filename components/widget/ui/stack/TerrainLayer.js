@@ -79,6 +79,7 @@ export default function TerrainLayer({ data, controller, onDelete }) {
               setResetButtonClick(true);
               onDelete();
               controller.resetModifiedTerrain(id);
+              if (id === currentTerrainId) setCurrentTerrainId(null);
             }}
           >
             <Trash className="text-xl" />

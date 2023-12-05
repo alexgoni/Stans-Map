@@ -16,6 +16,9 @@ class ShapeGroup {
 
 class ShapeLayer {
   static OFFSET = [0, -90, 800];
+  static HIGHLIGHT = [1.0, 1.0, 0.2, 0.8];
+  static BG_DEFAULT = [0.165, 0.165, 0.165, 0.8];
+  static DURATION = 1500;
 
   constructor(viewer) {
     this.viewer = viewer;

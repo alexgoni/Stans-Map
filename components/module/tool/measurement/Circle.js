@@ -107,6 +107,7 @@ class CircleStack extends ShapeLayer {
       if (circleGroup.id !== id) return;
       const offset = new Cesium.HeadingPitchRange(...ShapeLayer.OFFSET);
       this.viewer.zoomTo(circleGroup.circle, offset);
+      this.#highlightLabel(circleGroup);
     });
   }
 
@@ -118,6 +119,18 @@ class CircleStack extends ShapeLayer {
         return false;
       }
     });
+  }
+
+  #highlightLabel(circleGroup) {
+    circleGroup.label.label.backgroundColor = new Cesium.Color(
+      ...ShapeLayer.HIGHLIGHT,
+    );
+
+    setTimeout(() => {
+      circleGroup.label.label.backgroundColor = new Cesium.Color(
+        ...ShapeLayer.BG_DEFAULT,
+      );
+    }, ShapeLayer.DURATION);
   }
 
   #deleteCircleGroupEntities(circleGroup) {

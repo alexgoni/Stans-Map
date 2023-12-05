@@ -120,6 +120,7 @@ class AreaStack extends ShapeLayer {
       if (areaGroup.id !== id) return;
       const offset = new Cesium.HeadingPitchRange(...ShapeLayer.OFFSET);
       this.viewer.zoomTo(areaGroup.label, offset);
+      this.#highlightLabel(areaGroup);
     });
   }
 
@@ -131,6 +132,18 @@ class AreaStack extends ShapeLayer {
         return false;
       }
     });
+  }
+
+  #highlightLabel(areaGroup) {
+    areaGroup.label.label.backgroundColor = new Cesium.Color(
+      ...ShapeLayer.HIGHLIGHT,
+    );
+
+    setTimeout(() => {
+      areaGroup.label.label.backgroundColor = new Cesium.Color(
+        ...ShapeLayer.BG_DEFAULT,
+      );
+    }, ShapeLayer.DURATION);
   }
 
   #deleteAreaGroupEntities(areaGroup) {
