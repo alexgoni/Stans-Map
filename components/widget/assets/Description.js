@@ -1,3 +1,4 @@
+import { buildWidgetState } from "@/recoil/atom/BuildState";
 import {
   areaWidgetState,
   distanceWidgetState,
@@ -12,6 +13,7 @@ export default function Description() {
   const radiusWidgetOpen = useRecoilValue(radiusWidgetState);
   const areaWidgetOpen = useRecoilValue(areaWidgetState);
   const terrainEditorOpen = useRecoilValue(terrainWidgetState);
+  const buildWidgetOpen = useRecoilValue(buildWidgetState);
   const [text, setText] = useState("");
 
   const FINISH_BY_RIGHT_CLICK =
@@ -19,6 +21,7 @@ export default function Description() {
   const FINISH_BY_SECOND_CLICK =
     "첫 번째 클릭으로 원을 그리고 두 번째 클릭으로 그리기를 종료하세요.";
   const TERRAIN_DESCRIPTION = "높이를 지정하고 지형을 평탄화할 수 있습니다.";
+  const CLICK_TO_BUILD = "클릭으로 건물 모델을 추가할 수 있습니다.";
 
   useEffect(() => {
     switch (true) {
@@ -30,6 +33,9 @@ export default function Description() {
         break;
       case terrainEditorOpen:
         setText(`${FINISH_BY_RIGHT_CLICK}\n${TERRAIN_DESCRIPTION}`);
+        break;
+      case buildWidgetOpen:
+        setText(CLICK_TO_BUILD);
         break;
       default:
         setText("");

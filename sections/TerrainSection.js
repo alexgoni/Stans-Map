@@ -67,6 +67,7 @@ export default function TerrainSection({ viewer, setTerrainRef }) {
     (async () => {
       await terrainEditor.modifyTerrain(selectedPositions, targetHeight);
     })();
+    !currentTerrainId && terrainEditor.startDraw();
   }, [modifyButtonClick]);
 
   return (

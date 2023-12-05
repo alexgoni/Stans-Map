@@ -5,6 +5,8 @@ import TerrainTool from "./TerrainTool";
 import TerrainEditWidget from "./TerrainEditWidget";
 import StackContainer from "../stack/StackContainer";
 import { CursorHandler } from "@/components/handler/cesium/Viewer";
+import BuildTool from "./BuildTool";
+import BuildModelWidget from "./BuildModelWidget";
 
 export default function Toolbar({ viewer, toolController }) {
   return (
@@ -15,12 +17,16 @@ export default function Toolbar({ viewer, toolController }) {
             <List className="cursor-pointer text-2xl text-slate-600 hover:text-slate-800" />
           </div>
           <div className="flex gap-4 rounded-lg border-b-2 border-gray-300 bg-gray-100 p-3 shadow-2xl">
-            <MeasureTool />
-            <div className="border-l border-gray-500" />
             <TerrainTool />
+            <BuildTool />
+          </div>
+          <div className="flex gap-4 rounded-lg border-b-2 border-gray-300 bg-gray-100 p-3 shadow-2xl">
+            <MeasureTool />
           </div>
         </div>
+
         <TerrainEditWidget viewer={viewer} />
+        <BuildModelWidget />
       </div>
 
       <StackContainer toolController={toolController} />

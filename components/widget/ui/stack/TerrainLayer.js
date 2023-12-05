@@ -3,7 +3,6 @@ import {
   EyeFill,
   EyeSlashFill,
   PencilFill,
-  SendFill,
   Trash,
 } from "react-bootstrap-icons";
 import Tooltip from "../../assets/Tooltip";

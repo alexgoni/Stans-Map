@@ -30,7 +30,7 @@ export default function TerrainEditWidget({ viewer }) {
           terrainWidgetOpen ? "translate-x-0" : "translate-x-80"
         }`}
       >
-        <div className="fixed z-50 float-right mt-6 inline-block rounded-lg border-b-2 border-gray-300 bg-gray-100 p-2 shadow-2xl">
+        <div className="absolute right-0 z-50 float-right mt-6 inline-block rounded-lg border-b-2 border-gray-300 bg-gray-100 p-2 shadow-2xl">
           <span
             className={`relative left-1 top-1 h-3 w-3 ${
               editTerrainOn ? "flex" : "hidden"

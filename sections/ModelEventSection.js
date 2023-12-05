@@ -6,6 +6,7 @@ import {
   ModelGroupInfo,
 } from "@/components/module/model/ModelGroup";
 import Modal from "@/components/widget/Modal";
+import { buildWidgetState } from "@/recoil/atom/BuildState";
 import { measureEventOnState } from "@/recoil/atom/MeasurementState";
 import { floorsModelState, tecnoModelState } from "@/recoil/atom/ModelState";
 import { terrainWidgetState } from "@/recoil/atom/TerrainState";
@@ -17,6 +18,7 @@ export default function ModelEventSection({ viewer }) {
   const floorsModel = useRecoilValue(floorsModelState);
   const measureEventOn = useRecoilValue(measureEventOnState);
   const terrainEventOn = useRecoilValue(terrainWidgetState);
+  const buildEventOn = useRecoilValue(buildWidgetState);
   const [modalOpen, setModalOpen] = useState(false);
   const [uri, setUri] = useState("");
   const modelEventRef = useRef(null);
@@ -72,7 +74,7 @@ export default function ModelEventSection({ viewer }) {
 
   // Model
   useEffect(() => {
-    if (measureEventOn || terrainEventOn) return;
+    if (measureEventOn || terrainEventOn || buildEventOn) return;
 
     const modelEvent = modelEventRef.current;
     modelEvent.startEvent();

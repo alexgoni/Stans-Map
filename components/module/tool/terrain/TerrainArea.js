@@ -44,6 +44,7 @@ export default class TerrainAreaDrawer extends AreaController {
       this.#removeInvalidEntitiesFromPolygon();
     } else {
       this.#areaGroupEndEvent();
+      this.viewer.container.style.cursor = "default";
       this.stopDrawing();
     }
 

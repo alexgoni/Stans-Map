@@ -1,8 +1,12 @@
 import * as Cesium from "cesium";
 import * as turf from "@turf/turf";
-import { calculateArea } from "./GeoInfo";
 
-function addModelEntity({ viewer, position, orientation = [], modelInfo }) {
+export function addModelEntity({
+  viewer,
+  position,
+  orientation = [],
+  modelInfo,
+}) {
   // entity position
   const [longitude, latitude, height] = position;
 
@@ -43,7 +47,7 @@ function addModelEntity({ viewer, position, orientation = [], modelInfo }) {
   return modelEntity;
 }
 
-function createAreaPoint({ viewer, position }) {
+export function createAreaPoint({ viewer, position }) {
   const point = viewer.entities.add({
     position,
     point: {
@@ -58,7 +62,7 @@ function createAreaPoint({ viewer, position }) {
   return point;
 }
 
-function createAreaPolygon({ viewer, hierarchy }) {
+export function createAreaPolygon({ viewer, hierarchy }) {
   const { positions, holes } = hierarchy;
 
   const polygon = viewer.entities.add({
@@ -76,7 +80,7 @@ function createAreaPolygon({ viewer, hierarchy }) {
   return polygon;
 }
 
-function createAreaPolyline({ viewer, positions }) {
+export function createAreaPolyline({ viewer, positions }) {
   const polyline = viewer.entities.add({
     polyline: {
       positions: positions,
@@ -89,7 +93,7 @@ function createAreaPolyline({ viewer, positions }) {
   return polyline;
 }
 
-function createKinkedPolygon({ viewer, turfPointPositionArr }) {
+export function createKinkedPolygon({ viewer, turfPointPositionArr }) {
   // 같은 곳 여러번 클릭으로 생기는 중복 정점 제거
   const uniquePoints = turfPointPositionArr.filter(
     (point, index, self) =>
@@ -145,7 +149,7 @@ function createKinkedPolygon({ viewer, turfPointPositionArr }) {
   return polygonArr;
 }
 
-function createLinePoint({ viewer, position }) {
+export function createLinePoint({ viewer, position }) {
   const point = viewer.entities.add({
     position,
     point: {
@@ -160,7 +164,7 @@ function createLinePoint({ viewer, position }) {
   return point;
 }
 
-function createDashline({ viewer, positions }) {
+export function createDashline({ viewer, positions }) {
   const dashline = viewer.entities.add({
     polyline: {
       positions,
@@ -177,7 +181,7 @@ function createDashline({ viewer, positions }) {
   return dashline;
 }
 
-function createPolyline({ viewer, positions }) {
+export function createPolyline({ viewer, positions }) {
   const polyline = viewer.entities.add({
     polyline: {
       positions,
@@ -190,7 +194,7 @@ function createPolyline({ viewer, positions }) {
   return polyline;
 }
 
-function createCenterPoint({ viewer, position }) {
+export function createCenterPoint({ viewer, position }) {
   const point = viewer.entities.add({
     position,
     point: {
@@ -205,7 +209,7 @@ function createCenterPoint({ viewer, position }) {
   return point;
 }
 
-function createCircle({ viewer, position }) {
+export function createCircle({ viewer, position }) {
   const circle = viewer.entities.add({
     position,
     ellipse: {
@@ -218,7 +222,7 @@ function createCircle({ viewer, position }) {
   return circle;
 }
 
-function createLabel({ viewer, position }) {
+export function createLabel({ viewer, position }) {
   const label = viewer.entities.add({
     position,
     label: {
@@ -240,17 +244,3 @@ function createLabel({ viewer, position }) {
 
   return label;
 }
-
-export {
-  addModelEntity,
-  createAreaPoint,
-  createAreaPolyline,
-  createAreaPolygon,
-  createKinkedPolygon,
-  createLinePoint,
-  createDashline,
-  createPolyline,
-  createCenterPoint,
-  createCircle,
-  createLabel,
-};

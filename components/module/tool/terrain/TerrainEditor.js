@@ -95,7 +95,6 @@ export default class TerrainEditor {
 
     await this.#upsertTerrainData(positions, slideValue);
     this.viewer.terrainProvider.setGlobalFloor(this.terrainStack.dataStack);
-    this.terrainAreaDrawer.startDrawing();
   }
 
   toggleShowGroup(id, showState) {

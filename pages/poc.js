@@ -2,6 +2,7 @@ import { defaultCamera } from "@/components/handler/cesium/Camera";
 import { Viewer } from "@/components/handler/cesium/Viewer";
 import createCustomTerrainProvider from "@/components/module/CustomTerrainProvider";
 import UIWrapper from "@/components/widget/ui/UIWrapper";
+import BuildSection from "@/sections/BuildSection";
 import MeasureSection from "@/sections/MeasureSection";
 import ModelEventSection from "@/sections/ModelEventSection";
 import TerrainSection from "@/sections/TerrainSection";
@@ -53,8 +54,10 @@ export default function POC() {
           {/* <ModelEventSection viewer={viewer} /> */}
           <MeasureSection viewer={viewer} setMeasureRef={setMeasureRef} />
           <TerrainSection viewer={viewer} setTerrainRef={setTerrainRef} />
+          <BuildSection viewer={viewer} />
         </>
       )}
+      s
     </>
   );
 }
