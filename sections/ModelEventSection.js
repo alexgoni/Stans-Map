@@ -5,40 +5,40 @@ import {
   ModelGroup,
   ModelGroupInfo,
 } from "@/components/module/model/ModelGroup";
-import Modal from "@/components/handler/three/Modal";
+import ThreeModal from "@/components/widget/ui/ThreeModal";
 import { buildWidgetState } from "@/recoil/atom/BuildState";
 import { measureEventOnState } from "@/recoil/atom/MeasurementState";
-import { floorsModelState, tecnoModelState } from "@/recoil/atom/ModelState";
+import { floorsModelState, technoModelState } from "@/recoil/atom/ModelState";
 import { terrainWidgetState } from "@/recoil/atom/TerrainState";
 import { useEffect, useRef, useState } from "react";
 import { useRecoilValue } from "recoil";
 
 export default function ModelEventSection({ viewer }) {
-  const tecnoModel = useRecoilValue(tecnoModelState);
+  const technoModel = useRecoilValue(technoModelState);
   const floorsModel = useRecoilValue(floorsModelState);
   const measureEventOn = useRecoilValue(measureEventOnState);
   const terrainEventOn = useRecoilValue(terrainWidgetState);
   const buildEventOn = useRecoilValue(buildWidgetState);
-  const [modalOpen, setModalOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
   const [uri, setUri] = useState("");
   const modelEventRef = useRef(null);
 
   const clickInnerModelHandler = (uri) => {
-    setModalOpen(true);
+    setIsOpen(true);
     setUri(uri);
   };
 
+  // 모델을 추가하고 ModelEvent 객체 생성
   useEffect(() => {
     // add model entities
-    const tecno = addModelEntity({
+    const techno = addModelEntity({
       viewer,
-      position: tecnoModel.position,
-      orientation: tecnoModel.orientation,
-      modelInfo: tecnoModel.info,
+      position: technoModel.position,
+      orientation: technoModel.orientation,
+      modelInfo: technoModel.info,
     });
 
     const floors = [];
-
     floorsModel.forEach((element) => {
       const floor = addModelEntity({
         viewer,
@@ -50,7 +50,8 @@ export default function ModelEventSection({ viewer }) {
       floors.push(floor);
     });
 
-    const modelGroup = new ModelGroup(tecno, floors);
+    const modelGroup = new ModelGroup(techno, floors);
+    // 모델 상하 이동 시 각각의 위치 계산
     const { downPositionObj, upPositionObj } = getPositionObj(modelGroup);
     const modelGroupInfo = new ModelGroupInfo(
       modelGroup,
@@ -72,9 +73,10 @@ export default function ModelEventSection({ viewer }) {
     };
   }, []);
 
-  // Model
+  // tool이 켜져있는지 확인하고 model에 대한 event 활성화
   useEffect(() => {
-    if (measureEventOn || terrainEventOn || buildEventOn) return;
+    const toolEvent = measureEventOn || terrainEventOn || buildEventOn;
+    if (toolEvent) return;
 
     const modelEvent = modelEventRef.current;
     modelEvent.startEvent();
@@ -82,12 +84,12 @@ export default function ModelEventSection({ viewer }) {
     return () => {
       modelEvent.stopEvent();
     };
-  }, [measureEventOn, terrainEventOn]);
+  }, [measureEventOn, terrainEventOn, buildEventOn]);
 
   return (
-    <Modal
-      modalOpen={modalOpen}
-      closeModal={() => setModalOpen(false)}
+    <ThreeModal
+      isOpen={isOpen}
+      closeModal={() => setIsOpen(false)}
       filePath={uri}
     />
   );

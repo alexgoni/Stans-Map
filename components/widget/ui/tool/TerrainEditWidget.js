@@ -10,6 +10,7 @@ import RangeSlider from "react-bootstrap-range-slider";
 import "react-bootstrap-range-slider/dist/react-bootstrap-range-slider.css";
 import { useRecoilValue, useSetRecoilState } from "recoil";
 import Tooltip from "../../assets/Tooltip";
+import { custom3DButton } from "../../assets/Custom3DButton";
 
 export default function TerrainEditWidget({ viewer }) {
   const terrainWidgetOpen = useRecoilValue(terrainWidgetState);
@@ -80,10 +81,7 @@ export default function TerrainEditWidget({ viewer }) {
 
             <div className="group relative mx-2 w-max flex-1">
               <div
-                className="-mt-2 flex h-8 cursor-pointer select-none items-center justify-center rounded-lg
-                      border-[1px] border-blue-400 bg-blue-500 transition-all
-                      duration-150 [box-shadow:0_8px_0_0_#1b6ff8,0_13px_0_0_#1b70f841] active:translate-y-2
-                      active:border-b-[0px] active:[box-shadow:0_0px_0_0_#1b6ff8,0_0px_0_0_#1b70f841]"
+                className={`-mt-2 flex h-8 rounded-lg ${custom3DButton}`}
                 onClick={() => {
                   setModifyButtonClick(true);
                 }}

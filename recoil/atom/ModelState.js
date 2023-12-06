@@ -1,16 +1,16 @@
 import { atom } from "recoil";
 import * as Cesium from "cesium";
 
-export const tecnoModelState = atom({
-  key: "tecnoModelState",
+export const technoModelState = atom({
+  key: "technoModelState",
   default: {
     position: [127.08049, 37.63457, 38], // height: 38 (기준 Cesium.Terrain.FrowWorldTerrain)
     orientation: [105, 0, 0],
     info: {
-      name: "Tecno Building",
+      name: "Techno Building",
       description: "STANS 4th floor",
       model: {
-        uri: "/glb/tecno.glb",
+        uri: "/glb/techno.glb",
         scale: 0.01,
       },
     },

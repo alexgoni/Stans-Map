@@ -3,24 +3,20 @@ import * as THREE from "three";
 import { PointerLockControls } from "three/examples/jsm/controls/PointerLockControls";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 import useDidMountEffect from "../../module/lib/useDidMountEffect";
-import { PlayCircle, Plus } from "react-bootstrap-icons";
+import { ArrowClockwise, PlayCircle, Plus } from "react-bootstrap-icons";
 import { rendererCleanUp, rendererConfig, resizeRenderer } from "./Renderer";
 import { fourWayDirectionLight } from "./Light";
+import { custom3DButton } from "@/components/widget/assets/Custom3DButton";
 
-export default function FirstPerson({
-  filePath,
-  loadingState,
-  cameraFlagState,
-}) {
+export default function FirstPerson({ filePath, loadingState }) {
   const [initialCameraPosition, setInitialCameraPosition] = useState(null);
+  const [resetCameraPositionFlag, setResetCameraPositionFlag] = useState(false);
   const [playClicked, setPlayClicked] = useState(false);
   const [isIntersect, setIsIntersect] = useState(false);
-
   const { loading, setLoading } = loadingState;
-  const { initCameraFlag, setInitCameraFlag } = cameraFlagState;
-
   const targetRef = useRef(null);
   const cameraRef = useRef(null);
+
   // 4층 기준 카메라 초기 위치
   const firstCameraPosition = [-9, 2, 0];
 
@@ -36,7 +32,7 @@ export default function FirstPerson({
 
     // renderer 생성 후 container에 삽입
     const renderer = rendererConfig();
-    const container = document.querySelector("#container");
+    const container = document.querySelector("#threeContainer");
     container.appendChild(renderer.domElement);
 
     // 내부 구조 가로, 세로, 높이
@@ -76,6 +72,8 @@ export default function FirstPerson({
 
         // 모델에 대한 조명 설정
         fourWayDirectionLight(modelSize, scene);
+
+        setLoading(false);
       },
       undefined,
       (error) => {
@@ -230,8 +228,6 @@ export default function FirstPerson({
 
     resizeRenderer(camera, renderer);
 
-    setLoading(false);
-
     return () => {
       document.removeEventListener("keydown", onKeyDown, false);
       document.removeEventListener("keyup", onKeyUp, false);
@@ -241,12 +237,12 @@ export default function FirstPerson({
 
   // 카메라 위치 초기화
   useDidMountEffect(() => {
-    if (initialCameraPosition && initCameraFlag) {
+    if (initialCameraPosition && resetCameraPositionFlag) {
       const camera = cameraRef.current;
       camera.position.set(...initialCameraPosition);
-      setInitCameraFlag(false);
+      setResetCameraPositionFlag(false);
     }
-  }, [initCameraFlag, initialCameraPosition]);
+  }, [resetCameraPositionFlag, initialCameraPosition]);
 
   // Ray Event
   useEffect(() => {
@@ -284,7 +280,18 @@ export default function FirstPerson({
 
   return (
     <>
-      <div id="container">
+      {!loading && (
+        <div
+          className={`fixed bottom-12 right-12 z-50 h-12 w-14 rounded-full ${custom3DButton}`}
+          onClick={() => {
+            setResetCameraPositionFlag(true);
+          }}
+        >
+          <ArrowClockwise className="text-2xl text-slate-200" />
+        </div>
+      )}
+
+      <div id="threeContainer">
         <PlayCircle
           id="playButton"
           className={`fixed left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2 transform cursor-pointer text-2xl text-slate-200 ${
@@ -306,19 +313,19 @@ export default function FirstPerson({
             <tbody className="text-center">
               <tr>
                 <td className="border-b px-8 py-2">이름</td>
-                <td className="border-b px-8 py-2">-</td>
+                <td className="border-b px-8 py-2">천권희</td>
               </tr>
               <tr>
                 <td className="border-b px-8 py-2">직책</td>
-                <td className="border-b px-8 py-2">-</td>
+                <td className="border-b px-8 py-2">인턴</td>
               </tr>
               <tr>
                 <td className="border-b px-8 py-2">업무</td>
-                <td className="border-b px-8 py-2">-</td>
+                <td className="border-b px-8 py-2">프론트엔드 및 GUI</td>
               </tr>
               <tr>
                 <td className="border-b px-8 py-2">위치</td>
-                <td className="border-b px-8 py-2">-</td>
+                <td className="border-b px-8 py-2">413호</td>
               </tr>
             </tbody>
           </table>

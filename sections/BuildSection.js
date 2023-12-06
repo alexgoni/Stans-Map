@@ -32,7 +32,7 @@ export default function BuildSection({ viewer }) {
           viewer.entities.add({
             position: clickPosition,
             model: {
-              uri: "/glb/tecno.glb",
+              uri: "/glb/techno.glb",
               scale: 0.01,
             },
           });
