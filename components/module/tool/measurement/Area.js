@@ -220,15 +220,6 @@ export default class AreaController extends ShapeController {
     this.activeShape = null;
   }
 
-  forceReset() {
-    if (this.areaGroup.pointEntityNum <= 2) {
-      this.#removeInvalidEntitiesFromPolygon();
-    } else this.areaGroupArr.push(this.areaGroup);
-
-    this.resetAreaGroup();
-    this.#clearAreaGroupArr();
-  }
-
   toggleShowGroup(id, showState) {
     this.areaStack.toggleShowAreaGroup(this.areaGroupArr, id, showState);
   }
@@ -285,24 +276,5 @@ export default class AreaController extends ShapeController {
     this.areaGroup.name = `Area ${AreaController.nextId++}`;
     this.areaGroupArr.push(this.areaGroup);
     this.areaStack.updateData(this.areaGroup);
-  }
-
-  #clearAreaGroupArr() {
-    this.areaGroupArr.forEach((areaGroup) => {
-      this.#deleteAreaGroupEntities(areaGroup);
-    });
-
-    this.areaGroupArr = [];
-    this.areaStack.dataStack = [];
-  }
-
-  #deleteAreaGroupEntities(areaGroup) {
-    areaGroup.polygonArr.forEach((entity) => {
-      this.viewer.entities.remove(entity);
-    });
-    areaGroup.pointEntityArr.forEach((entity) => {
-      this.viewer.entities.remove(entity);
-    });
-    this.viewer.entities.remove(areaGroup.label);
   }
 }

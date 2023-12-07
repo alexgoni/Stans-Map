@@ -167,11 +167,6 @@ export default class CircleController extends ShapeController {
     this.handler.removeInputAction(Cesium.ScreenSpaceEventType.MOUSE_MOVE);
   }
 
-  forceReset() {
-    this.#clearCircleGroupArr();
-    this.#resetCircleGroup();
-  }
-
   onLeftClick(click) {
     const clickPosition = getRayPosition({
       viewer: this.viewer,
@@ -211,27 +206,6 @@ export default class CircleController extends ShapeController {
       this.circleGroupArr,
       id,
     );
-  }
-
-  #deleteCircleGroupEntities(circleGroup) {
-    this.viewer.entities.remove(circleGroup.centerPoint);
-    this.viewer.entities.remove(circleGroup.circle);
-    this.viewer.entities.remove(circleGroup.label);
-  }
-
-  #clearCircleGroupArr() {
-    this.circleGroupArr.forEach((circleGroup) => {
-      this.#deleteCircleGroupEntities(circleGroup);
-    });
-
-    this.circleGroupArr = [];
-    this.circleStack.dataStack = [];
-  }
-
-  #resetCircleGroup() {
-    this.isDrawing = false;
-    this.#deleteCircleGroupEntities(this.circleGroup);
-    this.circleGroup = new CircleGroup(this.viewer);
   }
 
   #firstClickHandler(clickPosition) {

@@ -51,7 +51,7 @@ export default function POC() {
       {viewer && (
         <>
           <UIWrapper viewer={viewer} toolController={toolController} />
-          <ModelEventSection viewer={viewer} />
+          {/* <ModelEventSection viewer={viewer} /> */}
           <MeasureSection viewer={viewer} setMeasureRef={setMeasureRef} />
           <TerrainSection viewer={viewer} setTerrainRef={setTerrainRef} />
           <BuildSection viewer={viewer} />

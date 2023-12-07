@@ -193,14 +193,6 @@ export default class LineController extends ShapeController {
     this.#resetLineGroup();
   }
 
-  forceReset() {
-    if (this.lineGroup.pointEntityNum === 1) this.#removeOneClickEntities();
-    else this.lineGroupArr.push(this.lineGroup);
-
-    this.#resetLineGroup();
-    this.#clearLineGroupArr();
-  }
-
   toggleShowGroup(id, showState) {
     this.lineStack.toggleShowLineGroup(this.lineGroupArr, id, showState);
   }
@@ -282,24 +274,5 @@ export default class LineController extends ShapeController {
     this.dashLine = null;
 
     this.lineGroup = new LineGroup(this.viewer);
-  }
-
-  #clearLineGroupArr() {
-    this.lineGroupArr.forEach((lineGroup) => {
-      this.#deleteLineGroupEntities(lineGroup);
-    });
-
-    this.lineGroupArr = [];
-    this.lineStack.dataStack = [];
-  }
-
-  #deleteLineGroupEntities(lineGroup) {
-    lineGroup.pointEntityArr.forEach((entity) =>
-      this.viewer.entities.remove(entity),
-    );
-    lineGroup.polylineArr.forEach((entity) =>
-      this.viewer.entities.remove(entity),
-    );
-    this.viewer.entities.remove(lineGroup.label);
   }
 }
