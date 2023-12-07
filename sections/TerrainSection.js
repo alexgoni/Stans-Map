@@ -36,22 +36,14 @@ export default function TerrainSection({ viewer, setTerrainRef }) {
     setTerrainRef(terrainEditor);
   }, []);
 
-  // terrainArea
+  // draw terrain area
   useDidMountEffect(() => {
     const terrainEditor = terrainEditorRef.current;
 
-    if (terrainWidgetOpen) {
-      terrainEditor.startDraw();
-    } else {
-      terrainEditor.stopDrawWidgetSwitch();
-      terrainEditor.clearNoModifyEntity();
-    }
+    terrainWidgetOpen
+      ? terrainEditor.startDraw()
+      : terrainEditor.widgetSwitch();
   }, [terrainWidgetOpen]);
-
-  useDidMountEffect(() => {
-    const terrainEditor = terrainEditorRef.current;
-    currentTerrainId ? terrainEditor.stopDraw() : terrainEditor.startDraw();
-  }, [currentTerrainId]);
 
   // modify terrain
   useDidMountEffect(() => {
@@ -69,6 +61,12 @@ export default function TerrainSection({ viewer, setTerrainRef }) {
     })();
     !currentTerrainId && terrainEditor.startDraw();
   }, [modifyButtonClick]);
+
+  // edit mode
+  useDidMountEffect(() => {
+    const terrainEditor = terrainEditorRef.current;
+    currentTerrainId ? terrainEditor.stopDraw() : terrainEditor.startDraw();
+  }, [currentTerrainId]);
 
   return (
     <>

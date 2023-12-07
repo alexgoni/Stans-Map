@@ -2,7 +2,7 @@ import useDidMountEffect from "@/components/module/lib/useDidMountEffect";
 import { terrainWidgetState } from "@/recoil/atom/TerrainState";
 import { useEffect, useState } from "react";
 import { useRecoilValue } from "recoil";
-import StackForm from "./StackForm";
+import StackForm from "../../assets/layer_stack/StackForm";
 import TerrainLayer from "./TerrainLayer";
 
 export default function TerrainStack({ toolController }) {

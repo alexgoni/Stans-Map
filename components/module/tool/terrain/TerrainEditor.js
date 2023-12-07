@@ -72,6 +72,7 @@ export default class TerrainEditor {
   }
 
   startDraw() {
+    this.viewer.container.style.cursor = "crosshair";
     this.terrainAreaDrawer.startDrawing();
   }
 
@@ -80,27 +81,16 @@ export default class TerrainEditor {
     this.terrainAreaDrawer.stopDrawing();
   }
 
-  stopDrawWidgetSwitch() {
+  widgetSwitch() {
     this.terrainAreaDrawer.stopDrawing();
-  }
-
-  clearNoModifyEntity() {
-    if (
-      this.terrainAreaDrawer.areaGroupArr.length !==
-      Object.keys(this.terrainStack.dataStack).length
-    ) {
-      this.terrainAreaDrawer.popAreaGroupArr();
-    }
+    this.#clearNotModifiedTerrainEntity();
   }
 
   getSelectedPositions(id) {
-    if (id) {
-      const selectedPositions =
-        this.terrainStack.dataStack[id]?.positions || [];
-      return selectedPositions;
-    }
-    const selectedPositions = this.terrainAreaDrawer.getSelectedPositions();
-    return selectedPositions;
+    // 현재 edit 진행 중인 terrainArea의 positions를 return
+    if (id) return this.terrainStack.dataStack[id]?.positions || [];
+    // edit 중이 아니라면 가장 최근에 입력된 areaGroup의 positions를 return
+    return this.terrainAreaDrawer.getSelectedPositions();
   }
 
   async modifyTerrain(positions, slideValue) {
@@ -131,52 +121,17 @@ export default class TerrainEditor {
       id,
     );
 
-    this.#popTerrainData(id);
+    delete this.terrainStack.dataStack[id];
     this.viewer.terrainProvider.setGlobalFloor(this.terrainStack.dataStack);
   }
 
-  async #getPositionHeight(position) {
-    const carto = Cesium.Cartographic.fromCartesian(position);
-    const updatedPositions = await Cesium.sampleTerrain(
-      this.viewer.terrainProvider,
-      11,
-      [carto],
-    );
-    return updatedPositions[0].height;
-  }
-
-  async #getAverageHeight(positions) {
-    const heightArr = await Promise.all(
-      positions.map((position) => this.#getPositionHeight(position)),
-    );
-
-    return heightArr.reduce((acc, cur) => acc + cur, 0) / heightArr.length;
-  }
-
-  #insertTerrainStack(positions, slideValue, targetHeight) {
-    const lastAreaGroup =
-      this.terrainAreaDrawer.areaGroupArr[
-        this.terrainAreaDrawer.areaGroupArr.length - 1
-      ];
-
-    const key = TerrainEditor.nextId;
-    this.terrainStack.dataStack[key] = {
-      id: key,
-      name: lastAreaGroup.name,
-      positions,
-      area: lastAreaGroup.area,
-      slideHeight: slideValue,
-      targetHeight,
-    };
-    TerrainEditor.nextId++;
-
-    this.terrainStack.updateData();
-  }
-
-  #updateTerrainStack(id, slideValue, targetHeight) {
-    this.terrainStack.dataStack[id].slideHeight = slideValue;
-    this.terrainStack.dataStack[id].targetHeight = targetHeight;
-    this.terrainStack.updateData();
+  #clearNotModifiedTerrainEntity() {
+    if (
+      this.terrainAreaDrawer.areaGroupArr.length !==
+      Object.keys(this.terrainStack.dataStack).length
+    ) {
+      this.terrainAreaDrawer.popAreaGroupArr();
+    }
   }
 
   async #upsertTerrainData(positions, slideValue) {
@@ -198,7 +153,47 @@ export default class TerrainEditor {
     }
   }
 
-  #popTerrainData(id) {
-    delete this.terrainStack.dataStack[id];
+  async #getAverageHeight(positions) {
+    const heightArr = await Promise.all(
+      positions.map((position) => this.#getPositionHeight(position)),
+    );
+
+    return heightArr.reduce((acc, cur) => acc + cur, 0) / heightArr.length;
+  }
+
+  async #getPositionHeight(position) {
+    const carto = Cesium.Cartographic.fromCartesian(position);
+    const updatedPositions = await Cesium.sampleTerrain(
+      this.viewer.terrainProvider,
+      11,
+      [carto],
+    );
+    return updatedPositions[0].height;
+  }
+
+  #updateTerrainStack(id, slideValue, targetHeight) {
+    this.terrainStack.dataStack[id].slideHeight = slideValue;
+    this.terrainStack.dataStack[id].targetHeight = targetHeight;
+    this.terrainStack.updateData();
+  }
+
+  #insertTerrainStack(positions, slideValue, targetHeight) {
+    const lastAreaGroup =
+      this.terrainAreaDrawer.areaGroupArr[
+        this.terrainAreaDrawer.areaGroupArr.length - 1
+      ];
+
+    const key = TerrainEditor.nextId;
+    this.terrainStack.dataStack[key] = {
+      id: key,
+      name: lastAreaGroup.name,
+      positions,
+      area: lastAreaGroup.area,
+      slideHeight: slideValue,
+      targetHeight,
+    };
+    TerrainEditor.nextId++;
+
+    this.terrainStack.updateData();
   }
 }

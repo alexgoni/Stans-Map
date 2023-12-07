@@ -18,11 +18,11 @@ export default function MainPage() {
   // viewer
   useEffect(() => {
     (async () => {
-      // const defaultTerrainProvider = await Cesium.CesiumTerrainProvider.fromUrl(
-      //   "http://localhost:8081/",
-      // );
-      const defaultTerrainProvider =
-        await Cesium.CesiumTerrainProvider.fromIonAssetId(1);
+      const defaultTerrainProvider = await Cesium.CesiumTerrainProvider.fromUrl(
+        "http://localhost:8081/",
+      );
+      // const defaultTerrainProvider =
+      //   await Cesium.CesiumTerrainProvider.fromIonAssetId(1);
       const customTerrainProvider = createCustomTerrainProvider(
         defaultTerrainProvider,
       );
