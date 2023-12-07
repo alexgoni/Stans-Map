@@ -190,34 +190,34 @@ export default class FirstPersonController {
     const VELOCITY = 0.08;
     requestAnimationFrame(this.#animate.bind(this));
 
-    if (!this.controls.isLocked) return;
-
-    const currentPosition = this.controls.getObject().position;
-    if (this.moveForward) {
-      this.controls.moveForward(VELOCITY);
-      if (this.#checkCollision(currentPosition)) {
-        this.controls.moveForward(-VELOCITY);
-      }
-    }
-
-    if (this.moveBackward) {
-      this.controls.moveForward(-VELOCITY);
-      if (this.#checkCollision(currentPosition)) {
+    if (this.controls.isLocked) {
+      const currentPosition = this.controls.getObject().position;
+      if (this.moveForward) {
         this.controls.moveForward(VELOCITY);
+        if (this.#checkCollision(currentPosition)) {
+          this.controls.moveForward(-VELOCITY);
+        }
       }
-    }
 
-    if (this.moveLeft) {
-      this.controls.moveRight(-VELOCITY);
-      if (this.#checkCollision(currentPosition)) {
-        this.controls.moveRight(VELOCITY);
+      if (this.moveBackward) {
+        this.controls.moveForward(-VELOCITY);
+        if (this.#checkCollision(currentPosition)) {
+          this.controls.moveForward(VELOCITY);
+        }
       }
-    }
 
-    if (this.moveRight) {
-      this.controls.moveRight(VELOCITY);
-      if (this.#checkCollision(currentPosition)) {
+      if (this.moveLeft) {
         this.controls.moveRight(-VELOCITY);
+        if (this.#checkCollision(currentPosition)) {
+          this.controls.moveRight(VELOCITY);
+        }
+      }
+
+      if (this.moveRight) {
+        this.controls.moveRight(VELOCITY);
+        if (this.#checkCollision(currentPosition)) {
+          this.controls.moveRight(-VELOCITY);
+        }
       }
     }
 

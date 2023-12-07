@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import ReactModal from "react-modal";
-import Loading from "../loading/Loading";
+import Loading from "../../loading/Loading";
 import { XLg } from "react-bootstrap-icons";
-import FirstPerson from "../../handler/three/FirstPerson";
+import FirstPerson from "../../../handler/three/FirstPerson";
 
 ReactModal.setAppElement("#__next");
 

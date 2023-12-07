@@ -5,7 +5,7 @@ import {
   ModelGroup,
   ModelGroupInfo,
 } from "@/components/module/model/ModelGroup";
-import ThreeModal from "@/components/widget/ui/ThreeModal";
+import ThreeModal from "@/components/widget/ui/three/ThreeModal";
 import { buildWidgetState } from "@/recoil/atom/BuildState";
 import { measureEventOnState } from "@/recoil/atom/MeasurementState";
 import { floorsModelState, technoModelState } from "@/recoil/atom/ModelState";
