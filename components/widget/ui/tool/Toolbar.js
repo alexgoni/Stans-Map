@@ -24,13 +24,12 @@ export default function Toolbar({ viewer, toolController }) {
             <MeasureTool />
           </div>
         </div>
-
         <TerrainEditWidget viewer={viewer} />
         <BuildModelWidget />
       </div>
 
-      <StackContainer toolController={toolController} />
       <Description />
+      <StackContainer toolController={toolController} />
       <CursorHandler viewer={viewer} />
     </>
   );

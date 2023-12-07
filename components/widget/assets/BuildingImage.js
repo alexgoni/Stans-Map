@@ -11,8 +11,8 @@ export default function BuildingImage({
 
   return (
     <div
-      className={`flex cursor-pointer flex-col items-center rounded-md border p-1 ${
-        buildModel ? "border-blue-500" : "border-gray-600"
+      className={`flex cursor-pointer flex-col items-center rounded-md border-2 p-1 ${
+        buildModel ? "border-blue-500" : "border-gray-400"
       }`}
       onClick={() => {
         setBuildModelState(!buildModel);
@@ -29,7 +29,11 @@ export default function BuildingImage({
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
         />
       </div>
-      <span className="text-xs text-gray-500">{text}</span>
+      <span
+        className={`text-xs ${buildModel ? "text-blue-500" : "text-gray-500"}`}
+      >
+        {text}
+      </span>
     </div>
   );
 }

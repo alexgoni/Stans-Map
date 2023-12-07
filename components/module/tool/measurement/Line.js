@@ -13,136 +13,6 @@ import {
 import { ShapeGroup, ShapeController, ShapeLayer } from "./Shape";
 import { formatByKilo } from "../../lib/formatter";
 
-class LineGroup extends ShapeGroup {
-  constructor(viewer) {
-    super(viewer);
-    this.name = null;
-    this.polylineArr = [];
-    this.distance = this.value;
-  }
-
-  addPointToViewer(position) {
-    const point = createLinePoint({
-      viewer: this.viewer,
-      position,
-    });
-
-    this.pointEntityArr.push(point);
-    this.addPointPosition(position);
-  }
-
-  addPointPosition(position) {
-    this.pointPositionArr.push(getCoordinate(position));
-  }
-
-  removeLastPointPosition() {
-    this.pointPositionArr.pop();
-    this.label.position = this.pointEntityArr.slice(-1)[0].position;
-  }
-
-  addPolylineToViewer() {
-    const positions = Cesium.Cartesian3.fromDegreesArray(
-      this.pointPositionArr.flat(),
-    );
-    const polyline = createPolyline({
-      viewer: this.viewer,
-      positions,
-    });
-
-    this.polylineArr.push(polyline);
-  }
-
-  addLabelToViewer(position) {
-    this.label = createLabel({ viewer: this.viewer, position });
-  }
-
-  calculateDistanceAndUpdateLabel() {
-    this.distance = calculateDistance(this.pointPositionArr);
-    this.#updateLabel();
-  }
-
-  toggleShow(showState) {
-    this.pointEntityArr.forEach((entity) => {
-      entity.show = showState;
-    });
-    this.polylineArr.forEach((entity) => {
-      entity.show = showState;
-    });
-    this.label.show = showState;
-  }
-
-  #updateLabel() {
-    this.label.label.text = new Cesium.CallbackProperty(() => {
-      return formatByKilo(this.distance, 2);
-    }, false);
-  }
-}
-
-class LineStack extends ShapeLayer {
-  constructor(viewer) {
-    super(viewer);
-  }
-
-  updateData(lineGroup) {
-    if (!this._readData) return;
-    const data = {
-      id: lineGroup.id,
-      name: lineGroup.name,
-      value: lineGroup.distance,
-    };
-    this.dataStack.push(data);
-    this._readData([...this.dataStack]);
-  }
-
-  toggleShowLineGroup(lineGroupArr, id, showState) {
-    lineGroupArr.forEach((lineGroup) => {
-      if (lineGroup.id !== id) return;
-      lineGroup.toggleShow(showState);
-    });
-  }
-
-  zoomToLineGroup(lineGroupArr, id) {
-    lineGroupArr.forEach((lineGroup) => {
-      if (lineGroup.id !== id) return;
-      const offset = new Cesium.HeadingPitchRange(...ShapeLayer.OFFSET);
-      this.viewer.zoomTo(lineGroup.label, offset);
-      this.#highlightLabel(lineGroup);
-    });
-  }
-
-  deleteLineGroup(lineGroupArr, id) {
-    return lineGroupArr.filter((lineGroup) => {
-      if (lineGroup.id !== id) return true;
-      else {
-        this.#deleteLineGroupEntities(lineGroup);
-        return false;
-      }
-    });
-  }
-
-  #highlightLabel(lineGroup) {
-    lineGroup.label.label.backgroundColor = new Cesium.Color(
-      ...ShapeLayer.HIGHLIGHT,
-    );
-
-    setTimeout(() => {
-      lineGroup.label.label.backgroundColor = new Cesium.Color(
-        ...ShapeLayer.BG_DEFAULT,
-      );
-    }, ShapeLayer.DURATION);
-  }
-
-  #deleteLineGroupEntities(lineGroup) {
-    lineGroup.pointEntityArr.forEach((entity) =>
-      this.viewer.entities.remove(entity),
-    );
-    lineGroup.polylineArr.forEach((entity) =>
-      this.viewer.entities.remove(entity),
-    );
-    this.viewer.entities.remove(lineGroup.label);
-  }
-}
-
 export default class LineController extends ShapeController {
   static nextId = 1;
 
@@ -274,5 +144,135 @@ export default class LineController extends ShapeController {
     this.dashLine = null;
 
     this.lineGroup = new LineGroup(this.viewer);
+  }
+}
+
+class LineGroup extends ShapeGroup {
+  constructor(viewer) {
+    super(viewer);
+    this.name = null;
+    this.polylineArr = [];
+    this.distance = this.value;
+  }
+
+  addPointToViewer(position) {
+    const point = createLinePoint({
+      viewer: this.viewer,
+      position,
+    });
+
+    this.pointEntityArr.push(point);
+    this.addPointPosition(position);
+  }
+
+  addPointPosition(position) {
+    this.pointPositionArr.push(getCoordinate(position));
+  }
+
+  removeLastPointPosition() {
+    this.pointPositionArr.pop();
+    this.label.position = this.pointEntityArr.slice(-1)[0].position;
+  }
+
+  addPolylineToViewer() {
+    const positions = Cesium.Cartesian3.fromDegreesArray(
+      this.pointPositionArr.flat(),
+    );
+    const polyline = createPolyline({
+      viewer: this.viewer,
+      positions,
+    });
+
+    this.polylineArr.push(polyline);
+  }
+
+  addLabelToViewer(position) {
+    this.label = createLabel({ viewer: this.viewer, position });
+  }
+
+  calculateDistanceAndUpdateLabel() {
+    this.distance = calculateDistance(this.pointPositionArr);
+    this.#updateLabel();
+  }
+
+  toggleShow(showState) {
+    this.pointEntityArr.forEach((entity) => {
+      entity.show = showState;
+    });
+    this.polylineArr.forEach((entity) => {
+      entity.show = showState;
+    });
+    this.label.show = showState;
+  }
+
+  #updateLabel() {
+    this.label.label.text = new Cesium.CallbackProperty(() => {
+      return formatByKilo(this.distance, 2);
+    }, false);
+  }
+}
+
+class LineStack extends ShapeLayer {
+  constructor(viewer) {
+    super(viewer);
+  }
+
+  updateData(lineGroup) {
+    if (!this._readData) return;
+    const data = {
+      id: lineGroup.id,
+      name: lineGroup.name,
+      value: lineGroup.distance,
+    };
+    this.dataStack.push(data);
+    this._readData([...this.dataStack]);
+  }
+
+  toggleShowLineGroup(lineGroupArr, id, showState) {
+    lineGroupArr.forEach((lineGroup) => {
+      if (lineGroup.id !== id) return;
+      lineGroup.toggleShow(showState);
+    });
+  }
+
+  zoomToLineGroup(lineGroupArr, id) {
+    lineGroupArr.forEach((lineGroup) => {
+      if (lineGroup.id !== id) return;
+      const offset = new Cesium.HeadingPitchRange(...ShapeLayer.OFFSET);
+      this.viewer.zoomTo(lineGroup.label, offset);
+      this.#highlightLabel(lineGroup);
+    });
+  }
+
+  deleteLineGroup(lineGroupArr, id) {
+    return lineGroupArr.filter((lineGroup) => {
+      if (lineGroup.id !== id) return true;
+      else {
+        this.#deleteLineGroupEntities(lineGroup);
+        return false;
+      }
+    });
+  }
+
+  #highlightLabel(lineGroup) {
+    lineGroup.label.label.backgroundColor = new Cesium.Color(
+      ...ShapeLayer.HIGHLIGHT,
+    );
+
+    setTimeout(() => {
+      lineGroup.label.label.backgroundColor = new Cesium.Color(
+        ...ShapeLayer.BG_DEFAULT,
+      );
+    }, ShapeLayer.DURATION);
+  }
+
+  #deleteLineGroupEntities(lineGroup) {
+    lineGroup.pointEntityArr.forEach((entity) =>
+      this.viewer.entities.remove(entity),
+    );
+    lineGroup.polylineArr.forEach((entity) =>
+      this.viewer.entities.remove(entity),
+    );
+    this.viewer.entities.remove(lineGroup.label);
   }
 }

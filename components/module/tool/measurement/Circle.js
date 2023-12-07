@@ -11,6 +11,93 @@ import * as Cesium from "cesium";
 import { ShapeGroup, ShapeController, ShapeLayer } from "./Shape";
 import { formatByMeter } from "../../lib/formatter";
 
+export default class CircleController extends ShapeController {
+  static nextId = 1;
+
+  constructor(viewer) {
+    super(viewer);
+    this.isDrawing = false;
+    this.circleGroup = new CircleGroup(viewer);
+    this.circleGroupArr = [];
+    this.circleStack = new CircleStack(viewer);
+  }
+
+  startDrawing() {
+    this.handler.setInputAction(
+      this.onLeftClick,
+      Cesium.ScreenSpaceEventType.LEFT_CLICK,
+    );
+    this.handler.setInputAction(
+      this.onMouseMove,
+      Cesium.ScreenSpaceEventType.MOUSE_MOVE,
+    );
+  }
+
+  stopDrawing() {
+    this.handler.removeInputAction(Cesium.ScreenSpaceEventType.LEFT_CLICK);
+    this.handler.removeInputAction(Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+  }
+
+  onLeftClick(click) {
+    const clickPosition = getRayPosition({
+      viewer: this.viewer,
+      position: click.position,
+    });
+    if (!Cesium.defined(clickPosition)) return;
+
+    if (!this.isDrawing) this.#firstClickHandler(clickPosition);
+    else this.#secondClickHandler();
+  }
+
+  onMouseMove(movement) {
+    if (!this.isDrawing) return;
+
+    const newPosition = getRayPosition({
+      viewer: this.viewer,
+      position: movement.endPosition,
+    });
+    if (!Cesium.defined(newPosition)) return;
+
+    this.circleGroup.radius = calculateRadius(
+      this.circleGroup.centerPosition,
+      newPosition,
+    );
+  }
+
+  toggleShowGroup(id, showState) {
+    this.circleStack.toggleShowCircleGroup(this.circleGroupArr, id, showState);
+  }
+
+  zoomToGroup(id) {
+    this.circleStack.zoomToCircleGroup(this.circleGroupArr, id);
+  }
+
+  deleteGroup(id) {
+    this.circleGroupArr = this.circleStack.deleteCircleGroup(
+      this.circleGroupArr,
+      id,
+    );
+  }
+
+  #firstClickHandler(clickPosition) {
+    this.isDrawing = true;
+
+    this.circleGroup.centerPosition = clickPosition;
+    this.circleGroup.addCircleGroupToViewer(clickPosition);
+    this.circleGroup.registerCircleGroupCallback();
+  }
+
+  #secondClickHandler() {
+    this.isDrawing = false;
+
+    this.circleGroup.id = CircleController.nextId;
+    this.circleGroup.name = `Radius ${CircleController.nextId++}`;
+    this.circleGroupArr.push(this.circleGroup);
+    this.circleStack.updateData(this.circleGroup);
+    this.circleGroup = new CircleGroup(this.viewer);
+  }
+}
+
 class CircleGroup extends ShapeGroup {
   constructor(viewer) {
     super(viewer);
@@ -137,92 +224,5 @@ class CircleStack extends ShapeLayer {
     this.viewer.entities.remove(circleGroup.centerPoint);
     this.viewer.entities.remove(circleGroup.circle);
     this.viewer.entities.remove(circleGroup.label);
-  }
-}
-
-export default class CircleController extends ShapeController {
-  static nextId = 1;
-
-  constructor(viewer) {
-    super(viewer);
-    this.isDrawing = false;
-    this.circleGroup = new CircleGroup(viewer);
-    this.circleGroupArr = [];
-    this.circleStack = new CircleStack(viewer);
-  }
-
-  startDrawing() {
-    this.handler.setInputAction(
-      this.onLeftClick,
-      Cesium.ScreenSpaceEventType.LEFT_CLICK,
-    );
-    this.handler.setInputAction(
-      this.onMouseMove,
-      Cesium.ScreenSpaceEventType.MOUSE_MOVE,
-    );
-  }
-
-  stopDrawing() {
-    this.handler.removeInputAction(Cesium.ScreenSpaceEventType.LEFT_CLICK);
-    this.handler.removeInputAction(Cesium.ScreenSpaceEventType.MOUSE_MOVE);
-  }
-
-  onLeftClick(click) {
-    const clickPosition = getRayPosition({
-      viewer: this.viewer,
-      position: click.position,
-    });
-    if (!Cesium.defined(clickPosition)) return;
-
-    if (!this.isDrawing) this.#firstClickHandler(clickPosition);
-    else this.#secondClickHandler();
-  }
-
-  onMouseMove(movement) {
-    if (!this.isDrawing) return;
-
-    const newPosition = getRayPosition({
-      viewer: this.viewer,
-      position: movement.endPosition,
-    });
-    if (!Cesium.defined(newPosition)) return;
-
-    this.circleGroup.radius = calculateRadius(
-      this.circleGroup.centerPosition,
-      newPosition,
-    );
-  }
-
-  toggleShowGroup(id, showState) {
-    this.circleStack.toggleShowCircleGroup(this.circleGroupArr, id, showState);
-  }
-
-  zoomToGroup(id) {
-    this.circleStack.zoomToCircleGroup(this.circleGroupArr, id);
-  }
-
-  deleteGroup(id) {
-    this.circleGroupArr = this.circleStack.deleteCircleGroup(
-      this.circleGroupArr,
-      id,
-    );
-  }
-
-  #firstClickHandler(clickPosition) {
-    this.isDrawing = true;
-
-    this.circleGroup.centerPosition = clickPosition;
-    this.circleGroup.addCircleGroupToViewer(clickPosition);
-    this.circleGroup.registerCircleGroupCallback();
-  }
-
-  #secondClickHandler() {
-    this.isDrawing = false;
-
-    this.circleGroup.id = CircleController.nextId;
-    this.circleGroup.name = `Radius ${CircleController.nextId++}`;
-    this.circleGroupArr.push(this.circleGroup);
-    this.circleStack.updateData(this.circleGroup);
-    this.circleGroup = new CircleGroup(this.viewer);
   }
 }
