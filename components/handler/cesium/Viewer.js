@@ -20,7 +20,7 @@ function Viewer({
   navigationHelpButton = false,
   geocoder = false,
   baseLayerPicker = false,
-  baseLayer = undefined,
+  baseLayer = false,
   homeButton = true,
   koreaHomeButton = false,
   scene3DOnly = true,
@@ -40,6 +40,7 @@ function Viewer({
     homeButton,
     scene3DOnly,
     fullscreenButton,
+    baseLayer,
     /* offline default imageLayer
     추가되는 이미지가 있는 경우
     baseLayer: false 
@@ -54,10 +55,10 @@ function Viewer({
   });
 
   // imageLayer 설정
-  if (baseLayer !== undefined) {
-    viewer.imageryLayers.removeAll();
-    viewer.imageryLayers.addImageryProvider(baseLayer);
-  }
+  // if (baseLayer) {
+  //   viewer.imageryLayers.removeAll();
+  //   viewer.imageryLayers.addImageryProvider(baseLayer);
+  // }
 
   // homeButton event
   if (koreaHomeButton) {
