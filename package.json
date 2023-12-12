@@ -20,6 +20,7 @@
     "react-modal": "^3.16.1",
     "react-spinners": "^0.13.8",
     "recoil": "^0.7.7",
+    "sharp": "^0.32.6",
     "three": "^0.156.1"
   },
   "devDependencies": {

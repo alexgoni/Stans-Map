@@ -5,8 +5,8 @@ import Layout from "@/components/module/lib/Layout";
 
 export default function App({ Component, pageProps }) {
   // In offline, you can delete this
-  Cesium.Ion.defaultAccessToken =
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJlZDQzNjhhZS00NDE1LTRiYzUtOWY2My02NDQ4OThiMDhjY2QiLCJpZCI6MTYyNDk2LCJpYXQiOjE2OTI5NDMzMDh9.RTB-QjPBrgslrSeAWuVlHT5yxZdFRLPNlCBmBQrRH9o";
+  // Cesium.Ion.defaultAccessToken =
+  //   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJlZDQzNjhhZS00NDE1LTRiYzUtOWY2My02NDQ4OThiMDhjY2QiLCJpZCI6MTYyNDk2LCJpYXQiOjE2OTI5NDMzMDh9.RTB-QjPBrgslrSeAWuVlHT5yxZdFRLPNlCBmBQrRH9o";
 
   return (
     <RecoilRoot>

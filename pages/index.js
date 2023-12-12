@@ -19,7 +19,7 @@ export default function MainPage() {
   useEffect(() => {
     (async () => {
       const defaultTerrainProvider = await Cesium.CesiumTerrainProvider.fromUrl(
-        "http://localhost:8081/",
+        "http://192.168.1.45:8081",
       );
       // const defaultTerrainProvider =
       //   await Cesium.CesiumTerrainProvider.fromIonAssetId(1);
@@ -27,9 +27,22 @@ export default function MainPage() {
         defaultTerrainProvider,
       );
 
+      const geomap = new Cesium.WebMapServiceImageryProvider({
+        url: "http://192.168.1.45:8188/geoserver/wms",
+        parameters: {
+          format: "image/png",
+          transparent: "true",
+          tiled: true,
+          enablePickFeatures: true,
+        },
+        layers: "stans:protoMap",
+        maximumLevel: 20,
+      });
+
       const viewer = Viewer({
         terrainProvider: customTerrainProvider,
         homeButton: false,
+        baseLayer: geomap,
       });
       viewer.scene.globe.depthTestAgainstTerrain = true;
       setViewer(viewer);
